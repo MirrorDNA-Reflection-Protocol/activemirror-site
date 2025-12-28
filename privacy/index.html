@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy — Active Mirror</title>
+
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <meta name="description" content="Active Mirror runs on your hardware. We don't collect your data.">
+    <meta property="og:title" content="Privacy Policy — Active Mirror">
+    <meta property="og:description" content="Active Mirror runs on your hardware. We don't collect your data.">
+    <meta property="og:image" content="https://activemirror.ai/assets/og-image.png">
+    <meta property="og:url" content="https://activemirror.ai/privacy">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body>
+
+    <nav>
+        <div class="container nav-content">
+            <a href="/" class="logo">⟡ Active Mirror</a>
+            <button class="mobile-menu-btn" aria-label="Menu">☰</button>
+            <div class="nav-links">
+                <a href="/product/">Product</a>
+                <a href="/company/">Company</a>
+                <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/" target="_blank">Docs</a>
+                <a href="/contact/">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero" style="padding-bottom: 40px;">
+        <div class="container">
+            <p class="text-accent"
+                style="margin-bottom: 16px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Legal
+            </p>
+            <h1>Privacy Policy</h1>
+            <p>Active Mirror runs on your hardware. We don't collect your data.</p>
+        </div>
+    </section>
+
+    <div class="container" style="max-width: 800px;">
+        <section class="section">
+            <div class="grid" style="grid-template-columns: 1fr; gap: 40px;">
+                <div>
+                    <h3>What we collect from Active Mirror</h3>
+                    <p class="text-secondary">Nothing. It runs locally. We never see your data, your prompts, your
+                        vault, or your identity kernel.</p>
+                </div>
+
+                <div>
+                    <h3>What we collect from this website</h3>
+                    <p class="text-secondary">Page view counts via Plausible Analytics (privacy-focused, no cookies, no
+                        personal data). We see "someone visited /product" — not who you are.</p>
+                </div>
+
+                <div>
+                    <h3>Email</h3>
+                    <p class="text-secondary">If you email us at paul@activemirror.ai, we have your email address. We
+                        won't spam you, sell it, or share it.</p>
+                </div>
+
+                <div>
+                    <h3>Third parties</h3>
+                    <p class="text-secondary">None. No Google Analytics. No tracking pixels. No ad networks.</p>
+                </div>
+
+                <div
+                    style="background-color: var(--card-bg); padding: 24px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <h3 style="color: var(--text-primary);">The point</h3>
+                    <p class="text-secondary">We're building sovereignty tools. Harvesting your data would make us
+                        hypocrites.</p>
+                </div>
+
+                <div style="margin-top: 40px; padding-top: 40px; border-top: 1px solid var(--border-color);">
+                    <p class="text-secondary">Last updated: December 2025</p>
+                    <p class="text-secondary">Questions? <a href="mailto:paul@activemirror.ai"
+                            class="text-accent">paul@activemirror.ai</a></p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h4>⟡ Active Mirror</h4>
+                    <p>Built by Paul Desai<br>N1 Intelligence (OPC) Pvt Ltd<br>Goa, India</p>
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/MirrorDNA-Reflection-Protocol">GitHub</a>
+                    <a href="https://twitter.com/pauldesai123">Twitter</a>
+                    <a href="mailto:paul@activemirror.ai">Email</a>
+                    <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/" target="_blank">Docs</a>
+                    <a href="/privacy/">Privacy</a>
+                </div>
+            </div>
+            <div class="copyright">
+                © 2025 N1 Intelligence. Open source under MIT.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const menuBtn = document.querySelector('.mobile-menu-btn');
+        const navLinks = document.querySelector('.nav-links');
+
+        menuBtn.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            menuBtn.textContent = navLinks.classList.contains('active') ? '✕' : '☰';
+        });
+    </script>
+</body>
+
+</html>
