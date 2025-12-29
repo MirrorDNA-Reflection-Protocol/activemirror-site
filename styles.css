@@ -429,6 +429,25 @@ footer {
         gap: 12px;
         align-items: center;
     }
+
+    /* Mobile CTA button fix */
+    .btn {
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        font-size: 0.9rem !important;
+        padding: 12px 20px !important;
+    }
+
+    .hero .btn-primary {
+        font-size: 1rem !important;
+        padding: 14px 24px !important;
+    }
 }
 
 /* ============================================
