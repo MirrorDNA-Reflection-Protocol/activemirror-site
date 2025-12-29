@@ -636,3 +636,23 @@ button:focus-visible,
     border: none;
     background: #0a0a10;
 }
+/* Page-to-Page Scroll Snap */
+html {
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+}
+
+.hero, .section, footer {
+    scroll-snap-align: start;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Ensure footer content is centered but respects padding if needed */
+footer {
+    justify-content: center;
+    margin-top: 0; /* Override existing margin */
+    border-top: none; /* remove separator line if it looks weird mid-scroll, or keep it */
+}
