@@ -5,33 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog — Active Mirror</title>
-
-    <!-- Favicon -->
     <link rel="icon" type="image/png" href="/favicon.png">
-
-    <!-- Design & Fonts -->
     <link rel="stylesheet" href="../styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- Meta Tags -->
-    <meta name="description"
-        content="Insights on sovereign AI, local LLMs, identity persistence, and the future of human-AI collaboration.">
-    <meta property="og:title" content="Blog — Active Mirror">
-    <meta property="og:description"
-        content="Insights on sovereign AI, local LLMs, identity persistence, and the future of human-AI collaboration.">
-    <meta property="og:image" content="https://activemirror.ai/assets/og-image.png">
-    <meta property="og:url" content="https://activemirror.ai/blog/">
-    <meta property="og:type" content="website">
-    <meta name="twitter:card" content="summary_large_image">
 </head>
 
 <body>
-    <!-- Navigation -->
     <nav>
         <div class="container nav-content">
-            <a href="/" class="logo"><img src="/assets/logo.png" alt="Active Mirror"
+            <a href="/" class="logo"><img src="/assets/logo.png" alt=""
                     style="height: 28px; vertical-align: middle; margin-right: 8px; filter: invert(1);">Active
                 Mirror</a>
             <button class="mobile-menu-btn" aria-label="Menu">☰</button>
@@ -46,77 +28,103 @@
         </div>
     </nav>
 
-    <!-- Hero -->
-    <section class="hero" style="padding: 100px 0 60px;">
+    <section class="hero" style="padding: 120px 0 60px;">
         <div class="container text-center">
-            <h1>Blog</h1>
-            <p>Insights on sovereign AI, identity persistence, and the future of human-AI collaboration.</p>
+            <h1>Insights</h1>
+            <p style="max-width: 600px; margin: 0 auto; color: var(--text-secondary);">
+                Thoughts on sovereign AI, local-first architecture, and the future of intelligence.
+            </p>
         </div>
     </section>
 
-    <!-- Blog Posts -->
     <section class="section">
-        <div class="container">
-            <div class="blog-grid" id="blog-posts">
-                <div class="card blog-card">
-                    <span class="blog-date">December 29, 2025 · AI Sovereignty</span>
-                    <a href="/blog/posts/2025-12-29-the-importance-of-local-llms-for-privacy-protection.html">
-                        <h3>The Importance of Local LLMs for Privacy Protection</h3>
-                    </a>
-                    <p>Discover how local LLMs enhance privacy in AI applications and why they matter for data
-                        sovereignty.</p>
-                </div>
-            </div>
+        <div class="container" style="max-width: 800px;">
+
+            <!-- Post 1 -->
+            <a href="/blog/posts/orchestrator-model.html" class="blog-card"
+                style="display: block; text-decoration: none; color: inherit; padding: 32px; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 24px; transition: transform 0.2s; background: rgba(255,255,255,0.02);">
+                <div style="color: var(--accent-color); font-family: monospace; font-size: 0.9rem; margin-bottom: 8px;">
+                    Dec 30 · Philosophy</div>
+                <h2 style="margin-bottom: 12px; font-size: 1.5rem;">The Orchestrator Model: One Human, Unlimited AI
+                    Leverage</h2>
+                <p class="text-secondary" style="margin-bottom: 0;">The future of work isn't humans vs. AI. It's humans
+                    directing AI swarms. Why the "Individual Contributor" is dead.</p>
+            </a>
+
+            <!-- Post 2 -->
+            <a href="/blog/posts/adhd-and-ai.html" class="blog-card"
+                style="display: block; text-decoration: none; color: inherit; padding: 32px; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 24px; transition: transform 0.2s; background: rgba(255,255,255,0.02);">
+                <div style="color: var(--accent-color); font-family: monospace; font-size: 0.9rem; margin-bottom: 8px;">
+                    Dec 30 · Neurodivergence</div>
+                <h2 style="margin-bottom: 12px; font-size: 1.5rem;">ADHD and AI: Why Neurodivergent Minds May Have an
+                    Edge</h2>
+                <p class="text-secondary" style="margin-bottom: 0;">AI handles the linear execution. The ADHD mind
+                    handles the lateral connection. An executive function exoskeleton.</p>
+            </a>
+
+            <!-- Post 3 -->
+            <a href="/blog/posts/building-red-team-node.html" class="blog-card"
+                style="display: block; text-decoration: none; color: inherit; padding: 32px; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 24px; transition: transform 0.2s; background: rgba(255,255,255,0.02);">
+                <div style="color: var(--accent-color); font-family: monospace; font-size: 0.9rem; margin-bottom: 8px;">
+                    Dec 29 · Security</div>
+                <h2 style="margin-bottom: 12px; font-size: 1.5rem;">Building a Red-Team Node: How We Test Our Own
+                    Security</h2>
+                <p class="text-secondary" style="margin-bottom: 0;">We built a specialized AI whose only job is to
+                    attack our code. Inside the "Adversarial Twin" architecture.</p>
+            </a>
+
+            <!-- Post 4 -->
+            <a href="/blog/posts/truth-state-enforcement.html" class="blog-card"
+                style="display: block; text-decoration: none; color: inherit; padding: 32px; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 24px; transition: transform 0.2s; background: rgba(255,255,255,0.02);">
+                <div style="color: var(--accent-color); font-family: monospace; font-size: 0.9rem; margin-bottom: 8px;">
+                    Dec 29 · Engineering</div>
+                <h2 style="margin-bottom: 12px; font-size: 1.5rem;">Truth-State Enforcement: How We Solved Hallucination
+                </h2>
+                <p class="text-secondary" style="margin-bottom: 0;">Business needs deterministic answers. How we
+                    classify AI output as FACT, ESTIMATE, or UNKNOWN.</p>
+            </a>
+
+            <!-- Post 5 -->
+            <a href="/blog/posts/why-local-llms-future-enterprise.html" class="blog-card"
+                style="display: block; text-decoration: none; color: inherit; padding: 32px; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 24px; transition: transform 0.2s; background: rgba(255,255,255,0.02);">
+                <div style="color: var(--accent-color); font-family: monospace; font-size: 0.9rem; margin-bottom: 8px;">
+                    Dec 28 · Strategy</div>
+                <h2 style="margin-bottom: 12px; font-size: 1.5rem;">Why Local LLMs Are the Future of Enterprise AI</h2>
+                <p class="text-secondary" style="margin-bottom: 0;">The cloud era is an anomaly. Physics, economics, and
+                    privacy are driving intelligence to the edge.</p>
+            </a>
+
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer>
+    <footer style="border-top: 1px solid rgba(255,255,255,0.05); padding: 40px 0; margin-top: 40px;">
         <div class="container text-center">
-            <p style="margin-bottom: 16px;"><span class="brand-glyph">⟡</span> Active Mirror</p>
-            <p class="text-secondary" style="font-size: 0.85rem;">MIT License · Built in Goa, India</p>
-            <p class="text-secondary" style="font-size: 0.75rem; margin-top: 8px;">© 2025 N1 Intelligence Pvt Ltd</p>
+            <p class="text-secondary">© 2025 N1 Intelligence</p>
         </div>
     </footer>
 
-    <style>
-        .blog-grid {
-            display: grid;
-            gap: 24px;
-            max-width: 800px;
-            margin: 0 auto;
+    <script>
+        const menuBtn = document.querySelector(".mobile-menu-btn");
+        const navLinks = document.querySelector(".nav-links");
+        if (menuBtn) {
+            menuBtn.addEventListener("click", () => {
+                navLinks.classList.toggle("active");
+                menuBtn.textContent = navLinks.classList.contains("active") ? "✕" : "☰";
+            });
         }
 
-        .blog-card {
-            padding: 32px;
-        }
-
-        .blog-card h3 {
-            margin-bottom: 12px;
-        }
-
-        .blog-date {
-            font-size: 0.75rem;
-            color: var(--accent-color);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        .blog-card a {
-            color: inherit;
-            text-decoration: none;
-        }
-
-        .blog-card a:hover h3 {
-            color: var(--accent-color);
-        }
-
-        nav a.active {
-            color: var(--accent-color);
-        }
-    </style>
+        // Add hover effect via JS/CSS class injection if needed, or rely on inline CSS transition
+        document.querySelectorAll('.blog-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-4px)';
+                card.style.borderColor = 'var(--accent-color)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+                card.style.borderColor = 'var(--border-color)';
+            });
+        });
+    </script>
 </body>
 
 </html>
