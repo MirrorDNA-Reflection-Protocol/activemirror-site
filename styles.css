@@ -417,6 +417,10 @@ footer {
     .footer-links {
         justify-content: center;
     }
+
+    .footer-brand h4 {
+        justify-content: center;
+    }
 }
 
 /* ============================================
