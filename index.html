@@ -383,42 +383,168 @@ One identity kernel. Multiple models. Your hardware.
     <section class="section">
         <div class="container">
             <h2 class="text-center" style="margin-bottom: 40px;">Who This Is Built For</h2>
-            <div class="grid features-grid">
-                <div class="card">
+            <div class="grid features-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));">
+
+                <!-- Government -->
+                <div class="card" style="padding: 28px;">
                     <span class="card-icon">🏛️</span>
                     <h3>Government & Defense</h3>
-                    <p>Classified data stays classified. Air-gapped deployments. Full audit trails. No external API
-                        calls, ever.</p>
+                    <p style="margin-bottom: 20px;">Classified data stays classified. Air-gapped deployments. Full audit
+                        trails.</p>
+                    <div class="workflow-diagram"
+                        style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; font-size: 0.8rem;">
+                        <div
+                            style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                            <span
+                                style="background: rgba(88,166,255,0.2); padding: 6px 12px; border-radius: 4px;">Classified
+                                Doc</span>
+                            <span>→</span>
+                            <span
+                                style="background: rgba(168,85,247,0.2); padding: 6px 12px; border-radius: 4px; border: 1px solid var(--accent-color);">Active
+                                Mirror</span>
+                            <span>→</span>
+                            <span
+                                style="background: rgba(88,166,255,0.2); padding: 6px 12px; border-radius: 4px;">Analyst</span>
+                        </div>
+                        <div style="margin-top: 12px; color: var(--text-secondary); text-align: center;">
+                            <span style="color: #22c55e;">✓</span> Air-gapped <span style="color: #22c55e;">✓</span>
+                            Audit logged <span style="color: #ef4444;">✕</span> No internet
+                        </div>
+                    </div>
                 </div>
-                <div class="card">
+
+                <!-- Healthcare -->
+                <div class="card" style="padding: 28px;">
                     <span class="card-icon">🏥</span>
                     <h3>Healthcare & Life Sciences</h3>
-                    <p>HIPAA-compliant AI infrastructure. Patient data never leaves your environment. Deterministic
-                        governance for clinical workflows.</p>
+                    <p style="margin-bottom: 20px;">HIPAA-compliant AI. Patient data never leaves your environment.</p>
+                    <div class="workflow-diagram"
+                        style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; font-size: 0.8rem;">
+                        <div
+                            style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                            <span
+                                style="background: rgba(239,68,68,0.2); padding: 6px 12px; border-radius: 4px;">PHI/EHR</span>
+                            <span>→</span>
+                            <span
+                                style="background: rgba(168,85,247,0.2); padding: 6px 12px; border-radius: 4px; border: 1px solid var(--accent-color);">Active
+                                Mirror</span>
+                            <span>→</span>
+                            <span
+                                style="background: rgba(34,197,94,0.2); padding: 6px 12px; border-radius: 4px;">Clinical
+                                Decision</span>
+                        </div>
+                        <div style="margin-top: 12px; color: var(--text-secondary); text-align: center;">
+                            <span style="color: #22c55e;">✓</span> HIPAA <span style="color: #22c55e;">✓</span> On-prem
+                            <span style="color: #22c55e;">✓</span> Deterministic
+                        </div>
+                    </div>
                 </div>
-                <div class="card">
+
+                <!-- Financial -->
+                <div class="card" style="padding: 28px;">
                     <span class="card-icon">🏦</span>
                     <h3>Financial Services</h3>
-                    <p>SOC 2, PCI-DSS ready architecture. On-premise AI with full regulatory compliance. Every decision
-                        auditable.</p>
+                    <p style="margin-bottom: 20px;">SOC 2, PCI-DSS ready. Every AI decision auditable.</p>
+                    <div class="workflow-diagram"
+                        style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; font-size: 0.8rem;">
+                        <div
+                            style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                            <span
+                                style="background: rgba(234,179,8,0.2); padding: 6px 12px; border-radius: 4px;">Transaction</span>
+                            <span>→</span>
+                            <span
+                                style="background: rgba(168,85,247,0.2); padding: 6px 12px; border-radius: 4px; border: 1px solid var(--accent-color);">Active
+                                Mirror</span>
+                            <span>→</span>
+                            <span style="background: rgba(34,197,94,0.2); padding: 6px 12px; border-radius: 4px;">Risk
+                                Score</span>
+                        </div>
+                        <div style="margin-top: 12px; color: var(--text-secondary); text-align: center;">
+                            <span style="color: #22c55e;">✓</span> SOC 2 <span style="color: #22c55e;">✓</span> PCI-DSS
+                            <span style="color: #22c55e;">✓</span> Audit trail
+                        </div>
+                    </div>
                 </div>
-                <div class="card">
+
+                <!-- Legal -->
+                <div class="card" style="padding: 28px;">
                     <span class="card-icon">⚖️</span>
-                    <h3>Legal & Professional Services</h3>
-                    <p>Attorney-client privilege preserved. Document analysis without cloud exposure. Confidentiality by
+                    <h3>Legal & Professional</h3>
+                    <p style="margin-bottom: 20px;">Attorney-client privilege preserved. Confidentiality by
                         architecture.</p>
+                    <div class="workflow-diagram"
+                        style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; font-size: 0.8rem;">
+                        <div
+                            style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                            <span style="background: rgba(88,166,255,0.2); padding: 6px 12px; border-radius: 4px;">Case
+                                Files</span>
+                            <span>→</span>
+                            <span
+                                style="background: rgba(168,85,247,0.2); padding: 6px 12px; border-radius: 4px; border: 1px solid var(--accent-color);">Active
+                                Mirror</span>
+                            <span>→</span>
+                            <span
+                                style="background: rgba(168,85,247,0.2); padding: 6px 12px; border-radius: 4px;">Analysis</span>
+                        </div>
+                        <div style="margin-top: 12px; color: var(--text-secondary); text-align: center;">
+                            <span style="color: #22c55e;">✓</span> Privilege <span style="color: #22c55e;">✓</span>
+                            Local only <span style="color: #ef4444;">✕</span> No cloud
+                        </div>
+                    </div>
                 </div>
-                <div class="card">
+
+                <!-- Manufacturing -->
+                <div class="card" style="padding: 28px;">
                     <span class="card-icon">🏭</span>
                     <h3>Manufacturing & Industrial</h3>
-                    <p>AI at the edge. No internet required. Trade secrets and IP stay on-site. Operational continuity
-                        guaranteed.</p>
+                    <p style="margin-bottom: 20px;">AI at the edge. Trade secrets stay on-site.</p>
+                    <div class="workflow-diagram"
+                        style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; font-size: 0.8rem;">
+                        <div
+                            style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                            <span style="background: rgba(234,179,8,0.2); padding: 6px 12px; border-radius: 4px;">Sensor
+                                Data</span>
+                            <span>→</span>
+                            <span
+                                style="background: rgba(168,85,247,0.2); padding: 6px 12px; border-radius: 4px; border: 1px solid var(--accent-color);">Edge
+                                AI</span>
+                            <span>→</span>
+                            <span
+                                style="background: rgba(34,197,94,0.2); padding: 6px 12px; border-radius: 4px;">Action</span>
+                        </div>
+                        <div style="margin-top: 12px; color: var(--text-secondary); text-align: center;">
+                            <span style="color: #22c55e;">✓</span> Offline <span style="color: #22c55e;">✓</span> Edge
+                            deploy <span style="color: #22c55e;">✓</span> Real-time
+                        </div>
+                    </div>
                 </div>
-                <div class="card">
+
+                <!-- Enterprise GDPR -->
+                <div class="card" style="padding: 28px;">
                     <span class="card-icon">🌍</span>
-                    <h3>Enterprise (GDPR/Data Sovereignty)</h3>
-                    <p>European data stays in Europe. Full data residency control. No cross-border compliance risks.</p>
+                    <h3>Enterprise (GDPR)</h3>
+                    <p style="margin-bottom: 20px;">European data stays in Europe. Full data residency control.</p>
+                    <div class="workflow-diagram"
+                        style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; font-size: 0.8rem;">
+                        <div
+                            style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                            <span style="background: rgba(59,130,246,0.2); padding: 6px 12px; border-radius: 4px;">🇪🇺
+                                EU Data</span>
+                            <span>→</span>
+                            <span
+                                style="background: rgba(168,85,247,0.2); padding: 6px 12px; border-radius: 4px; border: 1px solid var(--accent-color);">🇪🇺
+                                EU Server</span>
+                            <span>→</span>
+                            <span style="background: rgba(34,197,94,0.2); padding: 6px 12px; border-radius: 4px;">🇪🇺
+                                EU User</span>
+                        </div>
+                        <div style="margin-top: 12px; color: var(--text-secondary); text-align: center;">
+                            <span style="color: #22c55e;">✓</span> GDPR <span style="color: #22c55e;">✓</span> Data
+                            residency <span style="color: #ef4444;">✕</span> No transfer
+                        </div>
+                    </div>
                 </div>
+
             </div>
         </div>
     </section>
