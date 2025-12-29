@@ -304,6 +304,81 @@ One identity kernel. Multiple models. Your hardware.
         </div>
     </section>
 
+    <!-- Architecture Diagram -->
+    <section class="section" style="background-color: #0d0d12;">
+        <div class="container text-center">
+            <h2 style="margin-bottom: 16px;">Sovereign Architecture</h2>
+            <p class="text-secondary"
+                style="margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">Everything runs
+                inside your perimeter. No external calls. No data leakage.</p>
+
+            <div class="architecture-diagram"
+                style="max-width: 800px; margin: 0 auto; padding: 32px; border: 2px dashed rgba(88, 166, 255, 0.3); border-radius: 16px; position: relative;">
+                <span
+                    style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #0d0d12; padding: 0 16px; color: var(--accent-color); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em;">Your
+                    Infrastructure</span>
+
+                <!-- LLM Layer -->
+                <div style="display: flex; justify-content: center; gap: 16px; margin-bottom: 24px;">
+                    <div
+                        style="background: rgba(88, 166, 255, 0.1); border: 1px solid rgba(88, 166, 255, 0.3); padding: 12px 24px; border-radius: 8px;">
+                        <span style="font-size: 0.75rem; color: var(--accent-color);">LLM</span><br>
+                        <span style="font-weight: 600;">Ollama / Local</span>
+                    </div>
+                    <div
+                        style="background: rgba(88, 166, 255, 0.1); border: 1px solid rgba(88, 166, 255, 0.3); padding: 12px 24px; border-radius: 8px;">
+                        <span style="font-size: 0.75rem; color: var(--accent-color);">LLM</span><br>
+                        <span style="font-weight: 600;">Claude / GPT</span>
+                    </div>
+                </div>
+
+                <!-- Arrow -->
+                <div style="color: var(--text-secondary); margin-bottom: 16px;">↓ ↑</div>
+
+                <!-- Core Layer -->
+                <div
+                    style="background: linear-gradient(135deg, rgba(88, 166, 255, 0.2), rgba(168, 85, 247, 0.2)); border: 2px solid var(--accent-color); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
+                    <span style="font-size: 1.5rem;">⟡</span>
+                    <h3 style="margin: 8px 0; color: var(--text-primary);">Active Mirror</h3>
+                    <div style="display: flex; justify-content: center; gap: 24px; margin-top: 16px; flex-wrap: wrap;">
+                        <span style="font-size: 0.8rem; color: var(--text-secondary);">△ Governance</span>
+                        <span style="font-size: 0.8rem; color: var(--text-secondary);">◈ Identity</span>
+                        <span style="font-size: 0.8rem; color: var(--text-secondary);">⧉ Memory</span>
+                        <span style="font-size: 0.8rem; color: var(--text-secondary);">⊕ Audit</span>
+                    </div>
+                </div>
+
+                <!-- Arrow -->
+                <div style="color: var(--text-secondary); margin-bottom: 16px;">↓ ↑</div>
+
+                <!-- Data Layer -->
+                <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+                    <div
+                        style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); padding: 12px 24px; border-radius: 8px;">
+                        <span style="font-size: 0.75rem; color: #a855f7;">STORAGE</span><br>
+                        <span style="font-weight: 600;">Vault / Files</span>
+                    </div>
+                    <div
+                        style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); padding: 12px 24px; border-radius: 8px;">
+                        <span style="font-size: 0.75rem; color: #a855f7;">DATABASE</span><br>
+                        <span style="font-weight: 600;">SQLite / PG</span>
+                    </div>
+                    <div
+                        style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); padding: 12px 24px; border-radius: 8px;">
+                        <span style="font-size: 0.75rem; color: #a855f7;">VECTOR</span><br>
+                        <span style="font-weight: 600;">ChromaDB</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- External blocked -->
+            <div style="margin-top: 24px; color: var(--text-secondary);">
+                <span style="color: #ef4444;">✕</span> External API calls <span
+                    style="color: #ef4444; font-weight: 600;">blocked by design</span>
+            </div>
+        </div>
+    </section>
+
     <!-- Use Cases -->
     <section class="section">
         <div class="container">
