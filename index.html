@@ -90,18 +90,28 @@
     </nav>
 
     <!-- Hero Section -->
-    <section class="hero">
-        <div class="container">
+    <section class="hero"
+        style="background: linear-gradient(180deg, rgba(99, 102, 241, 0.08) 0%, rgba(10, 10, 15, 0) 50%), radial-gradient(ellipse at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 60%); position: relative; overflow: hidden;">
+        <!-- Subtle grid pattern -->
+        <div
+            style="position: absolute; inset: 0; background-image: linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none;">
+        </div>
+
+        <div class="container" style="position: relative; z-index: 1;">
             <img src="/assets/logo.png" alt="Active Mirror"
-                style="height: 80px; margin-bottom: 24px; filter: invert(1);">
-            <h1>Your AI. Your Hardware.<br>Your Rules.</h1>
-            <p>Active Mirror is sovereign AI infrastructure — systems that run on your machine, with your data, under
+                style="height: 80px; margin-bottom: 24px; filter: invert(1) drop-shadow(0 0 40px rgba(99, 102, 241, 0.5));">
+            <h1 style="text-shadow: 0 0 80px rgba(99, 102, 241, 0.3);">Your AI. Your Hardware.<br>Your Rules.</h1>
+            <p style="color: rgba(255,255,255,0.7);">Active Mirror is sovereign AI infrastructure — systems that run on
+                your machine, with your data, under
                 your control. No cloud dependency. No platform lock-in. No surprises.</p>
             <div class="buttons">
                 <a href="https://github.com/MirrorDNA-Reflection-Protocol/active-mirror-identity"
-                    class="btn btn-primary">Get Started →</a>
+                    class="btn btn-primary"
+                    style="background: linear-gradient(135deg, #6366f1, #a855f7); border: none; box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);">Get
+                    Started →</a>
                 <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/" class="btn btn-secondary"
-                    target="_blank">Documentation →</a>
+                    target="_blank"
+                    style="border-color: rgba(255,255,255,0.2); backdrop-filter: blur(10px);">Documentation →</a>
             </div>
         </div>
     </section>
