@@ -99,7 +99,7 @@ def generate_blog_post(category: str, topic: str) -> dict:
         raise ValueError("GEMINI_API_KEY environment variable not set")
     
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.0-flash-exp')
     
     prompt = f"""You are writing a blog post for Active Mirror (activemirror.ai), a company building sovereign AI infrastructure.
 
