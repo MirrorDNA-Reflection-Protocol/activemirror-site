@@ -663,3 +663,19 @@ footer {
     border-top: none;
     /* remove separator line if it looks weird mid-scroll, or keep it */
 }
+/* Strict 3-Column Grid Utility */
+.grid-3-cols {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+    .grid-3-cols {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (min-width: 1024px) {
+    .grid-3-cols {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
