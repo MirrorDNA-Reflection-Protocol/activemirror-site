@@ -99,7 +99,8 @@ def generate_blog_post(category: str, topic: str) -> dict:
         raise ValueError("GEMINI_API_KEY environment variable not set")
     
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-2.0-flash-exp')
+    # Use stable model available on free tier
+    model = genai.GenerativeModel('gemini-1.5-flash-latest')
     
     prompt = f"""You are writing a blog post for Active Mirror (activemirror.ai), a company building sovereign AI infrastructure.
 
@@ -128,8 +129,21 @@ CONTENT:
 [blog post content]
 """
     
-    response = model.generate_content(prompt)
-    text = response.text
+    # Retry with exponential backoff
+    import time
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = model.generate_content(prompt)
+            text = response.text
+            break
+        except Exception as e:
+            if attempt < max_retries - 1:
+                wait_time = (attempt + 1) * 15  # 15s, 30s, 45s
+                print(f"Retry {attempt + 1}/{max_retries} in {wait_time}s: {e}")
+                time.sleep(wait_time)
+            else:
+                raise
     
     # Parse response
     lines = text.strip().split('\n')
