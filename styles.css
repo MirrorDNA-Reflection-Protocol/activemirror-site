@@ -198,6 +198,13 @@ nav {
     border: 1px solid var(--border-color);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.card .btn {
+    margin-top: auto;
 }
 
 .card:hover {
@@ -558,6 +565,7 @@ button:focus-visible,
 .pulse-cta {
     animation: pulse-glow 2s ease-in-out infinite;
 }
+
 /* Modal Styles */
 .modal-overlay {
     position: fixed;
