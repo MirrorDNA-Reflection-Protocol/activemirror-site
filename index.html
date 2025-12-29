@@ -68,6 +68,26 @@
 
 <body>
 
+    <!-- Sticky Header CTA -->
+    <div id="sticky-header"
+        style="position:fixed; top:0; left:0; right:0; background:rgba(10,10,16,0.95); border-bottom:1px solid var(--border-color); padding:12px 0; z-index:1000; transform:translateY(-100%); transition:transform 0.3s ease; backdrop-filter:blur(10px);">
+        <div class="container" style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-weight:600; font-size:0.9rem;">Active Mirror</div>
+            <a href="https://id.activemirror.ai" class="btn btn-primary"
+                style="font-size:0.85rem; padding:8px 16px;">Launch Generator</a>
+        </div>
+    </div>
+    <script>
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('sticky-header');
+            if (window.scrollY > 600) { // After hero
+                header.style.transform = 'translateY(0)';
+            } else {
+                header.style.transform = 'translateY(-100%)';
+            }
+        });
+    </script>
+
     <!-- Navigation -->
     <nav>
         <div class="container nav-content">
@@ -150,6 +170,83 @@
                     you lose everything.
                 </p>
                 <p style="font-weight: 600; font-size: 1.2rem;">Active Mirror is the exit door.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Identity Generator Section -->
+    <section class="section"
+        style="background: linear-gradient(180deg, var(--bg-color) 0%, rgba(255,255,255,0.03) 100%);">
+        <div class="container">
+            <h2 class="text-center" style="margin-bottom: 16px;">Start With Your Kernel</h2>
+            <p class="text-center text-secondary" style="margin-bottom: 48px;">60 seconds to create. Works forever. 100%
+                Offline.</p>
+
+            <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px;">
+                <!-- Step 1 -->
+                <div class="card" style="border:none; background:transparent; padding:0;">
+                    <div style="font-size:3rem; color:var(--text-secondary); opacity:0.3; margin-bottom:16px;">01</div>
+                    <h3 style="margin-bottom:12px;">Configure</h3>
+                    <p style="color:var(--text-secondary); margin-bottom:24px;">Answer 5 questions about your
+                        preferences, communication style, and privacy boundaries. No sign-up required.</p>
+                    <div
+                        style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:8px; padding:16px;">
+                        <div
+                            style="height:8px; width:40%; background:var(--accent-color); border-radius:4px; margin-bottom:12px; opacity:0.5;">
+                        </div>
+                        <div
+                            style="height:8px; width:70%; background:var(--text-secondary); border-radius:4px; margin-bottom:8px; opacity:0.2;">
+                        </div>
+                        <div
+                            style="height:8px; width:50%; background:var(--text-secondary); border-radius:4px; opacity:0.2;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="card" style="border:none; background:transparent; padding:0;">
+                    <div style="font-size:3rem; color:var(--text-secondary); opacity:0.3; margin-bottom:16px;">02</div>
+                    <h3 style="margin-bottom:12px;">Download</h3>
+                    <p style="color:var(--text-secondary); margin-bottom:24px;">Get your portable identity kernel. A
+                        standard JSON file that lives on your device.</p>
+                    <div
+                        style="background:#000; border:1px solid var(--border-color); border-radius:8px; padding:16px; font-family:monospace; font-size:0.75rem; color:var(--text-secondary); position:relative; overflow:hidden;">
+                        <span style="color:var(--accent-color);">"identity"</span>: {<br>
+                        &nbsp;&nbsp;"name": "Paul",<br>
+                        &nbsp;&nbsp;"role": "Architect",<br>
+                        &nbsp;&nbsp;"style": "Direct"<br>
+                        },<br>
+                        <span style="color:var(--accent-color);">"integrity"</span>: "sha256..."
+                        <div
+                            style="position:absolute; bottom:0; left:0; right:0; height:40px; background:linear-gradient(to top, #000, transparent);">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="card" style="border:none; background:transparent; padding:0;">
+                    <div style="font-size:3rem; color:var(--text-secondary); opacity:0.3; margin-bottom:16px;">03</div>
+                    <h3 style="margin-bottom:12px;">Use Everywhere</h3>
+                    <p style="color:var(--text-secondary); margin-bottom:24px;">Load into Claude, ChatGPT, Gemini, or
+                        Ollama. Your context travels with you.</p>
+                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                        <span
+                            style="background:rgba(255,255,255,0.1); padding:6px 12px; border-radius:20px; font-size:0.8rem;">Claude</span>
+                        <span
+                            style="background:rgba(255,255,255,0.1); padding:6px 12px; border-radius:20px; font-size:0.8rem;">GPT</span>
+                        <span
+                            style="background:rgba(255,255,255,0.1); padding:6px 12px; border-radius:20px; font-size:0.8rem;">Ollama</span>
+                        <span
+                            style="background:rgba(255,255,255,0.1); padding:6px 12px; border-radius:20px; font-size:0.8rem;">Gemini</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center" style="margin-top: 48px;">
+                <a href="https://id.activemirror.ai" class="btn btn-primary"
+                    style="padding: 16px 40px; font-size: 1.1rem;">Launch Identity Generator →</a>
+                <div style="margin-top:12px; font-size:0.9rem; color:var(--text-secondary);">v1.4 · Web-based · Local
+                    Generation</div>
             </div>
         </div>
     </section>
