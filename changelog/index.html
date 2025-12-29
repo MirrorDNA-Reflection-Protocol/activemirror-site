@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changelog — Active Mirror</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="stylesheet" href="../styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="description" content="Release notes and updates for Active Mirror Identity and OS.">
+</head>
+
+<body>
+    <nav>
+        <div class="container nav-content">
+            <a href="/" class="logo"><img src="/assets/logo.png" alt=""
+                    style="height: 28px; vertical-align: middle; margin-right: 8px; filter: invert(1);">Active
+                Mirror</a>
+            <button class="mobile-menu-btn" aria-label="Menu">☰</button>
+            <div class="nav-links">
+                <a href="/product/">Product</a>
+                <a href="/solutions/">Solutions</a>
+                <a href="/company/">Company</a>
+                <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/" target="_blank">Docs</a>
+                <a href="/blog/">Blog</a>
+                <a href="/contact/">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero" style="padding: 120px 0 60px;">
+        <div class="container text-center">
+            <h1>Changelog</h1>
+            <p style="max-width: 600px; margin: 0 auto; color: var(--text-secondary);">
+                Latest updates to the core stack.
+            </p>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container" style="max-width: 800px;">
+
+            <!-- v1.4 -->
+            <div style="margin-bottom: 60px; border-bottom: 1px solid var(--border-color); padding-bottom: 40px;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px;">
+                    <h2 style="font-size: 1.5rem;">v1.4: Identity Generator</h2>
+                    <span style="color: var(--text-secondary); font-family: monospace;">Dec 2025</span>
+                </div>
+                <div
+                    style="background: rgba(168, 85, 247, 0.1); display: inline-block; padding: 4px 12px; border-radius: 4px; color: var(--accent-color); font-size: 0.8rem; font-weight: 600; margin-bottom: 16px;">
+                    MAJOR RELEASE</div>
+                <ul style="list-style: disc; padding-left: 20px; line-height: 1.8; color: var(--text-secondary);">
+                    <li><strong>Web-Based Generator:</strong> Create portable identity kernels without CLI.</li>
+                    <li><strong>Universal Schema:</strong> Optimized JSON format for Claude 3.5 Sonnet and GPT-4o system
+                        prompts.</li>
+                    <li><strong>Privacy:</strong> Generator runs entirely client-side (WASM). No data sent to server.
+                    </li>
+                </ul>
+            </div>
+
+            <!-- v1.3 -->
+            <div style="margin-bottom: 60px; border-bottom: 1px solid var(--border-color); padding-bottom: 40px;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px;">
+                    <h2 style="font-size: 1.5rem;">v1.3: 3-Layer Stack</h2>
+                    <span style="color: var(--text-secondary); font-family: monospace;">Nov 2025</span>
+                </div>
+                <ul style="list-style: disc; padding-left: 20px; line-height: 1.8; color: var(--text-secondary);">
+                    <li>Standardized architecture: Models + Runtime + Hardware.</li>
+                    <li>Added "Operational Mode" boundary definitions (Local vs Hybrid).</li>
+                    <li>Improved Vault integration for Obsidian users.</li>
+                </ul>
+            </div>
+
+            <!-- v1.2 -->
+            <div style="margin-bottom: 60px; border-bottom: 1px solid var(--border-color); padding-bottom: 40px;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px;">
+                    <h2 style="font-size: 1.5rem;">v1.2: AMGL Guard v1.1</h2>
+                    <span style="color: var(--text-secondary); font-family: monospace;">Oct 2025</span>
+                </div>
+                <ul style="list-style: disc; padding-left: 20px; line-height: 1.8; color: var(--text-secondary);">
+                    <li>New regex-based pre-inference filter.</li>
+                    <li>Blocks common "ignore previous instructions" jailbreaks.</li>
+                    <li>Added `ami_gate` MCP server for agentic workflows.</li>
+                </ul>
+            </div>
+
+            <!-- v1.0 -->
+            <div style="margin-bottom: 60px;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px;">
+                    <h2 style="font-size: 1.5rem;">v1.0: Initial Release</h2>
+                    <span style="color: var(--text-secondary); font-family: monospace;">Aug 2025</span>
+                </div>
+                <ul style="list-style: disc; padding-left: 20px; line-height: 1.8; color: var(--text-secondary);">
+                    <li>Open sourced Active Mirror Identity specification.</li>
+                    <li>Released MirrorBrain UI reference implementation.</li>
+                    <li>Published SCD Protocol whitepaper.</li>
+                </ul>
+            </div>
+
+        </div>
+    </section>
+
+    <footer style="border-top: 1px solid rgba(255,255,255,0.05); padding: 40px 0; margin-top: 40px;">
+        <div class="container text-center">
+            <p class="text-secondary">© 2025 N1 Intelligence</p>
+        </div>
+    </footer>
+
+    <script>
+        const menuBtn = document.querySelector(".mobile-menu-btn");
+        const navLinks = document.querySelector(".nav-links");
+        if (menuBtn) {
+            menuBtn.addEventListener("click", () => {
+                navLinks.classList.toggle("active");
+                menuBtn.textContent = navLinks.classList.contains("active") ? "✕" : "☰";
+            });
+        }
+    </script>
+</body>
+
+</html>
