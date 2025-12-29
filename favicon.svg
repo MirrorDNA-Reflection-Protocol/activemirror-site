@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <style>
-    text {
-      font-family: system-ui, -apple-system, sans-serif;
-      fill: #f0f0f5;
-    }
-  </style>
-  <text x="50" y="80" font-size="90" text-anchor="middle">⟡</text>
-</svg>
