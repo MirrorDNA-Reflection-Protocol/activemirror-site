@@ -129,21 +129,28 @@
         </section>
 
         <!-- Infrastructure Layer -->
+        <!-- Reference Rig -->
         <section class="section" style="border-top: 1px solid var(--border-color);">
-            <h2 style="margin-bottom: 40px;">Infrastructure Layer</h2>
-            <div class="grid features-grid" style="margin-top: 0;">
+            <h2 style="margin-bottom: 24px;">Reference Rig</h2>
+            <p class="text-secondary" style="margin-bottom: 40px;">
+                The proven hardware stack for full sovereignty. <span style="color:var(--accent-color);">Total cost <
+                        $1,000.</span>
+            </p>
+            <div class="grid features-grid grid-3-cols" style="margin-top: 0;">
                 <div class="card">
-                    <h3>Production Stack</h3>
-                    <ul style="list-style: none; margin-top: 12px; color: var(--text-secondary); font-size: 0.95rem;">
-                        <li style="margin-bottom: 8px;">• Mac Mini M4 (24GB) — daily production use</li>
-                        <li style="margin-bottom: 8px;">• Mac Mini M1 — adversarial testing</li>
-                        <li>• Pixel 9 Pro (GrapheneOS) — mobile sync</li>
-                    </ul>
+                    <h3>Compute Node</h3>
+                    <p style="font-weight:600;color:var(--text-primary);margin-bottom:8px;">Mac Mini M4 (24GB)</p>
+                    <p>Runs the Vault, local LLMs (Phi/Gemma), and Docker containers. Silent, low power.</p>
                 </div>
                 <div class="card">
-                    <h3>State Sync</h3>
-                    <p>Obsidian vault → ChromaDB → iCloud. Handoffs between sessions. LaunchAgent refresh every 30
-                        minutes.</p>
+                    <h3>Mobile Node</h3>
+                    <p style="font-weight:600;color:var(--text-primary);margin-bottom:8px;">Pixel 9 Pro</p>
+                    <p>Runs GrapheneOS. Syncs vault via Syncthing. No Google tracking.</p>
+                </div>
+                <div class="card">
+                    <h3>Storage</h3>
+                    <p style="font-weight:600;color:var(--text-primary);margin-bottom:8px;">Samsung T7 Shield</p>
+                    <p>Encrypted backups. Physical data possession. Air-gapped capable.</p>
                 </div>
             </div>
         </section>
