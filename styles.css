@@ -421,6 +421,12 @@ footer {
     .footer-brand h4 {
         justify-content: center;
     }
+
+    .footer-links {
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+    }
 }
 
 /* ============================================
