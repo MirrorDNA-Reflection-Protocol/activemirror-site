@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
 Blog Post Generator for Active Mirror
-Generates SEO-optimized weekly blog posts using Gemini API
+Generates SEO-optimized weekly blog posts using OpenAI API
 """
 
 import os
 import json
 from datetime import datetime
 from pathlib import Path
-import google.generativeai as genai
+from openai import OpenAI
 from slugify import slugify
 
 # Configuration
@@ -68,14 +68,12 @@ def get_next_topic():
     else:
         state = {"category_index": 0, "topic_index": 0, "used_topics": []}
     
-    # Find next unused topic
     cat_idx = state["category_index"]
     top_idx = state["topic_index"]
     
     category = TOPIC_CATEGORIES[cat_idx]
     topic = category["topics"][top_idx]
     
-    # Update state for next run
     top_idx += 1
     if top_idx >= len(category["topics"]):
         top_idx = 0
@@ -92,15 +90,13 @@ def get_next_topic():
 
 
 def generate_blog_post(category: str, topic: str) -> dict:
-    """Generate a blog post using Gemini API"""
+    """Generate a blog post using OpenAI API"""
     
-    api_key = os.environ.get("GEMINI_API_KEY")
+    api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        raise ValueError("GEMINI_API_KEY environment variable not set")
+        raise ValueError("OPENAI_API_KEY environment variable not set")
     
-    genai.configure(api_key=api_key)
-    # Use stable model available on free tier
-    model = genai.GenerativeModel('gemini-1.5-flash-latest')
+    client = OpenAI(api_key=api_key)
     
     prompt = f"""You are writing a blog post for Active Mirror (activemirror.ai), a company building sovereign AI infrastructure.
 
@@ -129,21 +125,14 @@ CONTENT:
 [blog post content]
 """
     
-    # Retry with exponential backoff
-    import time
-    max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            response = model.generate_content(prompt)
-            text = response.text
-            break
-        except Exception as e:
-            if attempt < max_retries - 1:
-                wait_time = (attempt + 1) * 15  # 15s, 30s, 45s
-                print(f"Retry {attempt + 1}/{max_retries} in {wait_time}s: {e}")
-                time.sleep(wait_time)
-            else:
-                raise
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=2000,
+        temperature=0.7
+    )
+    
+    text = response.choices[0].message.content
     
     # Parse response
     lines = text.strip().split('\n')
@@ -249,7 +238,6 @@ def format_content(content: str) -> str:
         p = p.strip()
         if not p:
             continue
-        # Check if it's a subheading (short line, no period at end)
         if len(p) < 60 and not p.endswith('.') and not p.endswith(':'):
             html_parts.append(f'<h2 style="color: var(--text-primary); margin: 32px 0 16px; font-size: 1.5rem;">{p}</h2>')
         else:
@@ -262,19 +250,15 @@ def main():
     BLOG_DIR.mkdir(parents=True, exist_ok=True)
     TOPICS_FILE.parent.mkdir(parents=True, exist_ok=True)
     
-    # Get topic
     category, topic = get_next_topic()
     print(f"Generating post: {category} - {topic}")
     
-    # Generate post
     post = generate_blog_post(category, topic)
     print(f"Generated: {post['title']}")
     
-    # Create HTML
     date = datetime.now()
     html, slug = create_post_html(post, date)
     
-    # Save post
     filename = f"{date.strftime('%Y-%m-%d')}-{slug}.html"
     filepath = BLOG_DIR / filename
     
@@ -283,7 +267,6 @@ def main():
     
     print(f"Saved: {filepath}")
     
-    # Save metadata for index update
     meta = {
         "filename": filename,
         "title": post["title"],

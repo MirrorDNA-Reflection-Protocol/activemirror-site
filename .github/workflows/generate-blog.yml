@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 env:
-  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
 jobs:
   generate-blog:
@@ -27,12 +27,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install google-generativeai python-slugify
+          pip install openai python-slugify
 
       - name: Generate blog post
         run: python scripts/generate_blog.py
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Update blog index
         run: python scripts/update_blog_index.py
