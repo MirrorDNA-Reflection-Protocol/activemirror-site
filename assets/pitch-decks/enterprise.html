@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Active Mirror for Enterprise GDPR — Pitch Deck</title>
+    <title>Active Mirror for Enterprise — Pitch Deck</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -30,7 +30,7 @@
         }
 
         .slide-title {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(168, 85, 247, 0.1));
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(168, 85, 247, 0.1));
         }
 
         h1 {
@@ -41,7 +41,12 @@
         h2 {
             font-size: 2rem;
             margin-bottom: 32px;
-            color: #3b82f6;
+            color: #58a6ff;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin-bottom: 16px;
         }
 
         p {
@@ -86,11 +91,22 @@
             color: #22c55e;
         }
 
+        .stat {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #58a6ff;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
         .architecture {
             max-width: 600px;
             margin: 32px auto;
             padding: 32px;
-            border: 2px dashed rgba(59, 130, 246, 0.3);
+            border: 2px dashed rgba(88, 166, 255, 0.3);
             border-radius: 16px;
             text-align: center;
         }
@@ -105,15 +121,15 @@
         }
 
         .flow-item {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
+            background: rgba(88, 166, 255, 0.1);
+            border: 1px solid rgba(88, 166, 255, 0.3);
             padding: 16px 24px;
             border-radius: 8px;
         }
 
         .flow-item.core {
-            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(59, 130, 246, 0.2));
-            border: 2px solid #3b82f6;
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(88, 166, 255, 0.2));
+            border: 2px solid #58a6ff;
         }
 
         ul {
@@ -127,13 +143,17 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
+        li:last-child {
+            border: none;
+        }
+
         .check {
             color: #22c55e;
             margin-right: 12px;
         }
 
         .cta {
-            background: linear-gradient(135deg, #3b82f6, #a855f7);
+            background: linear-gradient(135deg, #58a6ff, #a855f7);
             color: #fff;
             padding: 16px 32px;
             border-radius: 8px;
@@ -151,19 +171,25 @@
             font-size: 0.9rem;
         }
 
-        .compliance-badge {
-            display: inline-block;
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            padding: 8px 16px;
-            border-radius: 8px;
-            margin: 8px;
-            font-size: 0.9rem;
-        }
-
         @media print {
             .slide {
                 page-break-after: always;
+                min-height: auto;
+                padding: 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .slide {
+                padding: 40px 24px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
             }
         }
     </style>
@@ -171,90 +197,110 @@
 
 <body>
 
+    <!-- Slide 1: Title -->
     <div class="slide slide-title">
         <div class="logo">⟡ Active Mirror</div>
-        <h1>🇪🇺 GDPR-Compliant AI for<br>European Enterprise</h1>
-        <p class="tagline">European data stays in Europe. Full data residency control.</p>
+        <h1>Sovereign Enterprise<br>Dominance</h1>
+        <p class="tagline">Total Operational Autonomy. Zero Data Exfiltration. <br>The AI Infrastructure for the Sovereign Era.</p>
     </div>
 
+    <!-- Slide 2: The Sovereignty Crisis -->
     <div class="slide">
-        <h2>The Problem</h2>
+        <h2>The Corporate Sovereignty Crisis</h2>
         <div class="grid">
             <div class="card">
-                <h3>⚠️ Cross-Border Transfers</h3>
-                <p>Cloud AI often processes data in the US — violating GDPR data residency requirements.</p>
+                <h3>⚠️ Strategy Leakage</h3>
+                <p>Your strategic planning docs are the blueprint of your future. Don't hand them to a tech giant.</p>
             </div>
             <div class="card">
-                <h3>⚠️ Schrems II Compliance</h3>
-                <p>Post-Schrems II, EU-US data transfers require case-by-case assessment.</p>
+                <h3>⚠️ Vendor Lock-in</h3>
+                <p>Building on closed APIs means they own your intelligence. When they raise prices, you have no leverage.</p>
             </div>
             <div class="card">
-                <h3>⚠️ DPA Enforcement</h3>
-                <p>Data Protection Authorities are issuing increasing fines for AI-related violations.</p>
+                <h3>⚠️ The Black Box Problem</h3>
+                <p>Without full code and weight ownership, you are operating on rented intelligence. You cannot audit what you do not own.</p>
             </div>
         </div>
     </div>
 
+    <!-- Slide 3: The Active Mirror Doctrine -->
     <div class="slide">
-        <h2>The Active Mirror Solution</h2>
+        <h2>The Active Mirror Doctrine</h2>
         <div class="architecture">
-            <div style="font-size: 0.8rem; color: #3b82f6; margin-bottom: 16px;">🇪🇺 EU DATA RESIDENCY</div>
+            <div style="font-size: 0.8rem; color: #58a6ff; letter-spacing: 2px; margin-bottom: 16px;">TOTAL INFORMATION CONTROL</div>
             <div class="flow">
-                <div class="flow-item">🇪🇺 EU Data</div>
+                <div class="flow-item">Corporate Data</div>
                 <span>→</span>
-                <div class="flow-item core">🇪🇺 EU Server</div>
+                <div class="flow-item core">⟡ Sovereign Core</div>
                 <span>→</span>
-                <div class="flow-item">🇪🇺 EU User</div>
+                <div class="flow-item">Business Insights</div>
             </div>
-            <p style="margin-top: 16px;"><span class="check">✓</span> GDPR <span class="check">✓</span> Data residency
-                <span style="color: #ef4444;">✕</span> No transfer</p>
+            <p style="margin-top: 24px; font-size: 1.1rem; font-weight: 500;">
+                <span class="check">✓</span> Physics-gapped Security
+                <span class="check" style="margin-left: 16px;">✓</span> Uncensored Inference
+                <span class="check" style="margin-left: 16px;">✓</span> Deterministic Output
+            </p>
         </div>
     </div>
 
+    <!-- Slide 4: Strategic Capabilities -->
     <div class="slide">
-        <h2>GDPR Compliance Built-In</h2>
-        <div style="text-align: center; margin: 32px 0;">
-            <span class="compliance-badge">🇪🇺 GDPR Article 25</span>
-            <span class="compliance-badge">🇪🇺 Privacy by Design</span>
-            <span class="compliance-badge">🇪🇺 Data Residency</span>
-        </div>
+        <h2>Strategic Capabilities</h2>
         <ul>
-            <li><span class="check">✓</span> <strong>Data Localization:</strong> Deploy in any EU data center</li>
-            <li><span class="check">✓</span> <strong>Data Subject Rights:</strong> Built-in access, rectification,
-                erasure support</li>
-            <li><span class="check">✓</span> <strong>Processing Records:</strong> Automated Article 30 compliance</li>
-            <li><span class="check">✓</span> <strong>DPO Ready:</strong> Full audit capabilities for DPO oversight</li>
+            <li><span class="check">✓</span> <strong>Total Autonomy:</strong> Operate indefinitely without internet, grid, or external support.</li>
+            <li><span class="check">✓</span> <strong>Model Agnosticism:</strong> Hot-swap intelligence engines (Llama, Mistral, Command-R) as business needs evolve.</li>
+            <li><span class="check">✓</span> <strong>Hardened Memory:</strong> Persistent, vector-backed graph memory that survives reboots and personnel turnover.</li>
+            <li><span class="check">✓</span> <strong>Truth-State Enforcement:</strong> Rigorous classification of output into FACT, ESTIMATE, and UNKNOWN.</li>
         </ul>
     </div>
 
+    <!-- Slide 5: Operational Use Cases -->
     <div class="slide">
-        <h2>Use Cases</h2>
+        <h2>Operational Use Cases</h2>
         <div class="grid">
             <div class="card solution">
-                <h3>Customer Service AI</h3>
-                <p>AI assistants that never transfer EU customer data outside the EU.</p>
+                <h3>Knowledge Management</h3>
+                <p>A 'Corporate Brain' that remembers every meeting, document, and decision. Available instantly to every employee.</p>
             </div>
             <div class="card solution">
-                <h3>HR & Recruiting</h3>
-                <p>Process employee data with full GDPR compliance.</p>
+                <h3>Customer Intelligence</h3>
+                <p>Analyze customer feedback and support tickets to predict churn without sharing user data.</p>
             </div>
             <div class="card solution">
-                <h3>Business Analytics</h3>
-                <p>AI-driven insights while maintaining data sovereignty.</p>
+                <h3>Strategic Planning</h3>
+                <p>Model market scenarios using your confidential financial projections as the baseline.</p>
             </div>
         </div>
     </div>
 
+    <!-- Slide 6: The Sovereign Advantage -->
+    <div class="slide">
+        <h2>The Sovereign Advantage</h2>
+        <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div style="text-align: center;">
+                <div class="stat">0</div>
+                <div class="stat-label">Bytes Exfiltrated</div>
+            </div>
+            <div style="text-align: center;">
+                <div class="stat">∞</div>
+                <div class="stat-label">Operational Uptime</div>
+            </div>
+            <div style="text-align: center;">
+                <div class="stat">100%</div>
+                <div class="stat-label">Code Ownership</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7: CTA -->
     <div class="slide slide-title" style="text-align: center;">
-        <h2>Ready for GDPR-Compliant AI?</h2>
-        <p style="max-width: 600px; margin: 0 auto;">See how Active Mirror enables sovereign AI for European enterprise.
-        </p>
-        <a href="/contact/" class="cta">Schedule Demo →</a>
+        <h2>Command Your Intelligence.</h2>
+        <p style="max-width: 600px; margin: 0 auto; margin-bottom: 32px;">The era of rented intelligence is over. <br>Secure your sovereign infrastructure today.</p>
+        <a href="/contact/" class="cta">Initiate Deployment →</a>
     </div>
 
     <div class="footer">
-        <p>⟡ Active Mirror — N1 Intelligence Pvt Ltd</p>
-        <p>activemirror.ai</p>
+        <p>⟡ Active Mirror — Sovereign Intelligence Infrastructure</p>
     </div>
 
 </body>
