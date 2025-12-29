@@ -25,6 +25,43 @@
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
 
+    <!-- RSS Feed -->
+    <link rel="alternate" type="application/rss+xml" title="Active Mirror Blog" href="/feed.xml">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Active Mirror",
+        "alternateName": "N1 Intelligence",
+        "url": "https://activemirror.ai",
+        "logo": "https://activemirror.ai/assets/logo.png",
+        "description": "Sovereign AI infrastructure — systems that run on your machine, with your data, under your control.",
+        "foundingDate": "2024",
+        "founder": {
+            "@type": "Person",
+            "name": "Paul Desai"
+        },
+        "sameAs": [
+            "https://github.com/MirrorDNA-Reflection-Protocol"
+        ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Active Mirror",
+        "url": "https://activemirror.ai",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://activemirror.ai/blog/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+
     <!-- Analytics -->
     <!-- <script defer data-domain="activemirror.ai" src="https://plausible.io/js/script.js"></script> -->
 </head>

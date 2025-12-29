@@ -37,6 +37,9 @@ jobs:
       - name: Update blog index
         run: python scripts/update_blog_index.py
 
+      - name: Update RSS feed
+        run: python scripts/update_feed.py
+
       - name: Commit and push
         run: |
           git config --local user.email "action@github.com"
