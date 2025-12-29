@@ -20,10 +20,12 @@
                     style="height: 28px; vertical-align: middle; margin-right: 8px; filter: invert(1);">Active
                 Mirror</a>
             <button class="mobile-menu-btn" aria-label="Menu">☰</button>
-            <button class="mobile-menu-btn" aria-label="Menu">☰</button><div class="nav-links">
+            <div class="nav-links">
                 <a href="/product/">Product</a>
                 <a href="/solutions/" class="active">Solutions</a>
                 <a href="/company/">Company</a>
+                <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/" target="_blank">Docs</a>
+                <a href="/blog/">Blog</a>
                 <a href="/contact/">Contact</a>
             </div>
         </div>
@@ -62,46 +64,33 @@
         <div class="container">
             <h2 class="text-center" style="margin-bottom: 40px;">The Active Mirror Solution</h2>
 
-            <div
-                style="max-width: 700px; margin: 0 auto 48px; padding: 32px; border: 2px dashed rgba(88, 166, 255, 0.3); border-radius: 16px; position: relative;">
-                <span
-                    style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #0d0d12; padding: 0 16px; color: var(--accent-color); font-size: 0.8rem; text-transform: uppercase;">Edge
-                    Deployment</span>
-
+            <div style="max-width:600px; margin:0 auto 48px; font-family:monospace; text-align:center;">
+                <!-- Layer 1 -->
                 <div
-                    style="display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; margin-bottom: 24px;">
-                    <div
-                        style="background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.3); padding: 16px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 0.75rem; color: #eab308;">SENSOR</div>
-                        <div style="font-weight: 600;">Production Data</div>
-                    </div>
-                    <span style="font-size: 1.5rem;">→</span>
-                    <div
-                        style="background: linear-gradient(135deg, rgba(88, 166, 255, 0.2), rgba(168, 85, 247, 0.2)); border: 2px solid var(--accent-color); padding: 16px 24px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 1.25rem;">⟡</div>
-                        <div style="font-weight: 600;">Edge AI</div>
-                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Real-time</div>
-                    </div>
-                    <span style="font-size: 1.5rem;">→</span>
-                    <div
-                        style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); padding: 16px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 0.75rem; color: #22c55e;">ACTION</div>
-                        <div style="font-weight: 600;">Control Signal</div>
-                    </div>
+                    style="border:1px solid rgba(255,255,255,0.1); padding:24px; margin-bottom:16px; border-radius:12px;">
+                    <div style="font-weight:600; font-size:1.1rem; margin-bottom:8px;">EDGE MODELS</div>
+                    <div style="color:var(--text-secondary);">Vision-Small · Industrial-GPT · Sensor Fusion</div>
+                    <div style="font-size:2rem; margin-top:8px;">↓</div>
                 </div>
-
-                <div style="text-align: center; color: var(--text-secondary);">
-                    <span style="color: #22c55e;">✓</span> Offline capable &nbsp;
-                    <span style="color: #22c55e;">✓</span> Real-time &nbsp;
-                    <span style="color: #22c55e;">✓</span> IP protected
+                <!-- Layer 2 -->
+                <div
+                    style="border:1px solid var(--accent-color); background:rgba(168,85,247,0.05); padding:24px; margin-bottom:16px; border-radius:12px;">
+                    <div style="font-weight:600; font-size:1.1rem; margin-bottom:8px; color:var(--accent-color);">IP
+                        GUARDIAN</div>
+                    <div style="color:var(--text-secondary);">Trade Secret Filter · Edge Runtime · Local Logs</div>
+                    <div style="font-size:2rem; margin-top:8px; color:var(--accent-color);">↓</div>
+                </div>
+                <!-- Layer 3 -->
+                <div style="border:1px solid rgba(255,255,255,0.1); padding:24px; border-radius:12px;">
+                    <div style="font-weight:600; font-size:1.1rem; margin-bottom:8px;">FACTORY HARDWARE</div>
+                    <div style="color:var(--text-secondary);">Ruggedized Node · PLC Gateway · Air-Gapped Server</div>
                 </div>
             </div>
 
             <div class="grid features-grid">
                 <div class="card">
                     <h3>⚡ Real-Time Inference</h3>
-                    <p>Millisecond AI decisions for quality control, predictive maintenance, and process optimization.
-                    </p>
+                    <p>Millisecond AI decisions for quality control and predictive maintenance on the edge.</p>
                 </div>
                 <div class="card">
                     <h3>🔌 Offline Operation</h3>
@@ -115,6 +104,28 @@
         </div>
     </section>
 
+    <!-- Use Cases -->
+    <section class="section">
+        <div class="container">
+            <h2 class="text-center" style="margin-bottom: 40px;">Industrial Use Cases</h2>
+            <div class="grid features-grid">
+                <div class="card">
+                    <h3>Visual Quality Control</h3>
+                    <p>Detect micro-defects on assembly lines utilizing <5ms latency local vision models.</p>
+                </div>
+                <div class="card">
+                    <h3>Predictive Maintenance</h3>
+                    <p>Analyze high-frequency vibration and heat sensor logs locally to predict machine failure.</p>
+                </div>
+                <div class="card">
+                    <h3>R&D Safe-Haven</h3>
+                    <p>Query decades of technical drawings and proprietary formulas without any risk of IP exfiltration.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section class="section"
         style="background: linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(168, 85, 247, 0.1));">
         <div class="container text-center">
@@ -122,7 +133,8 @@
             <p class="text-secondary" style="margin-bottom: 32px;">See how Active Mirror can transform your
                 manufacturing AI infrastructure.</p>
             <a href="/contact/" class="btn btn-primary">Contact Us →</a>
-            <a href="/assets/pitch-decks/manufacturing.html" class="btn btn-secondary" style="margin-left: 16px;">View Strategic Brief</a>
+            <a href="/assets/pitch-decks/manufacturing.html" class="btn btn-secondary" style="margin-left: 16px;">View
+                Strategic Brief</a>
         </div>
     </section>
 
@@ -130,9 +142,10 @@
         <div class="container text-center">
             <p style="margin-bottom: 16px;"><span class="brand-glyph">⟡</span> Active Mirror</p>
             <p class="text-secondary" style="font-size: 0.85rem;">MIT License · Built in Goa, India</p>
+            <p class="text-secondary" style="font-size: 0.75rem; margin-top: 8px;">© 2025 N1 Intelligence Pvt Ltd</p>
         </div>
     </footer>
-<script>
+    <script>
         const menuBtn = document.querySelector(".mobile-menu-btn");
         const navLinks = document.querySelector(".nav-links");
         if (menuBtn) {
