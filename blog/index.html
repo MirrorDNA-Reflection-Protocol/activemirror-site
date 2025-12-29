@@ -8,6 +8,89 @@
     <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="stylesheet" href="../styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+        }
+
+        .blog-card {
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            color: inherit;
+            padding: 32px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            transition: all 0.2s ease;
+            height: 100%;
+        }
+
+        .blog-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .blog-meta {
+            color: var(--accent-color);
+            font-family: monospace;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .blog-title {
+            margin-bottom: 12px;
+            font-size: 1.4rem;
+            line-height: 1.3;
+        }
+
+        .blog-excerpt {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 0;
+            flex-grow: 1;
+        }
+
+        /* Featured Post Styling */
+        .blog-card.featured {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.05), rgba(168, 85, 247, 0.05));
+            border-color: rgba(168, 85, 247, 0.3);
+            flex-direction: row;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .blog-card.featured .content-wrapper {
+            flex: 1;
+        }
+
+        .blog-card.featured .blog-title {
+            font-size: 2rem;
+            margin-bottom: 16px;
+        }
+
+        .blog-card.featured .blog-excerpt {
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .blog-card.featured {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .blog-title {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -28,7 +111,7 @@
         </div>
     </nav>
 
-    <section class="hero" style="padding: 120px 0 60px;">
+    <section class="hero" style="padding: 100px 0 60px;">
         <div class="container text-center">
             <h1>Insights</h1>
             <p style="max-width: 600px; margin: 0 auto; color: var(--text-secondary);">
@@ -38,60 +121,86 @@
     </section>
 
     <section class="section">
-        <div class="container" style="max-width: 800px;">
+        <div class="container blog-grid">
 
-            <!-- Post 1 -->
-            <a href="/blog/posts/orchestrator-model.html" class="blog-card"
-                style="display: block; text-decoration: none; color: inherit; padding: 32px; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 24px; transition: transform 0.2s; background: rgba(255,255,255,0.02);">
-                <div style="color: var(--accent-color); font-family: monospace; font-size: 0.9rem; margin-bottom: 8px;">
-                    Dec 30 · Philosophy</div>
-                <h2 style="margin-bottom: 12px; font-size: 1.5rem;">The Orchestrator Model: One Human, Unlimited AI
-                    Leverage</h2>
-                <p class="text-secondary" style="margin-bottom: 0;">The future of work isn't humans vs. AI. It's humans
-                    directing AI swarms. Why the "Individual Contributor" is dead.</p>
+            <!-- Featured Post -->
+            <a href="/blog/posts/why-local-llms-future-enterprise.html" class="blog-card featured">
+                <div class="content-wrapper">
+                    <div class="blog-meta">
+                        <span>Strategy</span>
+                        <span>Dec 28 · 5 min read</span>
+                    </div>
+                    <h2 class="blog-title">Why Local LLMs Are the Future of Enterprise AI</h2>
+                    <p class="blog-excerpt">The cloud era of AI is a temporary anomaly. Physics, economics, and
+                        regulation are driving intelligence to the edge. Why bringing compute to data wins every time.
+                    </p>
+                </div>
             </a>
 
-            <!-- Post 2 -->
-            <a href="/blog/posts/adhd-and-ai.html" class="blog-card"
-                style="display: block; text-decoration: none; color: inherit; padding: 32px; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 24px; transition: transform 0.2s; background: rgba(255,255,255,0.02);">
-                <div style="color: var(--accent-color); font-family: monospace; font-size: 0.9rem; margin-bottom: 8px;">
-                    Dec 30 · Neurodivergence</div>
-                <h2 style="margin-bottom: 12px; font-size: 1.5rem;">ADHD and AI: Why Neurodivergent Minds May Have an
-                    Edge</h2>
-                <p class="text-secondary" style="margin-bottom: 0;">AI handles the linear execution. The ADHD mind
-                    handles the lateral connection. An executive function exoskeleton.</p>
+            <!-- Post: SaaS Trap -->
+            <a href="/blog/posts/saas-trap.html" class="blog-card">
+                <div class="blog-meta">
+                    <span>Business</span>
+                    <span>Dec 31 · 4 min read</span>
+                </div>
+                <h2 class="blog-title">The SaaS Trap: Why Renting Intelligence is a Dead End</h2>
+                <p class="blog-excerpt">Paying monthly for an API that learns from your prompts is double taxation. Stop
+                    training your competitors.</p>
             </a>
 
-            <!-- Post 3 -->
-            <a href="/blog/posts/building-red-team-node.html" class="blog-card"
-                style="display: block; text-decoration: none; color: inherit; padding: 32px; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 24px; transition: transform 0.2s; background: rgba(255,255,255,0.02);">
-                <div style="color: var(--accent-color); font-family: monospace; font-size: 0.9rem; margin-bottom: 8px;">
-                    Dec 29 · Security</div>
-                <h2 style="margin-bottom: 12px; font-size: 1.5rem;">Building a Red-Team Node: How We Test Our Own
-                    Security</h2>
-                <p class="text-secondary" style="margin-bottom: 0;">We built a specialized AI whose only job is to
-                    attack our code. Inside the "Adversarial Twin" architecture.</p>
+            <!-- Post: Beyond RAG -->
+            <a href="/blog/posts/beyond-rag.html" class="blog-card">
+                <div class="blog-meta">
+                    <span>Engineering</span>
+                    <span>Dec 31 · 6 min read</span>
+                </div>
+                <h2 class="blog-title">Beyond RAG: Why You Need a Vault, Not Just a Vector DB</h2>
+                <p class="blog-excerpt">Vector similarity is fuzzy. Truth is precise. Why we combine vector search with
+                    graph-based lineage.</p>
             </a>
 
-            <!-- Post 4 -->
-            <a href="/blog/posts/truth-state-enforcement.html" class="blog-card"
-                style="display: block; text-decoration: none; color: inherit; padding: 32px; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 24px; transition: transform 0.2s; background: rgba(255,255,255,0.02);">
-                <div style="color: var(--accent-color); font-family: monospace; font-size: 0.9rem; margin-bottom: 8px;">
-                    Dec 29 · Engineering</div>
-                <h2 style="margin-bottom: 12px; font-size: 1.5rem;">Truth-State Enforcement: How We Solved Hallucination
-                </h2>
-                <p class="text-secondary" style="margin-bottom: 0;">Business needs deterministic answers. How we
-                    classify AI output as FACT, ESTIMATE, or UNKNOWN.</p>
+            <!-- Post: Orchestrator -->
+            <a href="/blog/posts/orchestrator-model.html" class="blog-card">
+                <div class="blog-meta">
+                    <span>Philosophy</span>
+                    <span>Dec 30 · 5 min read</span>
+                </div>
+                <h2 class="blog-title">The Orchestrator Model: One Human, Unlimited Leverage</h2>
+                <p class="blog-excerpt">The "Individual Contributor" is dead. Long live the Orchestrator. Directing AI
+                    swarms for 100x output.</p>
             </a>
 
-            <!-- Post 5 -->
-            <a href="/blog/posts/why-local-llms-future-enterprise.html" class="blog-card"
-                style="display: block; text-decoration: none; color: inherit; padding: 32px; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 24px; transition: transform 0.2s; background: rgba(255,255,255,0.02);">
-                <div style="color: var(--accent-color); font-family: monospace; font-size: 0.9rem; margin-bottom: 8px;">
-                    Dec 28 · Strategy</div>
-                <h2 style="margin-bottom: 12px; font-size: 1.5rem;">Why Local LLMs Are the Future of Enterprise AI</h2>
-                <p class="text-secondary" style="margin-bottom: 0;">The cloud era is an anomaly. Physics, economics, and
-                    privacy are driving intelligence to the edge.</p>
+            <!-- Post: ADHD -->
+            <a href="/blog/posts/adhd-and-ai.html" class="blog-card">
+                <div class="blog-meta">
+                    <span>Neurodivergence</span>
+                    <span>Dec 30 · 4 min read</span>
+                </div>
+                <h2 class="blog-title">ADHD and AI: The Executive Function Exoskeleton</h2>
+                <p class="blog-excerpt">AI handles linear execution. The ADHD mind handles lateral connection. Why
+                    neurodivergence is an edge.</p>
+            </a>
+
+            <!-- Post: Red Team -->
+            <a href="/blog/posts/building-red-team-node.html" class="blog-card">
+                <div class="blog-meta">
+                    <span>Security</span>
+                    <span>Dec 29 · 3 min read</span>
+                </div>
+                <h2 class="blog-title">Building a Red-Team Node: The Adversarial Twin</h2>
+                <p class="blog-excerpt">We built a specialized AI whose only job is to attack our code. Simulating
+                    millions of localized attacks.</p>
+            </a>
+
+            <!-- Post: Truth State -->
+            <a href="/blog/posts/truth-state-enforcement.html" class="blog-card">
+                <div class="blog-meta">
+                    <span>Engineering</span>
+                    <span>Dec 29 · 5 min read</span>
+                </div>
+                <h2 class="blog-title">Truth-State Enforcement: Solving Hallucinations</h2>
+                <p class="blog-excerpt">Business needs deterministic answers. How we classify AI output as FACT,
+                    ESTIMATE, or UNKNOWN.</p>
             </a>
 
         </div>
@@ -104,6 +213,7 @@
     </footer>
 
     <script>
+        // Mobile Menu
         const menuBtn = document.querySelector(".mobile-menu-btn");
         const navLinks = document.querySelector(".nav-links");
         if (menuBtn) {
@@ -112,18 +222,6 @@
                 menuBtn.textContent = navLinks.classList.contains("active") ? "✕" : "☰";
             });
         }
-
-        // Add hover effect via JS/CSS class injection if needed, or rely on inline CSS transition
-        document.querySelectorAll('.blog-card').forEach(card => {
-            card.addEventListener('mouseenter', () => {
-                card.style.transform = 'translateY(-4px)';
-                card.style.borderColor = 'var(--accent-color)';
-            });
-            card.addEventListener('mouseleave', () => {
-                card.style.transform = 'translateY(0)';
-                card.style.borderColor = 'var(--border-color)';
-            });
-        });
     </script>
 </body>
 
