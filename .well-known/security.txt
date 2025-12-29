@@ -1,0 +1,5 @@
+Contact: mailto:paul@activemirror.ai
+Preferred-Languages: en
+Canonical: https://activemirror.ai/.well-known/security.txt
+Policy: https://activemirror.ai/privacy/
+Expires: 2026-12-31T23:59:00.000Z
