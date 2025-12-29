@@ -20,10 +20,13 @@
             <a href="/" class="logo"><img src="/assets/logo.png" alt="Active Mirror"
                     style="height: 28px; vertical-align: middle; margin-right: 8px; filter: invert(1);">Active
                 Mirror</a>
+            <button class="mobile-menu-btn" aria-label="Menu">☰</button>
             <div class="nav-links">
                 <a href="/product/">Product</a>
-                <a href="/solutions/government/" class="active">Solutions</a>
+                <a href="/solutions/" class="active">Solutions</a>
                 <a href="/company/">Company</a>
+                <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/" target="_blank">Docs</a>
+                <a href="/blog/">Blog</a>
                 <a href="/contact/">Contact</a>
             </div>
         </div>
@@ -191,6 +194,16 @@
             <p class="text-secondary" style="font-size: 0.75rem; margin-top: 8px;">© 2025 N1 Intelligence Pvt Ltd</p>
         </div>
     </footer>
+    <script>
+        const menuBtn = document.querySelector(".mobile-menu-btn");
+        const navLinks = document.querySelector(".nav-links");
+        if (menuBtn) {
+            menuBtn.addEventListener("click", () => {
+                navLinks.classList.toggle("active");
+                menuBtn.textContent = navLinks.classList.contains("active") ? "✕" : "☰";
+            });
+        }
+    </script>
 </body>
 
 </html>
