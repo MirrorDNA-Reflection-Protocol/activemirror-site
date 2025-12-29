@@ -203,6 +203,55 @@
             });
         }
     </script>
+
+    <!-- Strategic Brief Modal -->
+    <div class="modal-overlay" id="briefModal">
+        <div class="modal-container">
+            <div class="modal-close" onclick="closeModal()">×</div>
+            <iframe class="modal-iframe" id="briefFrame" src=""></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Modal Logic
+        const modal = document.getElementById('briefModal');
+        const frame = document.getElementById('briefFrame');
+        const briefBtns = document.querySelectorAll('a[href*="pitch-decks"]');
+
+        if (briefBtns) {
+            briefBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    frame.src = btn.href;
+                    modal.classList.add('active');
+                    document.body.style.overflow = 'hidden'; // Prevent scrolling
+                });
+            });
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+            setTimeout(() => {
+                frame.src = '';
+            }, 300);
+        }
+
+        // Close on outside click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('active')) {
+                closeModal();
+            }
+        });
+    </script>
+
 </body>
 
 </html>
