@@ -636,13 +636,18 @@ button:focus-visible,
     border: none;
     background: #0a0a10;
 }
+
 /* Page-to-Page Scroll Snap */
 html {
-    scroll-snap-type: y mandatory;
+    scroll-snap-type: y proximity;
     scroll-behavior: smooth;
+    scroll-padding-top: 80px;
+    /* Account for sticky nav */
 }
 
-.hero, .section, footer {
+.hero,
+.section,
+footer {
     scroll-snap-align: start;
     min-height: 100vh;
     display: flex;
@@ -653,6 +658,8 @@ html {
 /* Ensure footer content is centered but respects padding if needed */
 footer {
     justify-content: center;
-    margin-top: 0; /* Override existing margin */
-    border-top: none; /* remove separator line if it looks weird mid-scroll, or keep it */
+    margin-top: 0;
+    /* Override existing margin */
+    border-top: none;
+    /* remove separator line if it looks weird mid-scroll, or keep it */
 }
