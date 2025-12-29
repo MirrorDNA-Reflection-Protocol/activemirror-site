@@ -20,10 +20,12 @@
                     style="height: 28px; vertical-align: middle; margin-right: 8px; filter: invert(1);">Active
                 Mirror</a>
             <button class="mobile-menu-btn" aria-label="Menu">☰</button>
-            <button class="mobile-menu-btn" aria-label="Menu">☰</button><div class="nav-links">
+            <div class="nav-links">
                 <a href="/product/">Product</a>
                 <a href="/solutions/" class="active">Solutions</a>
                 <a href="/company/">Company</a>
+                <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/" target="_blank">Docs</a>
+                <a href="/blog/">Blog</a>
                 <a href="/contact/">Contact</a>
             </div>
         </div>
@@ -63,53 +65,64 @@
         <div class="container">
             <h2 class="text-center" style="margin-bottom: 40px;">The Active Mirror Solution</h2>
 
-            <div
-                style="max-width: 700px; margin: 0 auto 48px; padding: 32px; border: 2px dashed rgba(88, 166, 255, 0.3); border-radius: 16px; position: relative;">
-                <span
-                    style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #0d0d12; padding: 0 16px; color: var(--accent-color); font-size: 0.8rem; text-transform: uppercase;">Privilege-Preserving
-                    Architecture</span>
-
+            <div style="max-width:600px; margin:0 auto 48px; font-family:monospace; text-align:center;">
+                <!-- Layer 1 -->
                 <div
-                    style="display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; margin-bottom: 24px;">
-                    <div
-                        style="background: rgba(88,166,255,0.1); border: 1px solid rgba(88,166,255,0.3); padding: 16px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 0.75rem; color: var(--accent-color);">PRIVILEGED</div>
-                        <div style="font-weight: 600;">Case Files</div>
-                    </div>
-                    <span style="font-size: 1.5rem;">→</span>
-                    <div
-                        style="background: linear-gradient(135deg, rgba(88, 166, 255, 0.2), rgba(168, 85, 247, 0.2)); border: 2px solid var(--accent-color); padding: 16px 24px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 1.25rem;">⟡</div>
-                        <div style="font-weight: 600;">Active Mirror</div>
-                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Local Only</div>
-                    </div>
-                    <span style="font-size: 1.5rem;">→</span>
-                    <div
-                        style="background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.3); padding: 16px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 0.75rem; color: #a855f7;">OUTPUT</div>
-                        <div style="font-weight: 600;">Analysis</div>
-                    </div>
+                    style="border:1px solid rgba(255,255,255,0.1); padding:24px; margin-bottom:16px; border-radius:12px;">
+                    <div style="font-weight:600; font-size:1.1rem; margin-bottom:8px;">LEGAL MODELS</div>
+                    <div style="color:var(--text-secondary);">LawBERT · LegalGPT · Case Law Fine-Tunes</div>
+                    <div style="font-size:2rem; margin-top:8px;">↓</div>
                 </div>
-
-                <div style="text-align: center; color: var(--text-secondary);">
-                    <span style="color: #22c55e;">✓</span> Privilege preserved &nbsp;
-                    <span style="color: #22c55e;">✓</span> Local only &nbsp;
-                    <span style="color: #ef4444;">✕</span> No cloud exposure
+                <!-- Layer 2 -->
+                <div
+                    style="border:1px solid var(--accent-color); background:rgba(168,85,247,0.05); padding:24px; margin-bottom:16px; border-radius:12px;">
+                    <div style="font-weight:600; font-size:1.1rem; margin-bottom:8px; color:var(--accent-color);">
+                        PRIVILEGE GUARD</div>
+                    <div style="color:var(--text-secondary);">Privilege Logs · Matter Isolation · Audit Trail</div>
+                    <div style="font-size:2rem; margin-top:8px; color:var(--accent-color);">↓</div>
+                </div>
+                <!-- Layer 3 -->
+                <div style="border:1px solid rgba(255,255,255,0.1); padding:24px; border-radius:12px;">
+                    <div style="font-weight:600; font-size:1.1rem; margin-bottom:8px;">SECURE INFRASTRUCTURE</div>
+                    <div style="color:var(--text-secondary);">Firm Server · Encrypted Laptop · On-Prem</div>
                 </div>
             </div>
 
             <div class="grid features-grid">
                 <div class="card">
-                    <h3>📄 Document Review</h3>
-                    <p>AI-powered document analysis without exposing confidential client data.</p>
+                    <h3>🔐 Privilege by Design</h3>
+                    <p>Data never leaves your firm's encrypted perimeter. Privilege is preserved technically and
+                        legally.</p>
                 </div>
                 <div class="card">
-                    <h3>📝 Contract Analysis</h3>
-                    <p>Extract key terms and risks from contracts while preserving confidentiality.</p>
+                    <h3>📂 Matter Isolation</h3>
+                    <p>Ensure strict walls between client matters. RAG indices are siloed per case.</p>
                 </div>
                 <div class="card">
-                    <h3>🔍 Legal Research</h3>
-                    <p>AI-assisted research with persistent memory of your firm's knowledge base.</p>
+                    <h3>📋 Ethics Logs</h3>
+                    <p>Full audit trail of AI usage for compliance with professional responsibility rules.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases -->
+    <section class="section">
+        <div class="container">
+            <h2 class="text-center" style="margin-bottom: 40px;">Legal Use Cases</h2>
+            <div class="grid features-grid">
+                <div class="card">
+                    <h3>Automated Discovery</h3>
+                    <p>Rapidly review millions of documents for relevance and privilege locally. No per-page cloud
+                        costs.</p>
+                </div>
+                <div class="card">
+                    <h3>Contract Analysis</h3>
+                    <p>Compare counterparty drafts against firm playbooks. Identify risky clauses instantly.</p>
+                </div>
+                <div class="card">
+                    <h3>Drafting Assistant</h3>
+                    <p>Generate motions and briefs based on your firm's specific precedents and writing style.</p>
                 </div>
             </div>
         </div>
@@ -122,7 +135,8 @@
             <p class="text-secondary" style="margin-bottom: 32px;">See how Active Mirror preserves attorney-client
                 privilege while enabling AI productivity.</p>
             <a href="/contact/" class="btn btn-primary">Contact Us →</a>
-            <a href="/assets/pitch-decks/legal.html" class="btn btn-secondary" style="margin-left: 16px;">View Strategic Brief</a>
+            <a href="/assets/pitch-decks/legal.html" class="btn btn-secondary" style="margin-left: 16px;">View Strategic
+                Brief</a>
         </div>
     </section>
 
@@ -130,9 +144,10 @@
         <div class="container text-center">
             <p style="margin-bottom: 16px;"><span class="brand-glyph">⟡</span> Active Mirror</p>
             <p class="text-secondary" style="font-size: 0.85rem;">MIT License · Built in Goa, India</p>
+            <p class="text-secondary" style="font-size: 0.75rem; margin-top: 8px;">© 2025 N1 Intelligence Pvt Ltd</p>
         </div>
     </footer>
-<script>
+    <script>
         const menuBtn = document.querySelector(".mobile-menu-btn");
         const navLinks = document.querySelector(".nav-links");
         if (menuBtn) {
