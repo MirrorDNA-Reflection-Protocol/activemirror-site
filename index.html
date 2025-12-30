@@ -148,24 +148,31 @@
         <!-- 1. Hero Section -->
         <section class="hero">
             <div class="container">
+                <!-- Trust Badge -->
+                <div
+                    style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 24px;">
+                    <span style="color: var(--accent-color);">⟡</span>
+                    Open source · MIT Licensed · No tracking · No cloud dependency
+                </div>
                 <img src="/assets/logo.png" alt="" style="height: 80px; margin-bottom: 24px; filter: invert(1);">
                 <h1>Your AI. Your Hardware.<br>Your Rules.</h1>
                 <p>Sovereign AI infrastructure for builders who want control. Start with your identity kernel — runs on
                     your hardware, works with major models.</p>
 
-                <!-- Primary Actions -->
-                <div style="display: flex; gap: 16px; justify-content: center; margin-top: 32px; flex-wrap: wrap;">
+                <!-- Primary CTA -->
+                <div
+                    style="display: flex; gap: 16px; justify-content: center; margin-top: 32px; flex-wrap: wrap; align-items: center;">
                     <a href="https://id.activemirror.ai" class="btn btn-primary" aria-label="Launch Identity Generator"
                         style="font-size: 1.1rem; padding: 14px 32px; background:var(--accent-color); color:black; font-weight:600;">Start
                         Free →</a>
                 </div>
-                <div style="margin-top: 16px; font-size: 0.85rem; color: var(--text-secondary);">
-                    Verify: <a href="#proof"
-                        style="color:var(--text-secondary); text-decoration:underline;">Enforcement</a> · <a
-                        href="https://github.com/MirrorDNA-Reflection-Protocol"
-                        style="color:var(--text-secondary); text-decoration:underline;">GitHub</a> · <a
-                        href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/"
-                        style="color:var(--text-secondary); text-decoration:underline;">Protocol</a>
+                <!-- Secondary Link -->
+                <div style="margin-top: 16px; font-size: 0.9rem;">
+                    <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/"
+                        style="color: var(--text-secondary); text-decoration: underline;">Read the Docs</a>
+                    <span style="color: var(--text-secondary); margin: 0 8px;">·</span>
+                    <a href="https://github.com/MirrorDNA-Reflection-Protocol"
+                        style="color: var(--text-secondary); text-decoration: underline;">View on GitHub</a>
                 </div>
                 <p style="margin-top: 12px; font-size: 0.8rem; color: var(--text-secondary); opacity: 0.8;">
                     Builder-first today. Non-technical users can still try it safely.</p>
@@ -407,10 +414,10 @@
             </div>
         </section>
 
-        <!-- 7. This Is Real (Metrics) -->
+        <!-- 7. The Stack (Metrics) -->
         <section class="section" style="border-bottom: 1px solid var(--border-color);">
             <div class="container">
-                <h2 class="text-center" style="margin-bottom: 32px; font-size:1.5rem;">This Is Real</h2>
+                <h2 class="text-center" style="margin-bottom: 32px; font-size:1.5rem;">The Stack</h2>
                 <div class="grid stats-grid"
                     style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:24px;">
                     <div class="stat-item">
