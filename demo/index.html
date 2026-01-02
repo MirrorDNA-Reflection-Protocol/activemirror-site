@@ -20,7 +20,7 @@
 
 <body>
 
-    <!-- Navigation (Will be updated by script, but barebones for now) -->
+    <!-- Navigation -->
     <nav>
         <div class="container nav-content">
             <a href="/" class="logo" aria-label="Active Mirror Home"><img src="/assets/logo.png" alt=""
@@ -40,119 +40,95 @@
 
     <main class="demo-layout">
 
-        <!-- Left: Chat Interface -->
         <section class="chat-section">
 
-            <!-- System Status Bar -->
-            <div class="system-status-bar">
-                <div class="status-item"><span class="indicator online"></span> M4 Hub</div>
-                <div class="status-item"><span class="indicator online"></span> M1 Adversary</div>
-                <div class="status-item"><span class="indicator online blink"></span> Browser Kernel</div>
-            </div>
+            <!-- PRE-LOAD HERO STATE -->
+            <div id="pre-load" class="pre-load">
+                <div class="hero-content">
+                    <div class="hero-glyph">⟡</div>
+                    <h1>Experience Sovereign AI</h1>
+                    <p class="hero-subtitle">This model runs entirely in your browser.<br>Your data never leaves your
+                        device.</p>
 
-            <!-- Pre-load Hero (Unmissable) -->
-            <div id="pre-load-hero" class="pre-load-hero">
-                <div class="hero-glyph">⟡</div>
-                <h2>Experience Sovereign AI</h2>
-                <p>This model runs entirely in your browser.<br>Your data never leaves your device.</p>
-                <div id="progress-bar-container" style="display:none; width: 300px; margin: 20px auto;">
-                    <div id="progress-bar"
-                        style="width:0%; height:4px; background:var(--accent-color); transition:width 0.2s;"></div>
-                    <div id="progress-text" style="font-size:0.8rem; margin-top:4px; opacity:0.7;">0%</div>
-                </div>
-                <button id="init-btn" class="btn-hero pulse">
-                    Load Model
-                </button>
-                <span id="download-status" class="model-info">~700MB · ~60 seconds · WebGPU required</span>
-            </div>
+                    <button id="init-btn" class="btn-hero">
+                        <span class="btn-text">Begin Session</span>
+                        <span class="btn-subtext">~700MB · ~60 seconds</span>
+                    </button>
 
-            <!-- Chat History (Hidden initially) -->
-            <div id="chat-history" class="chat-history" style="display: none;">
-                <div class="message system">
-                    <div class="message-content">
-                        <strong>⟡ System Initialized</strong><br>
-                        Model: <span class="mono">Llama-3.2-1B-Instruct-q4f16_1-MLC</span><br>
-                        Status: <span style="color:#10b981">Ready.</span>
+                    <div class="requirements">
+                        <span class="req-item" id="webgpu-status">Checking WebGPU...</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Input Area -->
-            <div class="chat-input-area">
-                <div class="toolbar">
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="red-team-toggle">
-                        <span class="slider"></span>
-                        <span class="label-text">Red Team Critique</span>
-                    </label>
-                    <div class="stats">
-                        <span id="latency-stat" class="stat">⚡ 0ms</span>
-                        <span id="carbon-stat" class="stat">🌱 0g CO2</span>
+            <!-- LOADING STATE -->
+            <div id="loading-state" class="loading-state hidden">
+                <div class="loading-content">
+                    <div class="hero-glyph pulse">⟡</div>
+                    <h2>Downloading to Your Browser</h2>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progress-bar"></div>
+                    </div>
+                    <div class="progress-info">
+                        <span id="progress-percent">0%</span>
+                        <span id="progress-detail">Initializing...</span>
                     </div>
                 </div>
-                <div class="input-group">
-                    <textarea id="user-input" placeholder="Type a message..." rows="1" disabled></textarea>
-                    <button id="send-btn" disabled aria-label="Send">↑</button>
+            </div>
+
+            <!-- CHAT STATE (hidden until model loads) -->
+            <div id="chat-state" class="chat-state hidden">
+
+                <!-- Header Bar -->
+                <div class="chat-header">
+                    <div class="chat-title">
+                        <span class="glyph">⟡</span> MirrorMesh
+                        <span class="status-dot online"></span>
+                    </div>
+                    <div class="chat-stats">
+                        <span id="latency-stat" class="stat">⚡ --</span>
+                        <span id="carbon-stat" class="stat">🌱 0.00g</span>
+                        <span class="stat local-badge">🔒 Local</span>
+                    </div>
                 </div>
-                <div class="disclaimer">Running LOCALLY in your browser. Data never leaves this device.</div>
+
+                <!-- Messages Area -->
+                <div id="chat-history" class="chat-history">
+                    <!-- Welcome message injected by JS -->
+                </div>
+
+                <!-- Input Area (sticky bottom) -->
+                <div class="chat-input-wrapper">
+                    <div class="suggested-prompts-inline" id="suggestions">
+                        <button class="suggestion" data-prompt="Should I raise VC funding?">VC funding?</button>
+                        <button class="suggestion" data-prompt="Help me think through a career change">Career
+                            change</button>
+                        <button class="suggestion" data-prompt="What makes Active Mirror different?">Why Active
+                            Mirror?</button>
+                        <button class="suggestion" data-prompt="I have an idea but I'm not sure if it's good">Validate
+                            idea</button>
+                    </div>
+                    <div class="input-row">
+                        <textarea id="user-input" placeholder="What's on your mind?" rows="1"></textarea>
+                        <button id="send-btn" disabled>↑</button>
+                    </div>
+                    <div class="input-footer">
+                        <label class="toggle">
+                            <input type="checkbox" id="red-team-toggle">
+                            <span class="toggle-slider"></span>
+                            Red Team
+                        </label>
+                        <div class="action-btns">
+                            <button id="export-btn" class="btn-small">Save Mirror</button>
+                            <a href="https://id.activemirror.ai" target="_blank" class="btn-small primary">Create
+                                Identity →</a>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
         </section>
-
-        <!-- Right: Controls & Context -->
-        <aside class="controls-section">
-            <div class="panel">
-                <h3>MirrorMesh Demo</h3>
-                <p class="desc">Experience sovereign AI. Efficient, local, and reflective.</p>
-
-                <h4>Suggested Prompts</h4>
-                <div class="suggested-prompts">
-                    <button class="prompt-btn" data-prompt="Should I raise VC funding?">Should I raise VC
-                        funding?</button>
-                    <button class="prompt-btn" data-prompt="Help me think through a career change">Career
-                        Change</button>
-                    <button class="prompt-btn" data-prompt="What makes Active Mirror different?">Why Active
-                        Mirror?</button>
-                    <button class="prompt-btn" data-prompt="Validate my idea">Validate Idea</button>
-                </div>
-
-                <div class="divider"></div>
-
-                <h4>What's Different?</h4>
-                <div class="difference-list">
-                    <div class="diff-item">
-                        <span class="diff-icon">△</span>
-                        <span>Asks before advising</span>
-                    </div>
-                    <div class="diff-item">
-                        <span class="diff-icon">◈</span>
-                        <span>Tags confidence: FACT / ESTIMATE</span>
-                    </div>
-                    <div class="diff-item">
-                        <span class="diff-icon">⧉</span>
-                        <span>Frameworks over opinions</span>
-                    </div>
-                    <div class="diff-item">
-                        <span class="diff-icon">⟡</span>
-                        <span>Runs locally — data stays yours</span>
-                    </div>
-                </div>
-
-                <div class="divider"></div>
-
-                <div class="action-buttons">
-                    <button id="export-btn" class="btn btn-secondary full-width">
-                        <span class="icon">⧉</span> Save Your Mirror
-                    </button>
-                    <a href="https://id.activemirror.ai" target="_blank" class="btn btn-primary full-width">
-                        <span class="icon">⟡</span> Create Full Identity →
-                    </a>
-                    <a href="/install.sh" target="_blank" class="btn btn-primary full-width">
-                        <span class="icon">⚡</span> Fork Stack (install.sh)
-                    </a>
-                </div>
-            </div>
-        </aside>
 
     </main>
 
