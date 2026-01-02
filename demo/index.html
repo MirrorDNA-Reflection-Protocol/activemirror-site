@@ -70,25 +70,11 @@
                     </div>
                 </div>
 
-                <!-- Recommendation Banner -->
-                <div class="recommendation-banner glass-panel" id="recommendation">
-                    <div class="rec-icon">⟡</div>
-                    <div class="rec-text">
-                        <span class="rec-title" data-i18n="recommendedFor">Recommended for you</span>
-                        <span class="rec-model" id="rec-model-name">Analyzing device...</span>
-                    </div>
-                    <button class="btn-primary" id="btn-use-recommended" data-i18n="useThis">Use This</button>
-                </div>
-
-                <!-- Model Grid -->
+                <!-- Model Grid - Click to Start -->
+                <p class="model-hint" data-i18n="clickToStart">Click a model to begin</p>
                 <div class="model-grid" id="model-grid">
                     <!-- Populated by JS -->
                 </div>
-
-                <!-- Show More -->
-                <button class="text-btn" id="btn-show-all-models" style="margin-top: 16px;">
-                    <span data-i18n="showAllModels">Show all models</span> ↓
-                </button>
 
                 <!-- Device Status -->
                 <div class="device-status" id="device-status">
@@ -419,9 +405,11 @@
                             <span id="total-sessions">--</span>
                         </div>
                         <div class="setting-row" style="flex-direction: column; gap: 8px;">
-                            <button class="btn-secondary" id="btn-export-data" style="width: 100%;" data-i18n="exportData">Export All
+                            <button class="btn-secondary" id="btn-export-data" style="width: 100%;"
+                                data-i18n="exportData">Export All
                                 Data</button>
-                            <button class="btn-danger" id="btn-clear-data" style="width: 100%;" data-i18n="clearData">Clear All Data</button>
+                            <button class="btn-danger" id="btn-clear-data" style="width: 100%;"
+                                data-i18n="clearData">Clear All Data</button>
                         </div>
                     </div>
 

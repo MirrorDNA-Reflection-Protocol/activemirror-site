@@ -8,6 +8,18 @@ import { i18n, SUPPORTED_LANGUAGES } from "./i18n.js";
 
 const MODEL_CATALOG = [
     {
+        id: 'smollm-135m',
+        name: 'SmolLM 135M',
+        displayName: 'Nano',
+        icon: '⚡',
+        size: '100MB',
+        sizeBytes: 100000000,
+        minMemory: 2,
+        minCores: 2,
+        description: 'Ultra-fast, basic tasks',
+        webllmId: 'SmolLM2-135M-Instruct-q0f16-MLC'
+    },
+    {
         id: 'smollm-360m',
         name: 'SmolLM 360M',
         displayName: 'Quick',
@@ -18,6 +30,18 @@ const MODEL_CATALOG = [
         minCores: 4,
         description: 'Fast answers, simple tasks',
         webllmId: 'SmolLM2-360M-Instruct-q0f16-MLC'
+    },
+    {
+        id: 'llama-1b',
+        name: 'Llama 3.2 1B',
+        displayName: 'Light',
+        icon: '△',
+        size: '700MB',
+        sizeBytes: 700000000,
+        minMemory: 4,
+        minCores: 4,
+        description: 'Good balance of speed and quality',
+        webllmId: 'Llama-3.2-1B-Instruct-q4f16_1-MLC'
     },
     {
         id: 'llama-3b',
@@ -31,6 +55,18 @@ const MODEL_CATALOG = [
         description: 'Deep reflection, structured thinking',
         webllmId: 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
         recommended: true
+    },
+    {
+        id: 'qwen-1.5b',
+        name: 'Qwen 2.5 1.5B',
+        displayName: 'Global',
+        icon: '🌐',
+        size: '1GB',
+        sizeBytes: 1000000000,
+        minMemory: 4,
+        minCores: 4,
+        description: 'Great multilingual support',
+        webllmId: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC'
     },
     {
         id: 'phi-3-mini',
@@ -184,14 +220,6 @@ class App {
 
     bindEvents() {
         var self = this;
-
-        // Use recommended button
-        var btnUse = document.getElementById('btn-use-recommended');
-        if (btnUse) {
-            btnUse.addEventListener('click', function () {
-                self.startLoading();
-            });
-        }
 
         // Chat input
         var input = document.getElementById('user-input');
@@ -540,39 +568,39 @@ class App {
     renderLanguageSelector(container) {
         var self = this;
         container.innerHTML = '';
-        
+
         var grid = document.createElement('div');
         grid.className = 'language-selector';
-        
-        SUPPORTED_LANGUAGES.forEach(function(lang) {
+
+        SUPPORTED_LANGUAGES.forEach(function (lang) {
             var btn = document.createElement('button');
             btn.className = 'language-option' + (lang.code === i18n.currentLang ? ' active' : '');
             btn.innerHTML = '<span class="native">' + lang.native + '</span><span class="name">' + lang.name + '</span>';
-            btn.onclick = function() {
+            btn.onclick = function () {
                 i18n.setLanguage(lang.code);
                 self.renderLanguageSelector(container);
             };
             grid.appendChild(btn);
         });
-        
+
         container.appendChild(grid);
     }
 
     onLanguageChange() {
         // Re-render UI elements when language changes
         console.log('[MirrorOS] Language changed to:', i18n.currentLang);
-        
+
         // Update all data-i18n elements
-        document.querySelectorAll('[data-i18n]').forEach(function(el) {
+        document.querySelectorAll('[data-i18n]').forEach(function (el) {
             var key = el.getAttribute('data-i18n');
             el.textContent = i18n.t(key);
         });
-        
-        document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
             var key = el.getAttribute('data-i18n-placeholder');
             el.placeholder = i18n.t(key);
         });
-        
+
         // Re-render model grid
         this.renderModelGrid();
     }
