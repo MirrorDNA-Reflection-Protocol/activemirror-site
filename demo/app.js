@@ -12,6 +12,25 @@ import {
 // ACTIVE MIRROROS — Simplified Working Version
 // ================================================================
 
+// Debug display (temporary)
+function showDebug(msg) {
+    var el = document.getElementById('debug-display');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'debug-display';
+        el.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#111;color:#0f0;font-family:monospace;font-size:12px;padding:8px;max-height:150px;overflow:auto;z-index:9999;';
+        document.body.appendChild(el);
+    }
+    var time = new Date().toLocaleTimeString();
+    el.innerHTML += time + ': ' + msg + '<br>';
+    el.scrollTop = el.scrollHeight;
+}
+
+window.onerror = function(msg, url, line) {
+    showDebug('ERROR: ' + msg + ' (line ' + line + ')');
+    return false;
+};
+
 const MODEL_CATALOG = [
     {
         id: 'qwen-3b',
@@ -109,7 +128,7 @@ class App {
             saveProfile(this.profile);
             applyTheme(this.profile.preferences.theme, this.profile.preferences.accentColor);
         } catch (e) {
-            console.error('[MirrorOS] Profile load failed:', e);
+            showDebug('Profile load failed: ' + e.message); console.error('[MirrorOS] Profile load failed:', e);
             this.profile = { name: '', customInstructions: '', preferences: { responseLength: 'medium', theme: 'dark', accentColor: '#00d4ff' }, stats: {}, quickActions: [], starredSessions: [] };
         }
     }
@@ -326,21 +345,22 @@ class App {
                     statusEl.textContent = report.text;
                     var offset = circumference - (pct / 100) * circumference;
                     ringEl.style.strokeDashoffset = offset;
+                    if (pct === 100) showDebug('Loading: 100% complete');
                 }
             });
 
-            console.log('[MirrorOS] Engine created successfully, starting session');
+            showDebug('Engine created OK'); console.log('[MirrorOS] Engine created successfully, starting session');
             self.startSession();
 
         } catch (err) {
-            console.error('[MirrorOS] Engine creation failed:', err);
+            showDebug('Engine FAILED: ' + err.message); console.error('[MirrorOS] Engine creation failed:', err);
             statusEl.textContent = 'Error: ' + err.message;
             statusEl.style.color = 'var(--danger)';
         }
     }
 
     startSession() {
-        console.log('[MirrorOS] startSession called, showing chat view');
+        showDebug('startSession called'); console.log('[MirrorOS] startSession called, showing chat view');
         this.showView('view-chat');
 
         var input = document.getElementById('user-input');
