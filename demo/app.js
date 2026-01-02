@@ -1,82 +1,109 @@
 import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 import { MirrorOS } from "./mirror-os.js";
-import { VoiceService } from "./voice.js";
 
-// Models map
+// ================================================================
+// ACTIVE MIRROROS — Main Application
+// ================================================================
+
 const MODELS = {
     'smollm': 'SmolLM2-360M-Instruct-q0f16-MLC',
     'llama3': 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
     'phi3': 'Phi-3-mini-4k-instruct-q4f16_1-MLC'
 };
 
-// System Prompt
-const SYSTEM_PROMPT = `You are MirrorMesh, a sovereign AI reflection partner.
+const SYSTEM_PROMPT = `You are MirrorMesh, a sovereign AI reflection partner running in Active MirrorOS.
 
 CORE IDENTITY:
-- You run locally in the user's browser
-- You have persistent memory across sessions
+- You run locally in the user's browser — their data never leaves their device
 - You help users THINK, not think FOR them
+- You remember context within this session
 
 STRICT BEHAVIORS:
 1. NEVER give direct advice without asking at least 1 clarifying question first
 2. ALWAYS tag confidence on factual claims:
    - [FACT] = Verifiable, you're certain
-   - [ESTIMATE] = Reasoned inference
-   - [UNKNOWN] = Insufficient data
-3. When asked "should I X?", respond with a FRAMEWORK, not an answer
+   - [ESTIMATE] = Reasoned inference, could be wrong
+   - [UNKNOWN] = Insufficient data to answer
+3. When asked "should I X?", respond with a FRAMEWORK for thinking, not an answer
 4. Keep responses concise: 2-4 paragraphs max
+5. End complex topics with a focusing question
 
 You are demonstrating what GOVERNED, REFLECTIVE AI feels like.`;
 
 class App {
     constructor() {
         this.os = new MirrorOS();
-        this.voice = new VoiceService();
         this.engine = null;
+        this.modelId = MODELS['llama3'];
         this.currentSession = null;
-        this.modelId = MODELS['llama3']; // Default
         this.redTeamEnabled = false;
+        this.voice = null;
         this.firstMessage = true;
     }
 
     async init() {
-        try {
-            const identity = await this.os.init();
+        // Initialize OS
+        await this.os.init();
 
-            if (identity) {
-                this.showView('view-hero');
-                document.querySelector('#view-hero h1').innerText = "Welcome Back";
-                document.querySelector('#view-hero > p').innerHTML = "Ready to resume reflection?<br>Select a model to continue.";
-            } else {
-                this.showView('view-hero');
-            }
+        // Check device
+        this.checkDevice();
 
-            this.checkWebGPU();
-        } catch (err) {
-            console.error("OS Init Failed:", err);
-            document.querySelector('#view-hero > p').innerText = "Error initializing. Please disable Private Mode.";
-            document.querySelector('#view-hero > p').style.color = "#ef4444";
-        }
-
+        // Bind all events
         this.bindEvents();
+
+        // Load vault data
+        this.loadVault();
     }
 
+    // ===== DEVICE CHECK =====
+    async checkDevice() {
+        const status = document.getElementById('device-status');
+        const statusText = status.querySelector('.status-text');
+
+        if (!navigator.gpu) {
+            status.classList.add('error');
+            statusText.textContent = '⚠ WebGPU not supported — try Chrome or Edge';
+            return;
+        }
+
+        try {
+            const adapter = await navigator.gpu.requestAdapter();
+            if (adapter) {
+                status.classList.add('ready');
+                statusText.textContent = '✓ WebGPU ready — click a model to begin';
+            } else {
+                status.classList.add('error');
+                statusText.textContent = '⚠ WebGPU adapter not available';
+            }
+        } catch (e) {
+            status.classList.add('error');
+            statusText.textContent = '⚠ Error checking WebGPU';
+        }
+    }
+
+    // ===== EVENT BINDING =====
     bindEvents() {
-        // Model Cards
+        // Model selection
         document.querySelectorAll('.model-card').forEach(card => {
             card.addEventListener('click', () => {
-                document.querySelectorAll('.model-card').forEach(c => c.classList.remove('recommended'));
-                card.classList.add('recommended');
-                const key = card.dataset.model;
-                this.modelId = MODELS[key] || MODELS['llama3'];
+                document.querySelectorAll('.model-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                this.modelId = MODELS[card.dataset.model] || MODELS['llama3'];
                 this.startLoading();
             });
         });
 
-        // Chat
-        document.getElementById('send-btn').addEventListener('click', () => this.handleSend());
-
+        // Chat input
         const input = document.getElementById('user-input');
+        const sendBtn = document.getElementById('btn-send');
+
+        input.addEventListener('input', () => {
+            sendBtn.disabled = input.value.trim() === '';
+            // Auto-resize
+            input.style.height = 'auto';
+            input.style.height = Math.min(input.scrollHeight, 150) + 'px';
+        });
+
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -84,126 +111,100 @@ class App {
             }
         });
 
-        input.addEventListener('input', () => {
-            document.getElementById('send-btn').disabled = input.value.trim() === '';
-            // Auto-resize
-            input.style.height = 'auto';
-            input.style.height = Math.min(input.scrollHeight, 120) + 'px';
-        });
+        sendBtn.addEventListener('click', () => this.handleSend());
 
         // Suggestions
-        document.querySelectorAll('.suggestion').forEach(btn => {
-            btn.addEventListener('click', () => {
-                input.value = btn.dataset.prompt;
+        document.querySelectorAll('.suggestion-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                input.value = chip.dataset.prompt;
                 input.focus();
-                document.getElementById('send-btn').disabled = false;
+                sendBtn.disabled = false;
             });
         });
 
         // Red Team toggle
-        document.getElementById('red-team-toggle').addEventListener('change', (e) => {
+        document.getElementById('checkbox-redteam').addEventListener('change', (e) => {
             this.redTeamEnabled = e.target.checked;
         });
 
-        // Export
-        document.getElementById('export-btn').addEventListener('click', () => this.exportMirror());
+        // Sidebar
+        document.getElementById('btn-menu').addEventListener('click', () => this.openSidebar());
+        document.getElementById('btn-close-sidebar').addEventListener('click', () => this.closeSidebar());
+        document.getElementById('sidebar-overlay').addEventListener('click', () => this.closeSidebar());
 
-        // Sidebar toggle
-        document.getElementById('toggle-sidebar').addEventListener('click', () => {
-            document.getElementById('sidebar').classList.toggle('open');
-        });
+        // Sidebar actions
+        document.getElementById('btn-save').addEventListener('click', () => this.saveMirror());
+        document.getElementById('btn-export').addEventListener('click', () => this.exportAll());
+        document.getElementById('btn-capture').addEventListener('click', () => this.quickCapture());
+        document.getElementById('btn-settings').addEventListener('click', () => this.openSettings());
 
         // Voice
-        this.setupVoice();
+        this.initVoice();
+        document.getElementById('btn-voice').addEventListener('click', () => this.toggleVoice());
     }
 
-    setupVoice() {
-        const voiceBtn = document.getElementById('voice-btn');
-
-        if (!this.voice.isSupported()) {
-            voiceBtn.disabled = true;
-            voiceBtn.title = 'Voice not supported in this browser';
-            return;
-        }
-
-        this.voice.onResult = (transcript) => {
-            document.getElementById('user-input').value = transcript;
-            document.getElementById('send-btn').disabled = false;
-            voiceBtn.classList.remove('recording');
-        };
-
-        this.voice.onError = () => {
-            voiceBtn.classList.remove('recording');
-        };
-
-        voiceBtn.addEventListener('click', () => {
-            const isRecording = this.voice.toggle();
-            voiceBtn.classList.toggle('recording', isRecording);
-        });
+    // ===== VIEWS =====
+    showView(viewId) {
+        document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+        document.getElementById(viewId).classList.remove('hidden');
     }
 
-    async checkWebGPU() {
-        const el = document.getElementById('webgpu-check');
-        if (navigator.gpu) {
-            el.innerText = "✓ WebGPU Ready";
-            el.style.color = "#10b981";
-        } else {
-            el.innerText = "⚠ WebGPU not detected. Performance may be limited.";
-            el.style.color = "#fbbf24";
-        }
-    }
-
+    // ===== LOADING =====
     async startLoading() {
         this.showView('view-loading');
 
-        if (!this.os.identity) {
-            await this.os.createIdentity({ model: this.modelId });
-        }
+        const percentEl = document.getElementById('loading-percent');
+        const statusEl = document.getElementById('loading-status');
+        const ringEl = document.getElementById('progress-ring');
+        const circumference = 2 * Math.PI * 45; // r=45
 
         try {
             this.engine = await CreateMLCEngine(this.modelId, {
                 initProgressCallback: (report) => {
                     const pct = Math.round(report.progress * 100);
-                    document.getElementById('dl-progress').style.width = pct + "%";
-                    document.getElementById('dl-status').innerText = report.text;
+                    percentEl.textContent = pct + '%';
+                    statusEl.textContent = report.text;
+                    // Update ring
+                    const offset = circumference - (pct / 100) * circumference;
+                    ringEl.style.strokeDashoffset = offset;
                 }
             });
 
+            // Success — start session
             this.startSession();
 
         } catch (err) {
-            document.getElementById('dl-status').innerText = "Error: " + err.message;
-            document.getElementById('dl-status').style.color = "#ef4444";
+            statusEl.textContent = 'Error: ' + err.message;
+            statusEl.style.color = 'var(--danger)';
         }
     }
 
+    // ===== SESSION =====
     startSession() {
         this.showView('view-chat');
 
         // Enable input
-        document.getElementById('user-input').disabled = false;
-        document.getElementById('user-input').focus();
+        const input = document.getElementById('user-input');
+        input.disabled = false;
+        input.focus();
 
-        // New Session
+        // Create session
         this.currentSession = {
             id: crypto.randomUUID(),
             started: new Date().toISOString(),
+            title: 'New Session',
             messages: []
         };
 
-        // Welcome
-        this.appendMessage('ai', `Welcome. I'm MirrorMesh — a reflection partner, not an answer machine.
+        // Welcome message
+        this.appendMessage('ai', `Welcome to Active MirrorOS. I'm your reflection partner — I'll help you think, not think for you.
 
-I'll ask before I advise. I'll tag what I know: [FACT], [ESTIMATE], [UNKNOWN].
+I'll ask before I advise, and I'll tag what I know: [FACT], [ESTIMATE], or [UNKNOWN].
 
 What's on your mind?`);
     }
 
-    showView(id) {
-        document.querySelectorAll('.state-view').forEach(el => el.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
-    }
-
+    // ===== MESSAGING =====
     async handleSend() {
         const input = document.getElementById('user-input');
         const text = input.value.trim();
@@ -215,84 +216,218 @@ What's on your mind?`);
             this.firstMessage = false;
         }
 
-        // UI
+        // Add user message
         this.appendMessage('user', text);
         input.value = '';
         input.style.height = 'auto';
-        document.getElementById('send-btn').disabled = true;
+        document.getElementById('btn-send').disabled = true;
 
+        // Store message
         this.currentSession.messages.push({ role: 'user', content: text });
 
+        // Generate response
         const requestMessages = [
-            { role: "system", content: SYSTEM_PROMPT },
+            { role: 'system', content: SYSTEM_PROMPT },
             ...this.currentSession.messages
         ];
 
-        const aiMsgDiv = this.appendMessage('ai', '...');
+        const aiMsgEl = this.appendMessage('ai', '');
+        const contentEl = aiMsgEl.querySelector('.message-text');
+        let fullResponse = '';
         const startTime = performance.now();
-        let firstToken = true;
 
         try {
-            const chunks = await this.engine.chat.completions.create({
+            const stream = await this.engine.chat.completions.create({
                 messages: requestMessages,
-                stream: true
+                stream: true,
+                max_tokens: 800
             });
 
-            let full = "";
-            for await (const chunk of chunks) {
-                const content = chunk.choices[0]?.delta?.content || "";
+            let firstToken = true;
+
+            for await (const chunk of stream) {
+                const content = chunk.choices[0]?.delta?.content || '';
                 if (content) {
                     if (firstToken) {
-                        document.getElementById('stat-latency').textContent = `⚡ ${Math.round(performance.now() - startTime)}ms`;
+                        const latency = Math.round(performance.now() - startTime);
+                        document.querySelector('#stat-latency span').textContent = latency + 'ms';
                         firstToken = false;
                     }
-                    full += content;
-                    aiMsgDiv.innerHTML = `<div class="sender">⟡ MirrorMesh</div>${this.formatThinking(full)}`;
+                    fullResponse += content;
+                    contentEl.innerHTML = this.formatText(fullResponse);
                     this.scrollToBottom();
                 }
             }
 
-            this.currentSession.messages.push({ role: 'assistant', content: full });
-            this.os.saveSession(this.currentSession);
+            // Store response
+            this.currentSession.messages.push({ role: 'assistant', content: fullResponse });
 
-            // Update carbon
-            const carbonEl = document.getElementById('stat-carbon');
-            const currentCarbon = parseFloat(carbonEl.textContent.match(/[\d.]+/)?.[0] || 0);
-            carbonEl.textContent = `🌱 ${(currentCarbon + 0.04).toFixed(2)}g`;
+            // Auto-title based on first exchange
+            if (this.currentSession.messages.length === 2) {
+                this.currentSession.title = text.substring(0, 50) + (text.length > 50 ? '...' : '');
+            }
+
+            // Save session
+            await this.os.saveSession(this.currentSession);
+            this.loadVault();
 
             // Red Team
             if (this.redTeamEnabled) {
-                await this.runRedTeam(full);
+                await this.runRedTeam(fullResponse);
             }
 
         } catch (err) {
-            aiMsgDiv.innerHTML = `<div class="sender">⟡ MirrorMesh</div>Error: ${err.message}`;
+            contentEl.textContent = 'Error: ' + err.message;
         }
-
-        document.getElementById('send-btn').disabled = input.value.trim() === '';
     }
 
     async runRedTeam(advice) {
-        const prompt = `You are a Red Team auditor. In 2-3 sentences, critique this for unstated assumptions, missing risks, or logical gaps. Start with "⚠️":
+        const prompt = `You are a ruthless Red Team auditor. In 2-3 sentences, critique this for:
+- Unstated assumptions
+- Missing risks or edge cases
+- Logical gaps
 
+Start with "⚠️ Devil's Advocate:"
+
+ADVICE TO CRITIQUE:
 ${advice}`;
 
-        const redDiv = this.appendMessage('red-team', '<em>Analyzing...</em>');
+        const redMsgEl = this.appendMessage('red-team', 'Analyzing...');
+        const contentEl = redMsgEl.querySelector('.message-text');
 
         try {
             const response = await this.engine.chat.completions.create({
-                messages: [{ role: "user", content: prompt }],
-                max_tokens: 150,
+                messages: [{ role: 'user', content: prompt }],
+                max_tokens: 200
             });
-            redDiv.innerHTML = response.choices[0].message.content;
+            contentEl.innerHTML = this.formatText(response.choices[0].message.content);
             this.scrollToBottom();
         } catch (err) {
-            redDiv.innerHTML = "⚠️ Red Team analysis failed.";
+            contentEl.textContent = '⚠️ Red Team analysis failed.';
         }
     }
 
-    async exportMirror() {
-        const data = await this.os.exportAll();
+    appendMessage(role, content) {
+        const container = document.getElementById('chat-messages');
+        const div = document.createElement('div');
+        div.className = `message ${role}`;
+
+        if (role === 'ai') {
+            div.innerHTML = `
+        <div class="message-content">
+          <div class="message-sender"><span class="glyph">⟡</span> MirrorMesh</div>
+          <div class="message-text">${this.formatText(content)}</div>
+        </div>
+      `;
+        } else if (role === 'red-team') {
+            div.innerHTML = `
+        <div class="message-content">
+          <div class="message-text">${content}</div>
+        </div>
+      `;
+        } else {
+            div.innerHTML = `<div class="message-content">${content}</div>`;
+        }
+
+        container.appendChild(div);
+        this.scrollToBottom();
+        return div;
+    }
+
+    formatText(text) {
+        return text
+            .replace(/\[FACT\]/g, '<span class="tag tag-fact">FACT</span>')
+            .replace(/\[ESTIMATE\]/g, '<span class="tag tag-estimate">ESTIMATE</span>')
+            .replace(/\[UNKNOWN\]/g, '<span class="tag tag-unknown">UNKNOWN</span>');
+    }
+
+    scrollToBottom() {
+        const container = document.getElementById('chat-messages');
+        requestAnimationFrame(() => {
+            container.scrollTop = container.scrollHeight;
+        });
+    }
+
+    // ===== SIDEBAR =====
+    openSidebar() {
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('sidebar-overlay').classList.add('active');
+    }
+
+    closeSidebar() {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebar-overlay').classList.remove('active');
+    }
+
+    async loadVault() {
+        const sessions = await this.os.getRecentSessions();
+        const sessionList = document.getElementById('vault-sessions');
+        const sessionCount = document.getElementById('session-count');
+
+        sessionCount.textContent = sessions.length;
+
+        if (sessions.length === 0) {
+            sessionList.innerHTML = '<div class="vault-empty">No sessions yet</div>';
+            return;
+        }
+
+        sessionList.innerHTML = sessions.map(s => `
+      <div class="vault-item" data-id="${s.id}">
+        ${s.title || 'Untitled Session'}
+      </div>
+    `).join('');
+    }
+
+    // ===== VOICE =====
+    initVoice() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            document.getElementById('btn-voice').style.display = 'none';
+            return;
+        }
+
+        this.voice = new SpeechRecognition();
+        this.voice.continuous = false;
+        this.voice.interimResults = false;
+        this.voice.lang = 'en-US';
+
+        this.voice.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('user-input').value = transcript;
+            document.getElementById('btn-send').disabled = false;
+            document.getElementById('btn-voice').classList.remove('recording');
+        };
+
+        this.voice.onerror = () => {
+            document.getElementById('btn-voice').classList.remove('recording');
+        };
+
+        this.voice.onend = () => {
+            document.getElementById('btn-voice').classList.remove('recording');
+        };
+    }
+
+    toggleVoice() {
+        if (!this.voice) return;
+        const btn = document.getElementById('btn-voice');
+
+        if (btn.classList.contains('recording')) {
+            this.voice.stop();
+            btn.classList.remove('recording');
+        } else {
+            this.voice.start();
+            btn.classList.add('recording');
+        }
+    }
+
+    // ===== ACTIONS =====
+    async saveMirror() {
+        const data = {
+            exported: new Date().toISOString(),
+            type: 'mirror-seed',
+            session: this.currentSession
+        };
+
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -302,36 +437,29 @@ ${advice}`;
         URL.revokeObjectURL(url);
     }
 
-    appendMessage(role, content) {
-        const div = document.createElement('div');
-        div.className = `message ${role}`;
+    async exportAll() {
+        const data = await this.os.exportAll();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `active-mirroros-export-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
 
-        if (role === 'ai') {
-            div.innerHTML = `<div class="sender">⟡ MirrorMesh</div>${this.formatThinking(content)}`;
-        } else if (role === 'red-team') {
-            div.innerHTML = content;
-        } else {
-            div.textContent = content;
+    quickCapture() {
+        const text = prompt('Quick capture — what\'s on your mind?');
+        if (text) {
+            alert('Captured! (Full vault storage coming soon)');
         }
-
-        document.getElementById('chat-history').appendChild(div);
-        this.scrollToBottom();
-        return div;
     }
 
-    formatThinking(text) {
-        return text
-            .replace(/\[FACT\]/g, '<span class="tag tag-fact">FACT</span>')
-            .replace(/\[ESTIMATE\]/g, '<span class="tag tag-estimate">ESTIMATE</span>')
-            .replace(/\[UNKNOWN\]/g, '<span class="tag tag-unknown">UNKNOWN</span>');
-    }
-
-    scrollToBottom() {
-        const el = document.getElementById('chat-history');
-        el.scrollTop = el.scrollHeight;
+    openSettings() {
+        alert('Settings panel coming soon!');
     }
 }
 
-// Start
+// ===== INIT =====
 const app = new App();
 app.init();
