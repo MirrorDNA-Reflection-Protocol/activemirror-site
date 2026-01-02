@@ -26,8 +26,9 @@
 </head>
 
 <body>
+    <a href="#main" class="skip-link" data-i18n="skipToMain">Skip to main content</a>
 
-    <div id="app">
+    <div id="app" role="main" id="main">
 
         <!-- ========== AMBIENT BACKGROUND ========== -->
         <div class="ambient-bg">
@@ -38,7 +39,7 @@
 
         <!-- ========== OFFLINE INDICATOR ========== -->
         <div class="offline-indicator" id="offline-indicator">
-            <span>📴 Offline — Model cached, still working</span>
+            <span>📴 <span data-i18n="offline">Offline — Model cached, still working</span></span>
         </div>
 
         <!-- ========== VIEW: WELCOME / MODEL SELECT ========== -->
@@ -51,7 +52,7 @@
                     <div class="logo-ring"></div>
                 </div>
 
-                <h1 class="welcome-title">Active MirrorOS</h1>
+                <h1 class="welcome-title" data-i18n="appTitle">Active MirrorOS</h1>
                 <p class="welcome-subtitle">Sovereign AI that runs in your browser.<br>No cloud. No tracking. Yours
                     forever.</p>
 
@@ -64,7 +65,7 @@
                         <span id="spec-gpu">Checking GPU...</span>
                     </div>
                     <div class="device-score">
-                        <span class="score-label">Device Score</span>
+                        <span class="score-label" data-i18n="deviceScore">Device Score</span>
                         <span class="score-value" id="device-score">--</span>
                     </div>
                 </div>
@@ -73,10 +74,10 @@
                 <div class="recommendation-banner glass-panel" id="recommendation">
                     <div class="rec-icon">⟡</div>
                     <div class="rec-text">
-                        <span class="rec-title">Recommended for you</span>
+                        <span class="rec-title" data-i18n="recommendedFor">Recommended for you</span>
                         <span class="rec-model" id="rec-model-name">Analyzing device...</span>
                     </div>
-                    <button class="btn-primary" id="btn-use-recommended">Use This</button>
+                    <button class="btn-primary" id="btn-use-recommended" data-i18n="useThis">Use This</button>
                 </div>
 
                 <!-- Model Grid -->
@@ -86,7 +87,7 @@
 
                 <!-- Show More -->
                 <button class="text-btn" id="btn-show-all-models" style="margin-top: 16px;">
-                    Show all models ↓
+                    <span data-i18n="showAllModels">Show all models</span> ↓
                 </button>
 
                 <!-- Device Status -->
@@ -116,7 +117,7 @@
                     <p class="session-preview" id="return-session-preview">...</p>
                     <div class="session-actions">
                         <button class="btn-primary" id="btn-continue-session">Continue →</button>
-                        <button class="btn-secondary" id="btn-new-session">New Session</button>
+                        <button class="btn-secondary" id="btn-new-session" data-i18n="newSession">New Session</button>
                     </div>
                 </div>
 
@@ -282,7 +283,7 @@
         <aside class="sidebar glass-panel" id="sidebar">
             <div class="sidebar-header">
                 <span class="glyph">⧉</span>
-                <span>Vault</span>
+                <span data-i18n="vault">Vault</span>
                 <button class="icon-btn" id="btn-close-sidebar" aria-label="Close sidebar">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -395,32 +396,32 @@
                             <input type="checkbox" id="setting-redteam-default">
                         </div>
                         <div class="setting-row">
-                            <label>Show suggested prompts</label>
+                            <label data-i18n="showSuggestions">Show Suggestions</label>
                             <input type="checkbox" id="setting-suggestions" checked>
                         </div>
                     </div>
 
                     <!-- Data Section -->
                     <div class="settings-section">
-                        <h4>Data</h4>
+                        <h4 data-i18n="data">Data</h4>
                         <div class="setting-row">
-                            <label>Local Storage Used</label>
+                            <label data-i18n="storageUsed">Storage Used</label>
                             <span id="storage-used">Calculating...</span>
                         </div>
                         <div class="setting-row">
-                            <label>Total Sessions</label>
+                            <label data-i18n="totalSessions">Total Sessions</label>
                             <span id="total-sessions">--</span>
                         </div>
                         <div class="setting-row" style="flex-direction: column; gap: 8px;">
-                            <button class="btn-secondary" id="btn-export-data" style="width: 100%;">Export All
+                            <button class="btn-secondary" id="btn-export-data" style="width: 100%;" data-i18n="exportData">Export All
                                 Data</button>
-                            <button class="btn-danger" id="btn-clear-data" style="width: 100%;">Clear All Data</button>
+                            <button class="btn-danger" id="btn-clear-data" style="width: 100%;" data-i18n="clearData">Clear All Data</button>
                         </div>
                     </div>
 
                     <!-- About Section -->
                     <div class="settings-section">
-                        <h4>About</h4>
+                        <h4 data-i18n="about">About</h4>
                         <p class="settings-about">
                             <strong>Active MirrorOS</strong> v1.0<br>
                             Built by N1 Intelligence<br>

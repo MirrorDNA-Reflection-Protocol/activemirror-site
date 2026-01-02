@@ -1,5 +1,6 @@
 import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 import { MirrorOS } from "./mirror-os.js";
+import { i18n, SUPPORTED_LANGUAGES } from "./i18n.js";
 
 // ================================================================
 // ACTIVE MIRROROS — Simplified Working Version
@@ -79,6 +80,10 @@ class App {
 
         try {
             await this.os.init();
+        
+        // Initialize i18n
+        i18n.init();
+        i18n.onChange(() => this.onLanguageChange());
             console.log('[MirrorOS] OS initialized');
         } catch (e) {
             console.error('[MirrorOS] OS init failed:', e);
@@ -472,7 +477,56 @@ class App {
     }
 
     openSettings() {
-        alert('Settings: Feature coming soon!');
+        this.showView('view-settings');
+        
+        // Render language selector
+        const langContainer = document.getElementById('language-selector');
+        if (langContainer) {
+            this.renderLanguageSelector(langContainer);
+        }
+        
+        // Update storage info
+        this.updateStorageInfo();
+        
+        // Bind settings events
+        const btnClose = document.getElementById('btn-close-settings');
+        const btnExportData = document.getElementById('btn-export-data');
+        const btnClearData = document.getElementById('btn-clear-data');
+        
+        const self = this;
+        
+        if (btnClose) {
+            btnClose.onclick = () => this.showView('view-chat');
+        }
+        
+        if (btnExportData) {
+            btnExportData.onclick = () => this.exportAll();
+        }
+        
+        if (btnClearData) {
+            btnClearData.onclick = async () => {
+                if (confirm(i18n.t('clearConfirm'))) {
+                    await this.os.clearAll();
+                    location.reload();
+                }
+            };
+        }
+    }
+    
+    async updateStorageInfo() {
+        const storageEl = document.getElementById('storage-used');
+        const sessionsEl = document.getElementById('total-sessions');
+        
+        if (storageEl && navigator.storage && navigator.storage.estimate) {
+            const estimate = await navigator.storage.estimate();
+            const used = (estimate.usage / 1024 / 1024).toFixed(1);
+            storageEl.textContent = used + ' MB';
+        }
+        
+        if (sessionsEl) {
+            const sessions = await this.os.getRecentSessions();
+            sessionsEl.textContent = sessions.length;
+        }
     }
 }
 
