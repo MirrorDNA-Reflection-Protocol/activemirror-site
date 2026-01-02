@@ -103,12 +103,15 @@ class App {
         this.firstMessage = true;
         
         // Load user profile
-        this.profile = loadProfile();
-        this.profile = updateStreak(this.profile);
-        saveProfile(this.profile);
-        
-        // Apply theme
-        applyTheme(this.profile.preferences.theme, this.profile.preferences.accentColor);
+        try {
+            this.profile = loadProfile();
+            this.profile = updateStreak(this.profile);
+            saveProfile(this.profile);
+            applyTheme(this.profile.preferences.theme, this.profile.preferences.accentColor);
+        } catch (e) {
+            console.error('[MirrorOS] Profile load failed:', e);
+            this.profile = { name: '', customInstructions: '', preferences: { responseLength: 'medium', theme: 'dark', accentColor: '#00d4ff' }, stats: {}, quickActions: [], starredSessions: [] };
+        }
     }
 
     async init() {
@@ -326,15 +329,18 @@ class App {
                 }
             });
 
+            console.log('[MirrorOS] Engine created successfully, starting session');
             self.startSession();
 
         } catch (err) {
+            console.error('[MirrorOS] Engine creation failed:', err);
             statusEl.textContent = 'Error: ' + err.message;
             statusEl.style.color = 'var(--danger)';
         }
     }
 
     startSession() {
+        console.log('[MirrorOS] startSession called, showing chat view');
         this.showView('view-chat');
 
         var input = document.getElementById('user-input');
