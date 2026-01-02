@@ -2,6 +2,11 @@ import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 import { MirrorOS } from "./mirror-os.js";
 import { i18n, SUPPORTED_LANGUAGES } from "./i18n.js";
 import { retrieve, enhancePrompt, gatherBrowserContext } from "./retrieval.js";
+import { 
+    loadProfile, saveProfile, updateStreak, getWelcomeMessage, 
+    applyTheme, formatStats, exportAllData, exportSessionMarkdown,
+    setupKeyboardShortcuts, SHORTCUTS, DEFAULT_PROFILE 
+} from "./profile.js";
 
 // ================================================================
 // ACTIVE MIRROROS — Simplified Working Version
@@ -92,10 +97,18 @@ class App {
     constructor() {
         this.os = new MirrorOS();
         this.engine = null;
-        this.selectedModel = MODEL_CATALOG.find(function (m) { return m.recommended; }) || MODEL_CATALOG[1];
+        this.selectedModel = MODEL_CATALOG.find(function (m) { return m.recommended; }) || MODEL_CATALOG[0];
         this.currentSession = null;
         this.redTeamEnabled = false;
         this.firstMessage = true;
+        
+        // Load user profile
+        this.profile = loadProfile();
+        this.profile = updateStreak(this.profile);
+        saveProfile(this.profile);
+        
+        // Apply theme
+        applyTheme(this.profile.preferences.theme, this.profile.preferences.accentColor);
     }
 
     async init() {
@@ -230,6 +243,18 @@ class App {
                 self.handleSend();
             });
         }
+        
+        // Setup keyboard shortcuts
+        var self = this;
+        setupKeyboardShortcuts(function(action) {
+            self.handleShortcut(action);
+        });
+        
+        // Show welcome message
+        this.showWelcomeMessage();
+        
+        // Render quick actions
+        this.renderQuickActions();
 
         // Suggestions
         var suggestions = document.querySelectorAll('.suggestion-chip');
@@ -403,7 +428,21 @@ class App {
         }
 
         // Build messages for LLM
-        var systemPrompt = SYSTEM_PROMPT + timeContext + retrievalContext;
+        // Inject user's custom instructions and preferences
+        var customContext = '';
+        if (this.profile.customInstructions) {
+            customContext = '\n\nUSER CONTEXT (provided by the user):\n' + this.profile.customInstructions;
+        }
+        if (this.profile.name) {
+            customContext += '\nThe user\'s name is ' + this.profile.name + '.';
+        }
+        if (this.profile.preferences.responseLength === 'short') {
+            customContext += '\nUser prefers SHORT responses (1-2 paragraphs max).';
+        } else if (this.profile.preferences.responseLength === 'long') {
+            customContext += '\nUser prefers DETAILED responses with examples.';
+        }
+        
+        var systemPrompt = SYSTEM_PROMPT + customContext + timeContext + retrievalContext;
         var requestMessages = [
             { role: 'system', content: systemPrompt }
         ];
@@ -685,6 +724,254 @@ class App {
 
         // Re-render model grid
         this.renderModelGrid();
+    }
+
+    // ===== KEYBOARD SHORTCUTS =====
+    handleShortcut(action) {
+        var self = this;
+        switch(action) {
+            case 'newChat':
+                this.newSession();
+                break;
+            case 'focusInput':
+                var input = document.getElementById('user-input');
+                if (input) input.focus();
+                break;
+            case 'openSettings':
+                this.showView('view-settings');
+                this.openSettings();
+                break;
+            case 'exportChat':
+                if (this.currentSession) {
+                    exportSessionMarkdown(this.currentSession);
+                }
+                break;
+            case 'starSession':
+                this.toggleStarSession();
+                break;
+            case 'closeModal':
+                this.showView('view-chat');
+                break;
+            case 'quickAction0':
+            case 'quickAction1':
+            case 'quickAction2':
+            case 'quickAction3':
+                var idx = parseInt(action.replace('quickAction', ''));
+                if (this.profile.quickActions[idx]) {
+                    this.executeQuickAction(this.profile.quickActions[idx]);
+                }
+                break;
+        }
+    }
+    
+    // ===== QUICK ACTIONS =====
+    executeQuickAction(action) {
+        var input = document.getElementById('user-input');
+        if (input && this.currentSession && this.currentSession.messages.length > 0) {
+            input.value = action.prompt;
+            this.handleSend();
+        }
+    }
+    
+    renderQuickActions() {
+        var container = document.getElementById('quick-actions');
+        if (!container) return;
+        
+        var self = this;
+        var html = '';
+        
+        this.profile.quickActions.forEach(function(action, idx) {
+            html += '<button class="quick-action-btn" data-action-idx="' + idx + '">' + action.label + '</button>';
+        });
+        
+        container.innerHTML = html;
+        
+        container.querySelectorAll('.quick-action-btn').forEach(function(btn) {
+            btn.onclick = function() {
+                var idx = parseInt(btn.getAttribute('data-action-idx'));
+                self.executeQuickAction(self.profile.quickActions[idx]);
+            };
+        });
+    }
+    
+    // ===== WELCOME MESSAGE =====
+    async showWelcomeMessage() {
+        var sessions = await this.os.getRecentSessions();
+        var message = getWelcomeMessage(this.profile, sessions);
+        
+        var welcomeEl = document.getElementById('welcome-message');
+        if (welcomeEl) {
+            welcomeEl.textContent = message;
+            welcomeEl.style.display = 'block';
+        }
+        
+        // Show recent sessions for quick resume
+        this.renderRecentSessions(sessions.slice(0, 3));
+    }
+    
+    renderRecentSessions(sessions) {
+        var container = document.getElementById('recent-sessions');
+        if (!container || !sessions.length) return;
+        
+        var self = this;
+        var html = '<div class="recent-label">Recent</div>';
+        
+        sessions.forEach(function(session) {
+            var title = session.title || 'Untitled';
+            if (title.length > 30) title = title.substring(0, 30) + '...';
+            var isStarred = self.profile.starredSessions.includes(session.id);
+            html += '<button class="recent-session-btn' + (isStarred ? ' starred' : '') + '" data-session-id="' + session.id + '">';
+            html += (isStarred ? '⭐ ' : '') + title;
+            html += '</button>';
+        });
+        
+        container.innerHTML = html;
+        
+        container.querySelectorAll('.recent-session-btn').forEach(function(btn) {
+            btn.onclick = async function() {
+                var sessionId = btn.getAttribute('data-session-id');
+                await self.loadSession(sessionId);
+            };
+        });
+    }
+    
+    // ===== STAR SESSIONS =====
+    toggleStarSession() {
+        if (!this.currentSession) return;
+        
+        var idx = this.profile.starredSessions.indexOf(this.currentSession.id);
+        if (idx > -1) {
+            this.profile.starredSessions.splice(idx, 1);
+        } else {
+            this.profile.starredSessions.push(this.currentSession.id);
+        }
+        saveProfile(this.profile);
+        this.updateStarButton();
+    }
+    
+    updateStarButton() {
+        var btn = document.getElementById('btn-star');
+        if (!btn || !this.currentSession) return;
+        
+        var isStarred = this.profile.starredSessions.includes(this.currentSession.id);
+        btn.textContent = isStarred ? '⭐' : '☆';
+        btn.title = isStarred ? 'Unstar conversation' : 'Star conversation';
+    }
+    
+    // ===== PROFILE SETTINGS =====
+    renderProfileSettings() {
+        var container = document.getElementById('profile-settings');
+        if (!container) return;
+        
+        var self = this;
+        var stats = formatStats(this.profile.stats);
+        
+        var html = '<div class="profile-section">';
+        html += '<h4>Your Profile</h4>';
+        html += '<div class="setting-row"><label>Name</label>';
+        html += '<input type="text" id="profile-name" value="' + (this.profile.name || '') + '" placeholder="How should I call you?"></div>';
+        
+        html += '<div class="setting-row"><label>Custom Instructions</label></div>';
+        html += '<textarea id="profile-instructions" placeholder="Tell me about yourself, your work, preferences...">' + (this.profile.customInstructions || '') + '</textarea>';
+        html += '</div>';
+        
+        html += '<div class="profile-section">';
+        html += '<h4>Preferences</h4>';
+        html += '<div class="setting-row"><label>Response Length</label>';
+        html += '<select id="pref-length">';
+        html += '<option value="short"' + (this.profile.preferences.responseLength === 'short' ? ' selected' : '') + '>Short</option>';
+        html += '<option value="medium"' + (this.profile.preferences.responseLength === 'medium' ? ' selected' : '') + '>Medium</option>';
+        html += '<option value="long"' + (this.profile.preferences.responseLength === 'long' ? ' selected' : '') + '>Detailed</option>';
+        html += '</select></div>';
+        
+        html += '<div class="setting-row"><label>Accent Color</label>';
+        html += '<input type="color" id="pref-color" value="' + this.profile.preferences.accentColor + '"></div>';
+        
+        html += '<div class="setting-row"><label>Theme</label>';
+        html += '<select id="pref-theme">';
+        html += '<option value="dark"' + (this.profile.preferences.theme === 'dark' ? ' selected' : '') + '>Dark</option>';
+        html += '<option value="light"' + (this.profile.preferences.theme === 'light' ? ' selected' : '') + '>Light</option>';
+        html += '<option value="system"' + (this.profile.preferences.theme === 'system' ? ' selected' : '') + '>System</option>';
+        html += '</select></div>';
+        html += '</div>';
+        
+        html += '<div class="profile-section">';
+        html += '<h4>Your Stats</h4>';
+        html += '<div class="stats-grid">';
+        html += '<div class="stat"><span class="stat-value">' + stats.daysWithMirror + '</span><span class="stat-label">days</span></div>';
+        html += '<div class="stat"><span class="stat-value">' + stats.currentStreak + '</span><span class="stat-label">streak</span></div>';
+        html += '<div class="stat"><span class="stat-value">' + stats.totalSessions + '</span><span class="stat-label">chats</span></div>';
+        html += '<div class="stat"><span class="stat-value">' + stats.totalMessages + '</span><span class="stat-label">messages</span></div>';
+        html += '</div></div>';
+        
+        html += '<div class="profile-section">';
+        html += '<h4>Data</h4>';
+        html += '<div class="button-row">';
+        html += '<button id="btn-export-all" class="btn-secondary">Export All Data</button>';
+        html += '<button id="btn-import" class="btn-secondary">Import Backup</button>';
+        html += '</div>';
+        html += '<input type="file" id="import-file" accept=".json" style="display:none">';
+        html += '</div>';
+        
+        container.innerHTML = html;
+        
+        // Bind events
+        document.getElementById('profile-name').onchange = function() {
+            self.profile.name = this.value;
+            saveProfile(self.profile);
+        };
+        
+        document.getElementById('profile-instructions').onchange = function() {
+            self.profile.customInstructions = this.value;
+            saveProfile(self.profile);
+        };
+        
+        document.getElementById('pref-length').onchange = function() {
+            self.profile.preferences.responseLength = this.value;
+            saveProfile(self.profile);
+        };
+        
+        document.getElementById('pref-color').onchange = function() {
+            self.profile.preferences.accentColor = this.value;
+            saveProfile(self.profile);
+            applyTheme(self.profile.preferences.theme, this.value);
+        };
+        
+        document.getElementById('pref-theme').onchange = function() {
+            self.profile.preferences.theme = this.value;
+            saveProfile(self.profile);
+            applyTheme(this.value, self.profile.preferences.accentColor);
+        };
+        
+        document.getElementById('btn-export-all').onclick = async function() {
+            var sessions = await self.os.getRecentSessions();
+            exportAllData(self.profile, sessions);
+        };
+        
+        document.getElementById('btn-import').onclick = function() {
+            document.getElementById('import-file').click();
+        };
+        
+        document.getElementById('import-file').onchange = function() {
+            if (this.files[0]) {
+                var reader = new FileReader();
+                reader.onload = async function(e) {
+                    try {
+                        var data = JSON.parse(e.target.result);
+                        if (data.activeMirror && data.profile) {
+                            self.profile = Object.assign({}, DEFAULT_PROFILE, data.profile);
+                            saveProfile(self.profile);
+                            applyTheme(self.profile.preferences.theme, self.profile.preferences.accentColor);
+                            alert('Profile restored successfully!');
+                            self.renderProfileSettings();
+                        }
+                    } catch (err) {
+                        alert('Invalid backup file');
+                    }
+                };
+                reader.readAsText(this.files[0]);
+            }
+        };
     }
 
     // ===== TEXT-TO-SPEECH =====
