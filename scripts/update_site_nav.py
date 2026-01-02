@@ -7,6 +7,7 @@ TARGET_EXT = '.html'
 
 # New Content
 NAV_LINKS_CONTENT = '''<div class="nav-links">
+                <a href="/demo/" style="color:var(--text-primary); font-weight:500;">Demo</a>
                 <a href="/mobile/">Mobile</a>
                 <a href="/architecture/">Architecture</a>
                 <a href="/research/">Research</a>
