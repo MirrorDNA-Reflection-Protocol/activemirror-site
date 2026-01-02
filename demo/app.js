@@ -9,40 +9,17 @@ import { retrieve, enhancePrompt, gatherBrowserContext } from "./retrieval.js";
 
 const MODEL_CATALOG = [
     {
-        id: 'smollm-135m',
-        name: 'SmolLM 135M',
-        displayName: 'Nano',
-        icon: '⚡',
-        size: '100MB',
-        sizeBytes: 100000000,
-        minMemory: 2,
-        minCores: 2,
-        description: 'Ultra-fast, basic tasks',
-        webllmId: 'SmolLM2-135M-Instruct-q0f16-MLC'
-    },
-    {
-        id: 'smollm-360m',
-        name: 'SmolLM 360M',
-        displayName: 'Quick',
-        icon: '⚡',
-        size: '200MB',
-        sizeBytes: 200000000,
-        minMemory: 3,
-        minCores: 4,
-        description: 'Fast answers, simple tasks',
-        webllmId: 'SmolLM2-360M-Instruct-q0f16-MLC'
-    },
-    {
-        id: 'llama-1b',
-        name: 'Llama 3.2 1B',
-        displayName: 'Light',
-        icon: '△',
-        size: '700MB',
-        sizeBytes: 700000000,
+        id: 'qwen-3b',
+        name: 'Qwen 2.5 3B',
+        displayName: 'Global',
+        icon: '🌐',
+        size: '1.9GB',
+        sizeBytes: 1900000000,
         minMemory: 4,
         minCores: 4,
-        description: 'Good balance of speed and quality',
-        webllmId: 'Llama-3.2-1B-Instruct-q4f16_1-MLC'
+        description: 'Best multilingual, great for coding',
+        webllmId: 'Qwen2.5-3B-Instruct-q4f16_1-MLC',
+        recommended: true
     },
     {
         id: 'llama-3b',
@@ -53,21 +30,8 @@ const MODEL_CATALOG = [
         sizeBytes: 1800000000,
         minMemory: 6,
         minCores: 4,
-        description: 'Deep reflection, structured thinking',
-        webllmId: 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
-        recommended: true
-    },
-    {
-        id: 'qwen-1.5b',
-        name: 'Qwen 2.5 1.5B',
-        displayName: 'Global',
-        icon: '🌐',
-        size: '1GB',
-        sizeBytes: 1000000000,
-        minMemory: 4,
-        minCores: 4,
-        description: 'Great multilingual support',
-        webllmId: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC'
+        description: 'Best general reasoning',
+        webllmId: 'Llama-3.2-3B-Instruct-q4f16_1-MLC'
     },
     {
         id: 'phi-3-mini',
@@ -78,7 +42,7 @@ const MODEL_CATALOG = [
         sizeBytes: 2200000000,
         minMemory: 8,
         minCores: 6,
-        description: 'Advanced reasoning, complex analysis',
+        description: 'Advanced reasoning, complex tasks',
         webllmId: 'Phi-3-mini-4k-instruct-q4f16_1-MLC'
     }
 ];
