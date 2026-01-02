@@ -15,6 +15,7 @@ const statusText = document.getElementById('download-status');
 const progressBar = document.getElementById('progress-bar');
 const progressBarContainer = document.getElementById('progress-bar-container');
 const redTeamToggle = document.getElementById('red-team-toggle');
+const preLoadHero = document.getElementById('pre-load-hero');
 
 // Initialize
 initBtn.addEventListener('click', async () => {
@@ -35,8 +36,11 @@ initBtn.addEventListener('click', async () => {
             initProgressCallback: initProgressCallback,
         });
 
+        // Success state
+        preLoadHero.classList.add('hidden');
+        chatHistory.style.display = 'block';
+
         statusText.innerText = "Model Loaded. Active.";
-        statusText.style.color = "#10b981";
         userInput.disabled = false;
         userInput.placeholder = "Reflect on...";
         userInput.focus();
@@ -87,8 +91,29 @@ async function handleSend() {
 
     messages.push({ role: "user", content: text });
 
-    // System Prompt
-    const systemPrompt = "You are MirrorMesh, demonstrating Active Mirror's sovereign AI. Behaviors: Help users think, don't think for them. Ask clarifying questions before advice. Tag confidence: FACT, ESTIMATE, UNKNOWN. Be warm, direct, concise. You are running LOCALLY in this browser. Data never leaves their device. If asked about Active Mirror: explain identity kernel, vault, governance, multi-model support.";
+    // System Prompt (Strict Mirror Seed Behavior)
+    const systemPrompt = `You are MirrorMesh, demonstrating Active Mirror's governed AI.
+
+STRICT BEHAVIORS:
+1. NEVER give direct advice without asking at least one clarifying question first
+2. ALWAYS tag your confidence on claims:
+   - [FACT] = Verifiable information
+   - [ESTIMATE] = Reasoned inference, could be wrong
+   - [UNKNOWN] = Insufficient data
+3. When asked "should I X?", provide a FRAMEWORK for thinking, not an answer
+4. If you don't know, say [UNKNOWN] — never fabricate
+5. Be warm but structured. Help users THINK, don't think FOR them.
+
+EXAMPLE RESPONSE PATTERN:
+User: "Should I quit my job?"
+You: "That's a significant decision. Before I can help you think clearly:
+- What's driving the urge to leave? 
+- What's your financial runway? [UNKNOWN until you share]
+- Are you moving TOWARD something or just AWAY?
+
+[ESTIMATE] Most regretted job decisions come from reaction, not reflection. Let's map this properly."
+
+You are running LOCALLY in this browser. Data never leaves this device. You are showing what GOVERNED, REFLECTIVE AI feels like.`;
 
     const requestMessages = [
         { role: "system", content: systemPrompt },
@@ -120,10 +145,18 @@ async function handleSend() {
                     firstToken = false;
                 }
                 fullResponse += content;
-                aiMessageDiv.innerText = fullResponse;
+                aiMessageDiv.innerText = fullResponse; // Raw stream first
                 scrollToBottom();
             }
         }
+
+        // Apply Truth-State Styling after stream completes
+        const styledResponse = fullResponse
+            .replace(/\[FACT\]/g, '<span class="tag tag-fact">FACT</span>')
+            .replace(/\[ESTIMATE\]/g, '<span class="tag tag-estimate">ESTIMATE</span>')
+            .replace(/\[UNKNOWN\]/g, '<span class="tag tag-unknown">UNKNOWN</span>');
+
+        aiMessageDiv.innerHTML = styledResponse;
 
         messages.push({ role: "assistant", content: fullResponse });
 
