@@ -87,4 +87,16 @@ export class MirrorOS {
             };
         });
     }
+
+    async exportAll() {
+        const identity = await this.getIdentity();
+        const sessions = await this.getRecentSessions();
+
+        return {
+            exported: new Date().toISOString(),
+            version: '1.0',
+            identity,
+            sessions
+        };
+    }
 }
