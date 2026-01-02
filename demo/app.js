@@ -537,9 +537,43 @@ class App {
         }
     }
 
+    renderLanguageSelector(container) {
+        var self = this;
+        container.innerHTML = '';
+        
+        var grid = document.createElement('div');
+        grid.className = 'language-selector';
+        
+        SUPPORTED_LANGUAGES.forEach(function(lang) {
+            var btn = document.createElement('button');
+            btn.className = 'language-option' + (lang.code === i18n.currentLang ? ' active' : '');
+            btn.innerHTML = '<span class="native">' + lang.native + '</span><span class="name">' + lang.name + '</span>';
+            btn.onclick = function() {
+                i18n.setLanguage(lang.code);
+                self.renderLanguageSelector(container);
+            };
+            grid.appendChild(btn);
+        });
+        
+        container.appendChild(grid);
+    }
+
     onLanguageChange() {
         // Re-render UI elements when language changes
-        console.log('[MirrorOS] Language changed');
+        console.log('[MirrorOS] Language changed to:', i18n.currentLang);
+        
+        // Update all data-i18n elements
+        document.querySelectorAll('[data-i18n]').forEach(function(el) {
+            var key = el.getAttribute('data-i18n');
+            el.textContent = i18n.t(key);
+        });
+        
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+            var key = el.getAttribute('data-i18n-placeholder');
+            el.placeholder = i18n.t(key);
+        });
+        
+        // Re-render model grid
         this.renderModelGrid();
     }
 }
