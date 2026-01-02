@@ -345,47 +345,79 @@ class App {
 
     async handleSend() {
         var input = document.getElementById('user-input');
-        var text = input.value.trim();
-        if (!text || !this.engine) return;
+        var sendBtn = document.getElementById('btn-send');
+        var text = input ? input.value.trim() : '';
 
+        // Early exit checks
+        if (!text) return;
+        if (!this.engine) {
+            console.error('[MirrorOS] Engine not initialized');
+            alert('Model not ready. Please wait for download to complete.');
+            return;
+        }
+
+        // Hide suggestions on first message
         if (this.firstMessage) {
             var suggestions = document.getElementById('suggestions');
             if (suggestions) suggestions.style.display = 'none';
             this.firstMessage = false;
         }
 
+        // Show user message and clear input
         this.appendMessage('user', text);
-        input.value = '';
-        input.style.height = 'auto';
-
-        var sendBtn = document.getElementById('btn-send');
-        if (sendBtn) sendBtn.disabled = true;
-        
-        // === RETRIEVAL: Fetch live web context if needed ===
-        var retrievalContext = '';
-        var self = this;
-        try {
-            self.showRetrievalStatus('🔍 Searching...');
-            var retrieval = await retrieve(text);
-            if (retrieval && retrieval.context) {
-                console.log('[MirrorOS] Retrieved context for:', retrieval.intent.primary);
-                self.showRetrievalStatus('📡 Found: ' + retrieval.intent.primary);
-                retrievalContext = '\n\n[RETRIEVED INFORMATION]\n' + retrieval.context + '\n[END RETRIEVED]\n\nNow answer the user\'s question using this information when relevant. Cite sources.';
-            }
-            self.hideRetrievalStatus();
-        } catch (e) {
-            console.warn('[MirrorOS] Retrieval skipped:', e.message);
-            self.hideRetrievalStatus();
+        if (input) {
+            input.value = '';
+            input.style.height = 'auto';
         }
-        
-        // === BROWSER CONTEXT ===
-        var browserCtx = await gatherBrowserContext();
-        var timeContext = ' Current time: ' + new Date().toLocaleString() + ' (' + browserCtx.timezone + ').';
+        if (sendBtn) sendBtn.disabled = true;
 
+        // Add to session
+        if (!this.currentSession) {
+            this.currentSession = {
+                id: crypto.randomUUID(),
+                started: new Date().toISOString(),
+                title: 'New Session',
+                model: this.selectedModel ? this.selectedModel.id : null,
+                messages: []
+            };
+        }
         this.currentSession.messages.push({ role: 'user', content: text });
 
+        // === OPTIONAL RETRIEVAL (skip errors silently) ===
+        var retrievalContext = '';
+        var self = this;
+
+        try {
+            if (typeof retrieve === 'function') {
+                self.showRetrievalStatus('🔍 Searching...');
+                var retrieval = await retrieve(text);
+                if (retrieval && retrieval.context) {
+                    console.log('[MirrorOS] Retrieved context for:', retrieval.intent.primary);
+                    self.showRetrievalStatus('📡 Found: ' + retrieval.intent.primary);
+                    retrievalContext = '\n\n[RETRIEVED INFORMATION]\n' + retrieval.context + '\n[END RETRIEVED]\n\nNow answer the user\'s question using this information when relevant. Cite sources.';
+                }
+                self.hideRetrievalStatus();
+            }
+        } catch (e) {
+            console.warn('[MirrorOS] Retrieval skipped:', e.message);
+            try { self.hideRetrievalStatus(); } catch (e2) { }
+        }
+
+        // === BROWSER CONTEXT (optional) ===
+        var timeContext = ' Current time: ' + new Date().toLocaleString() + '.';
+        try {
+            if (typeof gatherBrowserContext === 'function') {
+                var browserCtx = await gatherBrowserContext();
+                if (browserCtx && browserCtx.timezone) {
+                    timeContext = ' Current time: ' + new Date().toLocaleString() + ' (' + browserCtx.timezone + ').';
+                }
+            }
+        } catch (e) {
+            console.warn('[MirrorOS] Browser context skipped:', e.message);
+        }
+
+        // Build messages for LLM
         var systemPrompt = SYSTEM_PROMPT + timeContext + retrievalContext;
-        
         var requestMessages = [
             { role: 'system', content: systemPrompt }
         ];
@@ -393,13 +425,24 @@ class App {
             requestMessages.push(this.currentSession.messages[i]);
         }
 
+        // Create AI message bubble
         var aiMsgEl = this.appendMessage('ai', '');
         var contentEl = aiMsgEl.querySelector('.message-text');
+        if (!contentEl) {
+            console.error('[MirrorOS] Could not find message content element');
+            if (sendBtn) sendBtn.disabled = false;
+            return;
+        }
+
+        contentEl.innerHTML = '<span style="opacity:0.5">Thinking...</span>';
+
         var fullResponse = '';
         var startTime = performance.now();
-        var self = this;
 
+        // === MAIN CHAT GENERATION ===
         try {
+            console.log('[MirrorOS] Starting chat generation...');
+
             var stream = await this.engine.chat.completions.create({
                 messages: requestMessages,
                 stream: true,
@@ -409,35 +452,64 @@ class App {
             var firstToken = true;
 
             for await (var chunk of stream) {
-                var content = chunk.choices[0] && chunk.choices[0].delta && chunk.choices[0].delta.content ? chunk.choices[0].delta.content : '';
-                if (content) {
-                    if (firstToken) {
-                        var latency = Math.round(performance.now() - startTime);
-                        var latencyEl = document.querySelector('#stat-latency span');
-                        if (latencyEl) latencyEl.textContent = latency + 'ms';
-                        firstToken = false;
+                try {
+                    var content = '';
+                    if (chunk && chunk.choices && chunk.choices[0] && chunk.choices[0].delta) {
+                        content = chunk.choices[0].delta.content || '';
                     }
-                    fullResponse += content;
-                    contentEl.innerHTML = self.formatText(fullResponse);
-                    self.scrollToBottom();
+                    if (content) {
+                        if (firstToken) {
+                            var latency = Math.round(performance.now() - startTime);
+                            var latencyEl = document.querySelector('#stat-latency span');
+                            if (latencyEl) latencyEl.textContent = latency + 'ms';
+                            firstToken = false;
+                        }
+                        fullResponse += content;
+                        contentEl.innerHTML = self.formatText(fullResponse);
+                        self.scrollToBottom();
+                    }
+                } catch (chunkErr) {
+                    console.warn('[MirrorOS] Chunk error:', chunkErr.message);
                 }
             }
 
-            this.currentSession.messages.push({ role: 'assistant', content: fullResponse });
+            console.log('[MirrorOS] Generation complete, response length:', fullResponse.length);
 
-            if (this.currentSession.messages.length === 2) {
-                this.currentSession.title = text.substring(0, 50) + (text.length > 50 ? '...' : '');
-            }
+            // Save response to session
+            if (fullResponse) {
+                this.currentSession.messages.push({ role: 'assistant', content: fullResponse });
 
-            await this.os.saveSession(this.currentSession);
+                if (this.currentSession.messages.length === 2) {
+                    this.currentSession.title = text.substring(0, 50) + (text.length > 50 ? '...' : '');
+                }
 
-            if (this.redTeamEnabled) {
-                await this.runRedTeam(fullResponse);
+                // Save session (don't crash if this fails)
+                try {
+                    await this.os.saveSession(this.currentSession);
+                } catch (saveErr) {
+                    console.warn('[MirrorOS] Session save failed:', saveErr.message);
+                }
+
+                // Red Team (optional)
+                if (this.redTeamEnabled) {
+                    try {
+                        await this.runRedTeam(fullResponse);
+                    } catch (rtErr) {
+                        console.warn('[MirrorOS] Red Team failed:', rtErr.message);
+                    }
+                }
+            } else {
+                contentEl.innerHTML = '<span style="color:var(--danger)">No response generated. Try again.</span>';
             }
 
         } catch (err) {
-            contentEl.textContent = 'Error: ' + err.message;
+            console.error('[MirrorOS] Chat generation error:', err);
+            contentEl.innerHTML = '<span style="color:var(--danger)">Error: ' + (err.message || 'Unknown error') + '</span>';
         }
+
+        // ALWAYS re-enable send button
+        if (sendBtn) sendBtn.disabled = false;
+        if (input) input.focus();
     }
 
     async runRedTeam(advice) {
@@ -640,7 +712,7 @@ class App {
         utterance.lang = i18n.currentLang || 'en';
         utterance.rate = 1.0;
         var voices = speechSynthesis.getVoices();
-        var langVoice = voices.find(function(v) { return v.lang.startsWith(i18n.currentLang); });
+        var langVoice = voices.find(function (v) { return v.lang.startsWith(i18n.currentLang); });
         if (langVoice) utterance.voice = langVoice;
         speechSynthesis.speak(utterance);
     }
