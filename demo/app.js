@@ -1,6 +1,7 @@
 import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 import { MirrorOS } from "./mirror-os.js";
 import { i18n, SUPPORTED_LANGUAGES } from "./i18n.js";
+import { retrieve, enhancePrompt, gatherBrowserContext } from "./retrieval.js";
 
 // ================================================================
 // ACTIVE MIRROROS — Simplified Working Version
@@ -359,11 +360,30 @@ class App {
 
         var sendBtn = document.getElementById('btn-send');
         if (sendBtn) sendBtn.disabled = true;
+        
+        // === RETRIEVAL: Fetch live web context if needed ===
+        var retrievalContext = '';
+        var self = this;
+        try {
+            var retrieval = await retrieve(text);
+            if (retrieval && retrieval.context) {
+                console.log('[MirrorOS] Retrieved context for:', retrieval.intent.primary);
+                retrievalContext = '\n\n[RETRIEVED INFORMATION]\n' + retrieval.context + '\n[END RETRIEVED]\n\nNow answer the user\'s question using this information when relevant. Cite sources.';
+            }
+        } catch (e) {
+            console.warn('[MirrorOS] Retrieval skipped:', e.message);
+        }
+        
+        // === BROWSER CONTEXT ===
+        var browserCtx = await gatherBrowserContext();
+        var timeContext = ' Current time: ' + new Date().toLocaleString() + ' (' + browserCtx.timezone + ').';
 
         this.currentSession.messages.push({ role: 'user', content: text });
 
+        var systemPrompt = SYSTEM_PROMPT + timeContext + retrievalContext;
+        
         var requestMessages = [
-            { role: 'system', content: SYSTEM_PROMPT }
+            { role: 'system', content: systemPrompt }
         ];
         for (var i = 0; i < this.currentSession.messages.length; i++) {
             requestMessages.push(this.currentSession.messages[i]);

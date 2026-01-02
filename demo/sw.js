@@ -1,7 +1,7 @@
 // sw.js - Service Worker for Active MirrorOS
 // Offline-first with smart caching
 
-const CACHE_NAME = 'mirror-os-v2';
+const CACHE_NAME = 'mirror-os-v3';
 const STATIC_ASSETS = [
     './',
     './index.html',
@@ -10,6 +10,7 @@ const STATIC_ASSETS = [
     './mirror-os.js',
     './i18n.js',
     './voice.js',
+    './retrieval.js',
     './manifest.json'
 ];
 
