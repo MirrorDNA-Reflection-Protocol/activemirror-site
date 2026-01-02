@@ -130,11 +130,12 @@ class App {
     }
 
     async init() {
+        // Set default model before anything else
+        this.selectedModel = MODEL_CATALOG.find(m => m.recommended) || MODEL_CATALOG[3];
+        this.recommendedModel = this.selectedModel;
+
         // Initialize OS
         await this.os.init();
-
-        // Check device
-        await this.detectDevice();
 
         // Check for returning user
         const identity = this.os.identity;
@@ -144,11 +145,19 @@ class App {
             this.showReturningUserFlow(identity, sessions);
         } else {
             this.showView('view-welcome');
-            this.renderModelGrid();
+            this.renderModelGrid(); // Render with defaults first
         }
 
         // Bind all events
         this.bindEvents();
+
+        // Check device (async, will re-render grid when done)
+        this.detectDevice().then(() => {
+            // Re-render grid with actual device info
+            if (!document.getElementById('view-welcome').classList.contains('hidden')) {
+                this.renderModelGrid();
+            }
+        });
 
         // Setup PWA install
         this.setupPWAInstall();
@@ -255,12 +264,20 @@ class App {
 
     renderModelGrid() {
         const grid = document.getElementById('model-grid');
+        if (!grid) return;
+
         const modelsToShow = this.showAllModels ? MODEL_CATALOG : MODEL_CATALOG.slice(0, 4);
-        const d = this.deviceInfo;
+
+        // Use device info or defaults
+        const d = this.deviceInfo || {
+            memory: 8,
+            cores: 4,
+            connection: { downlink: 10 }
+        };
 
         grid.innerHTML = modelsToShow.map(model => {
             const canRun = d.memory >= model.minMemory && d.cores >= model.minCores;
-            const downloadTime = Math.round(model.sizeBytes / (d.connection.downlink * 125000));
+            const downloadTime = Math.round(model.sizeBytes / ((d.connection?.downlink || 10) * 125000));
             const isSelected = this.selectedModel?.id === model.id;
             const isRecommended = this.recommendedModel?.id === model.id;
 
