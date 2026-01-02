@@ -365,13 +365,17 @@ class App {
         var retrievalContext = '';
         var self = this;
         try {
+            self.showRetrievalStatus('🔍 Searching...');
             var retrieval = await retrieve(text);
             if (retrieval && retrieval.context) {
                 console.log('[MirrorOS] Retrieved context for:', retrieval.intent.primary);
+                self.showRetrievalStatus('📡 Found: ' + retrieval.intent.primary);
                 retrievalContext = '\n\n[RETRIEVED INFORMATION]\n' + retrieval.context + '\n[END RETRIEVED]\n\nNow answer the user\'s question using this information when relevant. Cite sources.';
             }
+            self.hideRetrievalStatus();
         } catch (e) {
             console.warn('[MirrorOS] Retrieval skipped:', e.message);
+            self.hideRetrievalStatus();
         }
         
         // === BROWSER CONTEXT ===
@@ -623,6 +627,45 @@ class App {
 
         // Re-render model grid
         this.renderModelGrid();
+    }
+
+    // ===== TEXT-TO-SPEECH =====
+    speak(text) {
+        if (!('speechSynthesis' in window)) {
+            console.warn('[MirrorOS] Speech synthesis not supported');
+            return;
+        }
+        speechSynthesis.cancel();
+        var utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = i18n.currentLang || 'en';
+        utterance.rate = 1.0;
+        var voices = speechSynthesis.getVoices();
+        var langVoice = voices.find(function(v) { return v.lang.startsWith(i18n.currentLang); });
+        if (langVoice) utterance.voice = langVoice;
+        speechSynthesis.speak(utterance);
+    }
+
+    stopSpeaking() {
+        if ('speechSynthesis' in window) speechSynthesis.cancel();
+    }
+
+    // ===== RETRIEVAL STATUS =====
+    showRetrievalStatus(message) {
+        var status = document.getElementById('retrieval-status');
+        if (!status) {
+            status = document.createElement('div');
+            status.id = 'retrieval-status';
+            status.className = 'retrieval-status';
+            var chatArea = document.querySelector('.chat-messages');
+            if (chatArea) chatArea.parentNode.insertBefore(status, chatArea);
+        }
+        status.textContent = message;
+        status.style.display = 'block';
+    }
+
+    hideRetrievalStatus() {
+        var status = document.getElementById('retrieval-status');
+        if (status) status.style.display = 'none';
     }
 }
 

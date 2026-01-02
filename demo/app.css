@@ -1817,3 +1817,83 @@ textarea:focus-visible {
     margin-left: 0;
     margin-right: 4px;
 }
+
+/* ========================================
+   RETRIEVAL STATUS INDICATOR
+   ======================================== */
+
+.retrieval-status {
+    display: none;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(147, 51, 234, 0.1));
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 8px;
+    margin: 8px 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+.retrieval-status::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 8px;
+    animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+[dir="rtl"] .retrieval-status::before {
+    margin-right: 0;
+    margin-left: 8px;
+}
+
+/* ========================================
+   SPEAK BUTTON FOR MESSAGES
+   ======================================== */
+
+.message-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.chat-message:hover .message-actions {
+    opacity: 1;
+}
+
+.btn-speak {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-speak:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.btn-speak.speaking {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+}
