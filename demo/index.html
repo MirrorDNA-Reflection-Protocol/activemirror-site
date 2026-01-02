@@ -36,6 +36,11 @@
             <div class="gradient-orb orb-3"></div>
         </div>
 
+        <!-- ========== OFFLINE INDICATOR ========== -->
+        <div class="offline-indicator" id="offline-indicator">
+            <span>📴 Offline — Model cached, still working</span>
+        </div>
+
         <!-- ========== VIEW: WELCOME / MODEL SELECT ========== -->
         <div id="view-welcome" class="view">
             <div class="welcome-container">
@@ -50,43 +55,85 @@
                 <p class="welcome-subtitle">Sovereign AI that runs in your browser.<br>No cloud. No tracking. Yours
                     forever.</p>
 
-                <!-- Model Selection -->
-                <div class="model-grid">
-
-                    <button class="model-card" data-model="smollm">
-                        <div class="model-icon">⚡</div>
-                        <div class="model-info">
-                            <span class="model-name">Quick</span>
-                            <span class="model-meta">SmolLM2 · 200MB</span>
-                        </div>
-                        <div class="model-desc">Fast answers, simple tasks</div>
-                    </button>
-
-                    <button class="model-card selected" data-model="llama3">
-                        <div class="model-badge">Recommended</div>
-                        <div class="model-icon">⟡</div>
-                        <div class="model-info">
-                            <span class="model-name">Reflect</span>
-                            <span class="model-meta">Llama 3.2 3B · 1.8GB</span>
-                        </div>
-                        <div class="model-desc">Deep reflection, structured thinking</div>
-                    </button>
-
-                    <button class="model-card" data-model="phi3">
-                        <div class="model-icon">◈</div>
-                        <div class="model-info">
-                            <span class="model-name">Reason</span>
-                            <span class="model-meta">Phi-3 Mini · 2.2GB</span>
-                        </div>
-                        <div class="model-desc">Advanced reasoning, complex analysis</div>
-                    </button>
-
+                <!-- Device Info -->
+                <div class="device-info glass-panel" id="device-info">
+                    <div class="device-specs">
+                        <span id="spec-memory">-- RAM</span>
+                        <span id="spec-cores">-- Cores</span>
+                        <span id="spec-connection">--</span>
+                        <span id="spec-gpu">Checking GPU...</span>
+                    </div>
+                    <div class="device-score">
+                        <span class="score-label">Device Score</span>
+                        <span class="score-value" id="device-score">--</span>
+                    </div>
                 </div>
 
-                <!-- Device Check -->
-                <div class="device-status" id="device-status">
-                    <span class="status-dot"></span>
-                    <span class="status-text">Checking device capabilities...</span>
+                <!-- Recommendation Banner -->
+                <div class="recommendation-banner glass-panel" id="recommendation">
+                    <div class="rec-icon">⟡</div>
+                    <div class="rec-text">
+                        <span class="rec-title">Recommended for you</span>
+                        <span class="rec-model" id="rec-model-name">Analyzing device...</span>
+                    </div>
+                    <button class="btn-primary" id="btn-use-recommended">Use This</button>
+                </div>
+
+                <!-- Model Grid -->
+                <div class="model-grid" id="model-grid">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Show More -->
+                <button class="text-btn" id="btn-show-all-models" style="margin-top: 16px;">
+                    Show all models ↓
+                </button>
+
+            </div>
+        </div>
+
+        <!-- ========== VIEW: RETURNING USER ========== -->
+        <div id="view-returning" class="view hidden">
+            <div class="returning-container">
+
+                <div class="returning-header">
+                    <div class="logo-glyph" style="font-size: 2.5rem; margin-bottom: 16px;">⟡</div>
+                    <h1>Welcome Back</h1>
+                    <p class="return-time-text">Last here <span id="return-time">--</span></p>
+                </div>
+
+                <!-- Last Session Card -->
+                <div class="session-card glass-panel" id="last-session-card">
+                    <div class="session-card-header">
+                        <span class="session-icon">💬</span>
+                        <span class="session-title" id="return-session-title">Loading...</span>
+                    </div>
+                    <p class="session-preview" id="return-session-preview">...</p>
+                    <div class="session-actions">
+                        <button class="btn-primary" id="btn-continue-session">Continue →</button>
+                        <button class="btn-secondary" id="btn-new-session">New Session</button>
+                    </div>
+                </div>
+
+                <!-- Recent Sessions -->
+                <div class="recent-sessions">
+                    <h3>Recent Sessions</h3>
+                    <div class="session-list" id="recent-session-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <button class="action-chip" id="btn-open-vault">
+                        <span>⧉</span> Open Vault
+                    </button>
+                    <button class="action-chip" id="btn-change-model">
+                        <span>◈</span> Change Model
+                    </button>
+                    <button class="action-chip" id="btn-export-returning">
+                        <span>↓</span> Export All
+                    </button>
                 </div>
 
             </div>
@@ -150,6 +197,14 @@
                             <span>Local</span>
                         </span>
                     </div>
+                    <button class="icon-btn" id="btn-install" title="Install App" style="display: none;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                    </button>
                 </div>
             </header>
 
@@ -236,31 +291,21 @@
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
-                <input type="text" placeholder="Search vault..." id="vault-search">
+                <input type="text" placeholder="Search vault... (⌘K)" id="vault-search">
+            </div>
+
+            <!-- Vault Tabs -->
+            <div class="vault-tabs">
+                <button class="vault-tab active" data-type="all">All</button>
+                <button class="vault-tab" data-type="session">Sessions</button>
+                <button class="vault-tab" data-type="capture">Captures</button>
+                <button class="vault-tab" data-type="starred">★</button>
             </div>
 
             <div class="sidebar-content">
-
-                <div class="vault-section">
-                    <div class="vault-section-header">
-                        <span>Sessions</span>
-                        <span class="vault-count" id="session-count">0</span>
-                    </div>
-                    <div class="vault-list" id="vault-sessions">
-                        <div class="vault-empty">No sessions yet</div>
-                    </div>
+                <div class="vault-list" id="vault-list">
+                    <div class="vault-empty">Loading vault...</div>
                 </div>
-
-                <div class="vault-section">
-                    <div class="vault-section-header">
-                        <span>Captures</span>
-                        <span class="vault-count" id="capture-count">0</span>
-                    </div>
-                    <div class="vault-list" id="vault-captures">
-                        <div class="vault-empty">No captures yet</div>
-                    </div>
-                </div>
-
             </div>
 
             <div class="sidebar-footer">
@@ -283,7 +328,7 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
                         <path
-                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                            d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24">
                         </path>
                     </svg>
                     Settings
@@ -293,6 +338,102 @@
 
         <!-- Sidebar Overlay -->
         <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+        <!-- ========== QUICK CAPTURE MODAL ========== -->
+        <div class="modal hidden" id="capture-modal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content glass-panel">
+                <div class="modal-header">
+                    <h3>✨ Quick Capture</h3>
+                    <button class="icon-btn" id="close-capture-modal">✕</button>
+                </div>
+                <textarea id="capture-text"
+                    placeholder="What's on your mind? Capture a thought, decision, or insight..."></textarea>
+                <div class="modal-footer">
+                    <input type="text" id="capture-tags" placeholder="Tags (comma separated)">
+                    <button class="btn-primary" id="save-capture">Save to Vault</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== SETTINGS MODAL ========== -->
+        <div class="modal hidden" id="settings-modal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content glass-panel settings-panel">
+                <div class="modal-header">
+                    <h3>⚙ Settings</h3>
+                    <button class="icon-btn" id="close-settings-modal">✕</button>
+                </div>
+
+                <div class="settings-sections">
+
+                    <!-- Model Section -->
+                    <div class="settings-section">
+                        <h4>Model</h4>
+                        <div class="setting-row">
+                            <label>Preferred Model</label>
+                            <select id="setting-model">
+                                <!-- Populated by JS -->
+                            </select>
+                        </div>
+                        <div class="setting-row">
+                            <label>Auto-recommend based on device</label>
+                            <input type="checkbox" id="setting-auto-recommend" checked>
+                        </div>
+                    </div>
+
+                    <!-- Behavior Section -->
+                    <div class="settings-section">
+                        <h4>Behavior</h4>
+                        <div class="setting-row">
+                            <label>Red Team by default</label>
+                            <input type="checkbox" id="setting-redteam-default">
+                        </div>
+                        <div class="setting-row">
+                            <label>Show suggested prompts</label>
+                            <input type="checkbox" id="setting-suggestions" checked>
+                        </div>
+                    </div>
+
+                    <!-- Data Section -->
+                    <div class="settings-section">
+                        <h4>Data</h4>
+                        <div class="setting-row">
+                            <label>Local Storage Used</label>
+                            <span id="storage-used">Calculating...</span>
+                        </div>
+                        <div class="setting-row">
+                            <label>Total Sessions</label>
+                            <span id="total-sessions">--</span>
+                        </div>
+                        <div class="setting-row" style="flex-direction: column; gap: 8px;">
+                            <button class="btn-secondary" id="btn-export-data" style="width: 100%;">Export All
+                                Data</button>
+                            <button class="btn-danger" id="btn-clear-data" style="width: 100%;">Clear All Data</button>
+                        </div>
+                    </div>
+
+                    <!-- About Section -->
+                    <div class="settings-section">
+                        <h4>About</h4>
+                        <p class="settings-about">
+                            <strong>Active MirrorOS</strong> v1.0<br>
+                            Built by N1 Intelligence<br>
+                            <a href="https://activemirror.ai" target="_blank">activemirror.ai</a>
+                        </p>
+                        <p class="settings-shortcuts">
+                            <strong>Keyboard Shortcuts</strong><br>
+                            <code>⌘K</code> Search Vault<br>
+                            <code>⌘N</code> New Session<br>
+                            <code>⌘E</code> Export<br>
+                            <code>Esc</code> Close
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
 
     </div>
 
