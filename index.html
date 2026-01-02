@@ -26,14 +26,28 @@
                 </div>
             </div>
 
-            <div style="flex:1; padding:16px;">
-                <p style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Vault</p>
-                <div id="vault-list" style="display:flex; flex-direction:column; gap:8px;">
+            <div style="flex:1; padding:16px; overflow-y:auto;">
+                <p class="sidebar-label">Vault</p>
+                <div id="vault-list" class="sidebar-list">
                     <!-- Vault items injected here -->
-                    <div style="padding:12px; background:rgba(255,255,255,0.05); border-radius:8px; font-size:0.9rem;">
-                        📁 Sessions
+                    <div
+                        style="padding:12px; background:rgba(255,255,255,0.05); border-radius:8px; font-size:0.9rem; color:var(--text-secondary);">
+                        📁 Sessions (Empty)
                     </div>
                 </div>
+
+                <div style="margin-top:32px;"></div>
+
+                <p class="sidebar-label">Explore</p>
+                <nav class="sidebar-nav">
+                    <a href="/mobile/" class="nav-link">📱 Mobile App</a>
+                    <a href="/architecture/" class="nav-link">📐 Architecture</a>
+                    <a href="/research/" class="nav-link">🔬 Research</a>
+                    <a href="/open-source/" class="nav-link">🐙 Open Source</a>
+                    <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/" target="_blank"
+                        class="nav-link">📘 Documentation</a>
+                    <a href="/blog/" class="nav-link">📰 Blog</a>
+                </nav>
             </div>
 
             <div style="padding:16px; border-top:1px solid var(--border-color);">

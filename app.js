@@ -36,20 +36,26 @@ class App {
     }
 
     async init() {
-        // Init OS / DB
-        const identity = await this.os.init();
+        try {
+            // Init OS / DB
+            const identity = await this.os.init();
 
-        // Router
-        if (identity) {
-            // Returning user
-            this.showView('view-hero'); // For now, show hero but customize text
-            document.querySelector('#view-hero h1').innerText = "Welcome Back";
-            document.querySelector('#view-hero p').innerText = "Ready to resume reflection?";
-            // Auto-select their pref model?
-        } else {
-            // New user
-            this.showView('view-hero');
-            this.checkWebGPU();
+            // Router
+            if (identity) {
+                // Returning user
+                this.showView('view-hero');
+                document.querySelector('#view-hero h1').innerText = "Welcome Back";
+                document.querySelector('#view-hero p').innerText = "Ready to resume reflection?";
+            } else {
+                // New user
+                this.showView('view-hero');
+                this.checkWebGPU();
+            }
+        } catch (err) {
+            console.error("OS Init Failed:", err);
+            // Fallback UI or Alert
+            document.querySelector('#view-hero p').innerText = "Error initializing Storage. Please ensure you are not in Private/Incognito mode.";
+            document.querySelector('#view-hero p').style.color = "#ef4444";
         }
 
         this.bindEvents();
