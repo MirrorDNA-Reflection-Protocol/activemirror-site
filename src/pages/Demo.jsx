@@ -76,6 +76,13 @@ export default function Demo() {
             // Use Vite's worker import for reliable bundling
             const worker = new Worker(new URL('../worker.js', import.meta.url), { type: 'module' });
 
+            // ⟡ WORKER ERROR HANDLER: Catch silent worker failures
+            worker.onerror = (e) => {
+                console.error("Worker Error:", e);
+                setProgress("Worker Load Failed. Please refresh.");
+                setError("Worker Crash: " + (e.message || "Unknown"));
+            };
+
             try {
                 const eng = await CreateWebWorkerMLCEngine(worker, modelId, {
                     initProgressCallback: (report) => {
