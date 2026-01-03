@@ -1,292 +1,947 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Active Mirror — Demo</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⟡</text></svg>">
+    <meta name="theme-color" content="#050505">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Active Mirror — Sovereign AI</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://api.groq.com">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #000; color: #fff; 
-            min-height: 100vh; display: flex; flex-direction: column;
+        /* ═══════════════════════════════════════════════════════════════════════════
+           ⟡ ACTIVE MIRROR - PREMIUM GLASSMORPHISM UI
+           ═══════════════════════════════════════════════════════════════════════════ */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .view { display: none; flex: 1; flex-direction: column; }
-        .view.active { display: flex; }
-        
-        /* Welcome */
-        .welcome { justify-content: center; align-items: center; padding: 2rem; text-align: center; }
-        .glyph { font-size: 4rem; margin-bottom: 1rem; display: block; }
-        h1 { font-size: 1.8rem; font-weight: 300; margin-bottom: 0.5rem; }
-        .tagline { color: #888; margin-bottom: 2rem; }
-        .model-grid { display: flex; flex-direction: column; gap: 1rem; max-width: 400px; width: 100%; }
-        .model-card { 
-            background: #111; border: 1px solid #333; border-radius: 12px;
-            padding: 1.2rem; cursor: pointer; text-align: left; transition: all 0.2s;
+
+        :root {
+            --bg: #050505;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --amber: #f59e0b;
+            --purple: #8b5cf6;
+            --green: #10b981;
+            --text: #ffffff;
+            --text-dim: #71717a;
+            --radius: 20px;
+            --safe-bottom: env(safe-area-inset-bottom, 20px);
         }
-        .model-card:hover { border-color: #666; background: #1a1a1a; }
-        .model-card.recommended { border-color: #4a9eff; }
-        .model-name { font-weight: 600; margin-bottom: 0.3rem; }
-        .model-meta { font-size: 0.85rem; color: #888; }
-        .model-badge { 
-            display: inline-block; background: #4a9eff22; color: #4a9eff; 
-            font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; margin-top: 0.5rem;
+
+        html,
+        body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
         }
-        .privacy { margin-top: 2rem; font-size: 0.8rem; color: #666; }
-        
-        /* Loading */
-        .loading { justify-content: center; align-items: center; }
-        .loading-text { font-size: 1.2rem; margin-bottom: 1rem; }
-        .progress { width: 200px; height: 4px; background: #333; border-radius: 2px; overflow: hidden; }
-        .progress-bar { height: 100%; background: #4a9eff; width: 0%; transition: width 0.3s; }
-        .loading-status { margin-top: 1rem; font-size: 0.85rem; color: #888; text-align: center; max-width: 300px; }
-        
-        /* Chat */
-        .chat { }
-        .chat-header { 
-            padding: 1rem; border-bottom: 1px solid #222; 
-            display: flex; justify-content: space-between; align-items: center;
+
+        /* ─── Animated Background ─── */
+        .bg-orbs {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
         }
-        .chat-header .left { display: flex; align-items: center; gap: 0.5rem; }
-        .chat-header .glyph { font-size: 1.2rem; margin: 0; }
-        .badge { font-size: 0.7rem; background: #1a1a1a; padding: 0.3rem 0.6rem; border-radius: 4px; }
-        .badge.cloud { color: #4a9eff; }
-        .badge.local { color: #22c55e; }
-        
-        .messages { flex: 1; overflow-y: auto; padding: 1rem; }
-        .msg { margin-bottom: 1rem; max-width: 85%; }
-        .msg.user { margin-left: auto; background: #1a1a1a; padding: 0.8rem 1rem; border-radius: 12px; }
-        .msg.ai { color: #ddd; line-height: 1.6; }
-        .msg.ai .thinking { animation: pulse 1s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        
-        .input-area { padding: 1rem; border-top: 1px solid #222; }
-        .input-row { display: flex; gap: 0.5rem; }
-        input[type="text"] { 
-            flex: 1; background: #111; border: 1px solid #333; border-radius: 8px;
-            padding: 0.8rem 1rem; color: #fff; font-size: 1rem;
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.3;
+            animation: float 20s ease-in-out infinite;
         }
-        input:focus { outline: none; border-color: #4a9eff; }
-        button.send { 
-            background: #4a9eff; border: none; border-radius: 8px; 
-            padding: 0 1.2rem; cursor: pointer; color: #fff; font-weight: 600;
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--amber);
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
         }
-        button.send:disabled { opacity: 0.5; cursor: not-allowed; }
-        
-        .error { background: #ff444422; border: 1px solid #ff4444; padding: 1rem; border-radius: 8px; margin: 1rem; }
+
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: var(--purple);
+            bottom: -50px;
+            right: -50px;
+            animation-delay: -7s;
+        }
+
+        .orb-3 {
+            width: 200px;
+            height: 200px;
+            background: var(--purple);
+            top: 50%;
+            left: 50%;
+            animation-delay: -14s;
+            opacity: 0.15;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            33% {
+                transform: translate(30px, -30px) scale(1.1);
+            }
+
+            66% {
+                transform: translate(-20px, 20px) scale(0.9);
+            }
+        }
+
+        /* ─── App Container ─── */
+        #app {
+            position: relative;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            z-index: 1;
+        }
+
+        /* ─── Glass Panel ─── */
+        .glass {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+        }
+
+        /* ─── Welcome Screen ─── */
+        #welcome {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 100;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        #welcome.hidden {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+        }
+
+        .glyph {
+            font-size: 72px;
+            color: var(--amber);
+            animation: pulse-glow 2s ease-in-out infinite;
+            margin-bottom: 24px;
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                text-shadow: 0 0 20px var(--amber), 0 0 40px var(--amber);
+                transform: scale(1);
+            }
+
+            50% {
+                text-shadow: 0 0 40px var(--amber), 0 0 80px var(--amber);
+                transform: scale(1.05);
+            }
+        }
+
+        .welcome-title {
+            font-size: 28px;
+            font-weight: 200;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+            opacity: 0;
+            animation: fade-up 0.8s ease forwards 0.3s;
+        }
+
+        .welcome-tagline {
+            font-size: 14px;
+            color: var(--text-dim);
+            margin-bottom: 48px;
+            opacity: 0;
+            animation: fade-up 0.8s ease forwards 0.5s;
+        }
+
+        @keyframes fade-up {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ─── Mode Cards ─── */
+        .mode-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .mode-card {
+            padding: 20px 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fade-up 0.6s ease forwards;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .mode-card:nth-child(1) {
+            animation-delay: 0.7s;
+        }
+
+        .mode-card:nth-child(2) {
+            animation-delay: 0.9s;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .mode-card:active {
+            transform: scale(0.98);
+        }
+
+        .mode-icon {
+            font-size: 32px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .mode-info {
+            flex: 1;
+        }
+
+        .mode-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .mode-desc {
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+
+        .mode-badge {
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-instant {
+            background: var(--amber);
+            color: black;
+        }
+
+        .badge-sovereign {
+            background: var(--purple);
+            color: white;
+        }
+
+        /* ─── Loading Screen ─── */
+        #loading {
+            position: absolute;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 90;
+        }
+
+        #loading.active {
+            display: flex;
+        }
+
+        .progress-ring {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            margin-bottom: 32px;
+        }
+
+        .progress-ring svg {
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+        }
+
+        .progress-ring circle {
+            fill: none;
+            stroke-width: 4;
+            stroke-linecap: round;
+        }
+
+        .progress-bg {
+            stroke: rgba(255, 255, 255, 0.1);
+        }
+
+        .progress-fill {
+            stroke: var(--purple);
+            stroke-dasharray: 440;
+            stroke-dashoffset: 440;
+            transition: stroke-dashoffset 0.3s ease, stroke 0.5s ease;
+            filter: drop-shadow(0 0 10px var(--purple));
+        }
+
+        .progress-text {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .progress-percent {
+            font-size: 42px;
+            font-weight: 200;
+        }
+
+        .progress-label {
+            font-size: 12px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .loading-status {
+            font-size: 14px;
+            color: var(--text-dim);
+            text-align: center;
+            max-width: 280px;
+        }
+
+        /* ─── Chat Interface ─── */
+        #chat {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        #chat.active {
+            display: flex;
+        }
+
+        .chat-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .chat-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-glyph {
+            font-size: 20px;
+            color: var(--amber);
+        }
+
+        .chat-title {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .chat-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* ─── Messages ─── */
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 14px 18px;
+            border-radius: 18px;
+            animation: message-in 0.4s ease;
+            line-height: 1.5;
+            font-size: 15px;
+        }
+
+        @keyframes message-in {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-user {
+            align-self: flex-end;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .message-ai {
+            align-self: flex-start;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        /* ─── Thinking Indicator ─── */
+        .thinking {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            font-size: 14px;
+            color: var(--text-dim);
+        }
+
+        .thinking-glyph {
+            color: var(--amber);
+            animation: spin-slow 3s linear infinite;
+        }
+
+        @keyframes spin-slow {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ─── Input Area ─── */
+        .input-area {
+            padding: 16px 20px;
+            padding-bottom: calc(16px + var(--safe-bottom));
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+
+        #input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        #input::placeholder {
+            color: var(--text-dim);
+        }
+
+        .send-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: none;
+            background: var(--amber);
+            color: black;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            font-size: 18px;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--amber);
+        }
+
+        .send-btn:active {
+            transform: scale(0.95);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ─── Session Counter ─── */
+        .session-counter {
+            text-align: center;
+            padding: 8px;
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        /* ─── Back Button ─── */
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .back-btn:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 480px) {
+            .welcome-title {
+                font-size: 24px;
+            }
+
+            .glyph {
+                font-size: 56px;
+            }
+
+            .mode-card {
+                padding: 16px 20px;
+            }
+        }
+
+        /* ─── Reduced Motion ─── */
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 </head>
+
 <body>
-    <!-- Welcome -->
-    <div id="welcome" class="view active welcome">
-        <span class="glyph">⟡</span>
-        <h1>Active Mirror</h1>
-        <p class="tagline">Sovereign AI reflection</p>
-        <div class="model-grid" id="models"></div>
-        <p class="privacy">🔒 Your data stays on your device</p>
+    <!-- Animated Background -->
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
     </div>
-    
-    <!-- Loading -->
-    <div id="loading" class="view loading">
-        <div class="loading-text">Loading AI...</div>
-        <div class="progress"><div class="progress-bar" id="progress"></div></div>
-        <div class="loading-status" id="status">Preparing...</div>
-    </div>
-    
-    <!-- Chat -->
-    <div id="chat" class="view chat">
-        <div class="chat-header">
-            <div class="left"><span class="glyph">⟡</span> Active Mirror</div>
-            <span class="badge" id="mode-badge">Local</span>
+
+    <div id="app">
+        <!-- Welcome Screen -->
+        <div id="welcome">
+            <div class="glyph">⟡</div>
+            <h1 class="welcome-title">ACTIVE MIRROR</h1>
+            <p class="welcome-tagline">Sovereign AI that reflects, not directs</p>
+
+            <div class="mode-cards">
+                <div class="mode-card glass" onclick="startCloud()">
+                    <div class="mode-icon">☁️</div>
+                    <div class="mode-info">
+                        <div class="mode-title">Cloud Reflection</div>
+                        <div class="mode-desc">Powered by Llama 3.3-70B</div>
+                    </div>
+                    <span class="mode-badge badge-instant">Instant</span>
+                </div>
+
+                <div class="mode-card glass" onclick="startSovereign()" id="sovereign-card">
+                    <div class="mode-icon">🧠</div>
+                    <div class="mode-info">
+                        <div class="mode-title">Sovereign Mode</div>
+                        <div class="mode-desc">100% local, 100% private</div>
+                    </div>
+                    <span class="mode-badge badge-sovereign">Local AI</span>
+                </div>
+            </div>
         </div>
-        <div class="messages" id="messages"></div>
-        <div class="input-area">
-            <div class="input-row">
-                <input type="text" id="input" placeholder="What's on your mind?" autocomplete="off">
-                <button class="send" id="send" disabled>Send</button>
+
+        <!-- Loading Screen -->
+        <div id="loading">
+            <div class="progress-ring">
+                <svg viewBox="0 0 160 160">
+                    <circle class="progress-bg" cx="80" cy="80" r="70"></circle>
+                    <circle class="progress-fill" cx="80" cy="80" r="70" id="progress-circle"></circle>
+                </svg>
+                <div class="progress-text">
+                    <div class="progress-percent" id="progress-percent">0%</div>
+                    <div class="progress-label">Loading</div>
+                </div>
+            </div>
+            <p class="loading-status" id="loading-status">Preparing your sovereign AI...</p>
+        </div>
+
+        <!-- Chat Interface -->
+        <div id="chat">
+            <header class="chat-header">
+                <button class="back-btn" onclick="showWelcome()">←</button>
+                <div class="chat-brand">
+                    <span class="chat-glyph">⟡</span>
+                    <span class="chat-title">Active Mirror</span>
+                </div>
+                <div class="chat-status">
+                    <span class="status-dot"></span>
+                    <span id="mode-label">Cloud</span>
+                </div>
+            </header>
+
+            <div class="messages" id="messages">
+                <!-- Messages appear here -->
+            </div>
+
+            <div class="session-counter" id="session-counter">Start your reflection</div>
+
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <input type="text" id="input" placeholder="What's on your mind?" autocomplete="off">
+                    <button class="send-btn" id="send-btn" onclick="send()">→</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script type="module">
-    import { CreateWebWorkerMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
-    
-    // Config
-    const GROQ_KEY = "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";
-    const GROQ_MODEL = "llama-3.3-70b-versatile";
-    const LOCAL_MODEL = "Qwen2.5-1.5B-Instruct-q4f16_1-MLC";
-    
-    const SYSTEM = `You are Active Mirror — a reflective AI. Help users think clearly.
-Ask clarifying questions. Surface assumptions. Be concise and warm.`;
-    
-    // State
-    let engine = null;
-    let mode = 'cloud'; // 'cloud' or 'local'
-    let messages = [];
-    const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
-    
-    // Elements
-    const $welcome = document.getElementById('welcome');
-    const $loading = document.getElementById('loading');
-    const $chat = document.getElementById('chat');
-    const $models = document.getElementById('models');
-    const $progress = document.getElementById('progress');
-    const $status = document.getElementById('status');
-    const $messages = document.getElementById('messages');
-    const $input = document.getElementById('input');
-    const $send = document.getElementById('send');
-    const $badge = document.getElementById('mode-badge');
-    
-    function show(view) {
-        [$welcome, $loading, $chat].forEach(v => v.classList.remove('active'));
-        view.classList.add('active');
-    }
-    
-    function addMsg(role, text) {
-        const div = document.createElement('div');
-        div.className = 'msg ' + role;
-        div.innerHTML = text;
-        $messages.appendChild(div);
-        $messages.scrollTop = $messages.scrollHeight;
-        return div;
-    }
-    
-    // Cloud inference
-    async function cloudInfer(userMsg) {
-        messages.push({ role: 'user', content: userMsg });
-        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_KEY}` },
-            body: JSON.stringify({
-                model: GROQ_MODEL,
-                messages: [{ role: 'system', content: SYSTEM }, ...messages.slice(-10)],
-                temperature: 0.7, max_tokens: 300
-            })
-        });
-        if (!res.ok) throw new Error('API error: ' + res.status);
-        const data = await res.json();
-        const reply = data.choices[0]?.message?.content || "I hear you. Tell me more.";
-        messages.push({ role: 'assistant', content: reply });
-        return reply;
-    }
-    
-    // Local inference
-    async function localInfer(userMsg) {
-        messages.push({ role: 'user', content: userMsg });
-        const stream = await engine.chat.completions.create({
-            messages: [{ role: 'system', content: SYSTEM }, ...messages.slice(-10)],
-            stream: true, max_tokens: 300
-        });
-        let full = '';
-        const div = addMsg('ai', '<span class="thinking">⟡</span>');
-        for await (const chunk of stream) {
-            full += chunk.choices[0]?.delta?.content || '';
-            div.innerHTML = full.replace(/\n/g, '<br>');
-            $messages.scrollTop = $messages.scrollHeight;
+        // ═══════════════════════════════════════════════════════════════════════════
+        // ⟡ ACTIVE MIRROR - PREMIUM UX ENGINE
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        import { CreateWebWorkerMLCEngine } from 'https://cdn.jsdelivr.net/npm/@anthropic-ai/claude-bedrock-sdk@0.10.2/+esm';
+
+        // Config
+        const GROQ_KEY = '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';
+        const MODEL_ID = 'SmolLM2-1.7B-Instruct-q4f32_1-MLC';
+
+        const SYSTEM_PROMPT = `You are Active Mirror, a sovereign reflection system. Your role is to help humans think more clearly—not by giving answers, but by asking questions that surface hidden assumptions.
+
+Rules:
+- Never give advice or solutions
+- Respond with 1-2 reflective questions
+- Mirror their words back to them
+- Be warm, present, curious
+- Keep responses under 50 words`;
+
+        // State
+        let mode = null; // 'cloud' | 'sovereign'
+        let engine = null;
+        let messages = [];
+        let isLoading = false;
+
+        // Elements
+        const welcomeEl = document.getElementById('welcome');
+        const loadingEl = document.getElementById('loading');
+        const chatEl = document.getElementById('chat');
+        const messagesEl = document.getElementById('messages');
+        const inputEl = document.getElementById('input');
+        const sendBtn = document.getElementById('send-btn');
+        const progressCircle = document.getElementById('progress-circle');
+        const progressPercent = document.getElementById('progress-percent');
+        const loadingStatus = document.getElementById('loading-status');
+        const modeLabel = document.getElementById('mode-label');
+        const sessionCounter = document.getElementById('session-counter');
+
+        // Check device capabilities
+        const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
+        const hasWebGPU = !!navigator.gpu;
+
+        // Hide sovereign option on mobile
+        if (isMobile || !hasWebGPU) {
+            document.getElementById('sovereign-card').style.display = 'none';
         }
-        messages.push({ role: 'assistant', content: full });
-        return null; // Already rendered
-    }
-    
-    // Send message
-    async function send() {
-        const text = $input.value.trim();
-        if (!text) return;
-        
-        $input.value = '';
-        $send.disabled = true;
-        addMsg('user', text);
-        
-        try {
-            if (mode === 'cloud') {
-                const thinkDiv = addMsg('ai', '<span class="thinking">⟡</span>');
-                const reply = await cloudInfer(text);
-                thinkDiv.innerHTML = reply.replace(/\n/g, '<br>');
-            } else {
-                await localInfer(text);
+
+        // ─── Cloud Mode ───
+        window.startCloud = function () {
+            mode = 'cloud';
+            modeLabel.textContent = 'Cloud';
+            showChat();
+            addMessage('ai', "What's alive for you right now?");
+        };
+
+        // ─── Sovereign Mode ───
+        window.startSovereign = async function () {
+            mode = 'sovereign';
+            modeLabel.textContent = 'Sovereign';
+            welcomeEl.classList.add('hidden');
+            loadingEl.classList.add('active');
+
+            try {
+                const { CreateWebWorkerMLCEngine } = await import('https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.73/+esm');
+
+                engine = await CreateWebWorkerMLCEngine(
+                    new Worker(URL.createObjectURL(new Blob([`
+                        import { WebWorkerMLCEngineHandler } from 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.73/+esm';
+                        const handler = new WebWorkerMLCEngineHandler();
+                        self.onmessage = (e) => handler.onmessage(e);
+                    `], { type: 'module' }))),
+                    MODEL_ID,
+                    {
+                        initProgressCallback: (progress) => {
+                            const pct = Math.round(progress.progress * 100);
+                            progressPercent.textContent = pct + '%';
+                            progressCircle.style.strokeDashoffset = 440 - (440 * progress.progress);
+                            loadingStatus.textContent = progress.text || 'Loading model...';
+
+                            // Color shift
+                            if (pct < 50) {
+                                progressCircle.style.stroke = '#3b82f6';
+                            } else if (pct < 90) {
+                                progressCircle.style.stroke = '#8b5cf6';
+                            } else {
+                                progressCircle.style.stroke = '#10b981';
+                            }
+                        }
+                    }
+                );
+
+                loadingEl.classList.remove('active');
+                showChat();
+                addMessage('ai', "Your sovereign AI is ready. What's on your mind?");
+
+            } catch (err) {
+                console.error('Sovereign mode failed:', err);
+                loadingStatus.textContent = 'Failed to load. Switching to cloud...';
+                setTimeout(() => {
+                    loadingEl.classList.remove('active');
+                    window.startCloud();
+                }, 2000);
             }
-        } catch (err) {
-            addMsg('ai', '<span style="color:#ff6b6b">Error: ' + err.message + '</span>');
+        };
+
+        // ─── Show Chat ───
+        function showChat() {
+            welcomeEl.classList.add('hidden');
+            chatEl.classList.add('active');
+            inputEl.focus();
         }
-        
-        $send.disabled = false;
-        $input.focus();
-    }
-    
-    // Load local model
-    async function loadLocal() {
-        show($loading);
-        try {
-            const worker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' });
-            engine = await CreateWebWorkerMLCEngine(worker, LOCAL_MODEL, {
-                initProgressCallback: (r) => {
-                    $progress.style.width = Math.round(r.progress * 100) + '%';
-                    $status.textContent = r.text || 'Loading...';
+
+        // ─── Show Welcome ───
+        window.showWelcome = function () {
+            chatEl.classList.remove('active');
+            welcomeEl.classList.remove('hidden');
+            messages = [];
+            messagesEl.innerHTML = '';
+            updateCounter();
+        };
+
+        // ─── Add Message ───
+        function addMessage(role, content) {
+            messages.push({ role, content });
+
+            const div = document.createElement('div');
+            div.className = `message message-${role}`;
+            div.textContent = content;
+            messagesEl.appendChild(div);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+
+            updateCounter();
+        }
+
+        // ─── Update Counter ───
+        function updateCounter() {
+            const count = messages.filter(m => m.role === 'user').length;
+            if (count === 0) {
+                sessionCounter.textContent = 'Start your reflection';
+            } else {
+                sessionCounter.textContent = `${count} reflection${count === 1 ? '' : 's'} this session`;
+            }
+        }
+
+        // ─── Show Thinking ───
+        function showThinking() {
+            const div = document.createElement('div');
+            div.className = 'thinking';
+            div.id = 'thinking';
+            div.innerHTML = '<span class="thinking-glyph">⟡</span> Reflecting...';
+            messagesEl.appendChild(div);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function hideThinking() {
+            const el = document.getElementById('thinking');
+            if (el) el.remove();
+        }
+
+        // ─── Send Message ───
+        window.send = async function () {
+            const text = inputEl.value.trim();
+            if (!text || isLoading) return;
+
+            inputEl.value = '';
+            addMessage('user', text);
+            isLoading = true;
+            sendBtn.disabled = true;
+            showThinking();
+
+            try {
+                let response;
+
+                if (mode === 'cloud') {
+                    response = await cloudInference(text);
+                } else {
+                    response = await localInference(text);
                 }
+
+                hideThinking();
+                addMessage('ai', response);
+
+            } catch (err) {
+                console.error('Inference failed:', err);
+                hideThinking();
+                addMessage('ai', "What feels most important about what you just shared?");
+            }
+
+            isLoading = false;
+            sendBtn.disabled = false;
+            inputEl.focus();
+        };
+
+        // ─── Cloud Inference ───
+        async function cloudInference(userMsg) {
+            const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${GROQ_KEY}`
+                },
+                body: JSON.stringify({
+                    model: 'llama-3.3-70b-versatile',
+                    messages: [
+                        { role: 'system', content: SYSTEM_PROMPT },
+                        ...messages.slice(-8).map(m => ({
+                            role: m.role === 'ai' ? 'assistant' : m.role,
+                            content: m.content
+                        })),
+                        { role: 'user', content: userMsg }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 150
+                })
             });
-            mode = 'local';
-            $badge.textContent = '🔒 Local';
-            $badge.className = 'badge local';
-            show($chat);
-            addMsg('ai', "Ready. What's on your mind?");
-        } catch (err) {
-            $status.textContent = 'Error: ' + err.message;
-            $status.style.color = '#ff6b6b';
+
+            if (!res.ok) throw new Error('API failed');
+            const data = await res.json();
+            return data.choices[0]?.message?.content || "What's underneath that?";
         }
-    }
-    
-    // Start cloud mode
-    function startCloud() {
-        mode = 'cloud';
-        $badge.textContent = '☁️ Cloud';
-        $badge.className = 'badge cloud';
-        show($chat);
-        addMsg('ai', "Ready. What's on your mind?");
-    }
-    
-    // Render model cards
-    function renderModels() {
-        const cards = [];
-        
-        if (isMobile) {
-            cards.push(`
-                <div class="model-card recommended" onclick="window.startCloud()">
-                    <div class="model-name">☁️ Cloud Mode</div>
-                    <div class="model-meta">Instant start • Llama 3.3 70B</div>
-                    <div class="model-badge">Recommended for Mobile</div>
-                </div>
-            `);
-        } else {
-            cards.push(`
-                <div class="model-card recommended" onclick="window.loadLocal()">
-                    <div class="model-name">🔒 Sovereign Mode</div>
-                    <div class="model-meta">~800MB download • Qwen 2.5 1.5B</div>
-                    <div class="model-badge">Runs 100% locally</div>
-                </div>
-            `);
-            cards.push(`
-                <div class="model-card" onclick="window.startCloud()">
-                    <div class="model-name">☁️ Cloud Mode</div>
-                    <div class="model-meta">Instant start • Llama 3.3 70B</div>
-                </div>
-            `);
+
+        // ─── Local Inference ───
+        async function localInference(userMsg) {
+            const result = await engine.chat.completions.create({
+                messages: [
+                    { role: 'system', content: SYSTEM_PROMPT },
+                    ...messages.slice(-8).map(m => ({
+                        role: m.role === 'ai' ? 'assistant' : m.role,
+                        content: m.content
+                    })),
+                    { role: 'user', content: userMsg }
+                ],
+                temperature: 0.7,
+                max_tokens: 150
+            });
+
+            return result.choices[0]?.message?.content || "What feels true about that?";
         }
-        
-        $models.innerHTML = cards.join('');
-    }
-    
-    // Event listeners
-    $input.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
-    $input.addEventListener('input', () => { $send.disabled = !$input.value.trim(); });
-    $send.addEventListener('click', send);
-    
-    // Expose to window for onclick
-    window.loadLocal = loadLocal;
-    window.startCloud = startCloud;
-    
-    // Init
-    renderModels();
+
+        // ─── Enter to Send ───
+        inputEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                window.send();
+            }
+        });
+
+        // ─── Keyboard Shortcuts ───
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                window.showWelcome();
+            }
+            if (e.key === '/' && document.activeElement !== inputEl) {
+                e.preventDefault();
+                inputEl.focus();
+            }
+        });
     </script>
 </body>
+
 </html>
