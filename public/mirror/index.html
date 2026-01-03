@@ -822,23 +822,46 @@ You are a mirror, not an oracle. Questions only.`;
             modeLabel.textContent = 'Sovereign';
             welcomeEl.classList.add('hidden');
             loadingEl.classList.add('active');
+            loadingStatus.textContent = 'Checking WebGPU support...';
 
             try {
+                // Check WebGPU first
+                if (!navigator.gpu) {
+                    throw new Error('WebGPU not supported. Try Chrome or Edge.');
+                }
+                
+                const adapter = await navigator.gpu.requestAdapter();
+                if (!adapter) {
+                    throw new Error('No WebGPU adapter found. Your GPU may not be supported.');
+                }
+                
+                loadingStatus.textContent = 'Loading WebLLM library...';
+                
                 const { CreateWebWorkerMLCEngine } = await import('https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.73/+esm');
+                
+                loadingStatus.textContent = 'Creating AI worker...';
+
+                // Create worker from separate file instead of blob (more compatible)
+                const workerCode = `
+                    import { WebWorkerMLCEngineHandler } from 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.73/+esm';
+                    const handler = new WebWorkerMLCEngineHandler();
+                    self.onmessage = (e) => handler.onmessage(e);
+                `;
+                const blob = new Blob([workerCode], { type: 'text/javascript' });
+                const workerUrl = URL.createObjectURL(blob);
+                const worker = new Worker(workerUrl, { type: 'module' });
+
+                loadingStatus.textContent = 'Starting model download...';
 
                 engine = await CreateWebWorkerMLCEngine(
-                    new Worker(URL.createObjectURL(new Blob([`
-                        import { WebWorkerMLCEngineHandler } from 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.73/+esm';
-                        const handler = new WebWorkerMLCEngineHandler();
-                        self.onmessage = (e) => handler.onmessage(e);
-                    `], { type: 'module' }))),
+                    worker,
                     MODEL_ID,
                     {
                         initProgressCallback: (progress) => {
                             const pct = Math.round(progress.progress * 100);
                             progressPercent.textContent = pct + '%';
                             progressCircle.style.strokeDashoffset = 440 - (440 * progress.progress);
-                            loadingStatus.textContent = progress.text || 'Loading model...';
+                            loadingStatus.textContent = progress.text || 'Downloading model...';
 
                             // Color shift
                             if (pct < 50) {
@@ -852,12 +875,20 @@ You are a mirror, not an oracle. Questions only.`;
                     }
                 );
 
+                URL.revokeObjectURL(workerUrl);
                 loadingEl.classList.remove('active');
                 showChat();
                 addMessage('ai', "Your sovereign AI is ready. What's on your mind?");
 
             } catch (err) {
                 console.error('Sovereign mode failed:', err);
+                loadingStatus.textContent = '❌ ' + err.message;
+                loadingStatus.style.color = '#ef4444';
+                
+                // Show fallback option after 3 seconds
+                setTimeout(() => {
+                    loadingStatus.innerHTML = `❌ ${err.message}<br><br><button onclick="window.startCloud()" style="padding: 12px 24px; background: #3b82f6; border: none; border-radius: 8px; color: white; cursor: pointer;">Use Cloud Mode Instead</button>`;
+                }, 2000);
                 loadingStatus.textContent = 'Failed to load. Switching to cloud...';
                 setTimeout(() => {
                     loadingEl.classList.remove('active');
