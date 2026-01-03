@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CreateWebWorkerMLCEngine } from "@mlc-ai/web-llm";
-import { ArrowLeft, Send, Fingerprint, Menu, Cloud, Lock, Brain, Download, Check, Wifi, WifiOff } from 'lucide-react';
+import { ArrowLeft, Send, Fingerprint, Menu, Cloud, Lock, Brain, Download, Check, Wifi, WifiOff, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -43,6 +43,7 @@ export default function Demo() {
     const { reflections, stats, saveReflection, hasReflectedToday } = useVault();
     const [intent, setIntent] = useState(null);
     const [isHistoryOpen, setHistoryOpen] = useState(false);
+    const [showInfo, setShowInfo] = useState(false); // Hybrid mode info panel
 
     // ─────────────────────────────────────────────────────────────────────────
     // CONFIGURATION
@@ -339,43 +340,92 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
                         <Link to="/" className="p-2 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-colors">
                             <ArrowLeft size={18} />
                         </Link>
-                        {/* Intelligence Status */}
-                        <div className="flex items-center gap-3 text-xs font-mono">
+                        {/* Intelligence Status - EXPANDED TRANSPARENCY */}
+                        <div className="flex items-center gap-2 text-xs font-mono">
                             {/* Online indicator */}
                             <div className={`${isOnline ? 'text-green-500' : 'text-red-400'}`}>
                                 {isOnline ? <Wifi size={12} /> : <WifiOff size={12} />}
                             </div>
-                            {/* Current mode */}
-                            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-white/5 border border-white/10">
-                                {tierIcons[currentTier]}
-                                <span className="text-zinc-400">{tierLabels[currentTier]}</span>
+
+                            {/* HYBRID STATUS DISPLAY */}
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-white/10">
+                                {/* Current mode */}
+                                <div className="flex items-center gap-1">
+                                    {tierIcons[currentTier]}
+                                    <span className={`font-medium ${currentTier === 'cloud' ? 'text-blue-400' :
+                                        currentTier === 'tier1' ? 'text-amber-400' : 'text-purple-400'
+                                        }`}>
+                                        {currentTier === 'cloud' ? '☁️ Cloud' :
+                                            currentTier === 'tier1' ? '📱 Local' : '🔒 Sovereign'}
+                                    </span>
+                                </div>
+
+                                {/* Separator */}
+                                <div className="w-px h-3 bg-white/20 mx-1"></div>
+
+                                {/* Background status */}
+                                <div className="text-zinc-500">
+                                    {isSovereign ? (
+                                        <span className="text-purple-400">✓ Offline Ready</span>
+                                    ) : tier2Progress > 0 && tier2Progress < 100 ? (
+                                        <span>⬇ Caching {tier2Progress}%</span>
+                                    ) : tier1Progress > 0 && tier1Progress < 100 ? (
+                                        <span>⬇ Fallback {tier1Progress}%</span>
+                                    ) : (
+                                        <span>Hybrid Active</span>
+                                    )}
+                                </div>
                             </div>
-                            {/* Download progress */}
-                            {tier1Progress > 0 && tier1Progress < 100 && (
-                                <div className="flex items-center gap-1 text-zinc-500">
-                                    <Download size={10} className="animate-pulse" />
-                                    <span>{tier1Progress}%</span>
-                                </div>
-                            )}
-                            {tier2Progress > 0 && tier2Progress < 100 && (
-                                <div className="flex items-center gap-1 text-zinc-500">
-                                    <Download size={10} className="animate-pulse" />
-                                    <span>{tier2Progress}%</span>
-                                </div>
-                            )}
-                            {/* Sovereign badge */}
-                            {isSovereign && (
-                                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-400">
-                                    <Check size={10} />
-                                    <span>Sovereign</span>
-                                </div>
-                            )}
                         </div>
                     </div>
-                    <button onClick={() => setHistoryOpen(true)} className="p-2 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-colors">
-                        <Menu size={18} />
-                    </button>
+
+                    {/* Info Button */}
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setShowInfo(!showInfo)}
+                            className="p-2 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-colors"
+                            title="About Hybrid Mode"
+                        >
+                            <Info size={16} />
+                        </button>
+                        <button onClick={() => setHistoryOpen(true)} className="p-2 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-colors">
+                            <Menu size={18} />
+                        </button>
+                    </div>
                 </div>
+
+                {/* INFO PANEL - Explains Hybrid Architecture */}
+                <AnimatePresence>
+                    {showInfo && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="border-b border-white/10 bg-white/[0.02] overflow-hidden"
+                        >
+                            <div className="p-4 text-xs space-y-3">
+                                <div className="font-medium text-purple-400">⟡ How Active Mirror Works</div>
+                                <div className="grid grid-cols-3 gap-3 text-center">
+                                    <div className={`p-2 rounded-lg ${currentTier === 'cloud' ? 'bg-blue-500/20 ring-1 ring-blue-500/50' : 'bg-white/5'}`}>
+                                        <div className="text-blue-400 mb-1">☁️ Cloud</div>
+                                        <div className="text-zinc-500 text-[10px]">Instant response via Groq</div>
+                                    </div>
+                                    <div className={`p-2 rounded-lg ${currentTier === 'tier1' ? 'bg-amber-500/20 ring-1 ring-amber-500/50' : 'bg-white/5'}`}>
+                                        <div className="text-amber-400 mb-1">📱 Local</div>
+                                        <div className="text-zinc-500 text-[10px]">On-device AI fallback</div>
+                                    </div>
+                                    <div className={`p-2 rounded-lg ${isSovereign ? 'bg-purple-500/20 ring-1 ring-purple-500/50' : 'bg-white/5'}`}>
+                                        <div className="text-purple-400 mb-1">🔒 Sovereign</div>
+                                        <div className="text-zinc-500 text-[10px]">100% offline capable</div>
+                                    </div>
+                                </div>
+                                <div className="text-zinc-600 text-[10px] text-center">
+                                    Your data stays private. Local AI downloads in background for offline use.
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Chat Area */}
                 <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 scrollbar-hide">
