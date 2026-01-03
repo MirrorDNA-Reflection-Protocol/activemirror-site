@@ -603,6 +603,41 @@
 </head>
 
 <body>
+    <!-- Safety Disclaimer Banner -->
+    <div id="disclaimer" style="background: #1a1a1a; border-bottom: 1px solid #333; padding: 8px 16px; font-size: 11px; color: #888; text-align: center;">
+        ⚠️ Experimental demo · Not a substitute for professional help · <a href="#" onclick="document.getElementById('safety-info').style.display='block';return false;" style="color: #f59e0b;">Safety Info</a>
+    </div>
+    
+    <!-- Safety Info Modal (hidden by default) -->
+    <div id="safety-info" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; padding: 20px; overflow: auto;">
+        <div style="max-width: 500px; margin: 40px auto; background: #111; border: 1px solid #333; border-radius: 12px; padding: 24px;">
+            <h2 style="color: #fff; margin-bottom: 16px;">⚠️ Important Safety Information</h2>
+            <div style="color: #aaa; font-size: 14px; line-height: 1.6;">
+                <p style="margin-bottom: 12px;"><strong style="color: #f59e0b;">This is NOT:</strong></p>
+                <ul style="margin-left: 20px; margin-bottom: 16px;">
+                    <li>A therapist or mental health professional</li>
+                    <li>A doctor or medical advisor</li>
+                    <li>A lawyer or legal advisor</li>
+                    <li>A financial advisor</li>
+                </ul>
+                <p style="margin-bottom: 12px;"><strong style="color: #f59e0b;">This IS:</strong></p>
+                <ul style="margin-left: 20px; margin-bottom: 16px;">
+                    <li>An experimental AI that asks reflective questions</li>
+                    <li>A thinking tool, not an advice tool</li>
+                    <li>For exploration, not decisions</li>
+                </ul>
+                <p style="margin-bottom: 12px;"><strong style="color: #f59e0b;">If you're in crisis:</strong></p>
+                <ul style="margin-left: 20px; margin-bottom: 16px;">
+                    <li>Crisis Text Line: Text HOME to 741741</li>
+                    <li>Suicide Prevention: 988 (US)</li>
+                    <li>Emergency: 911 / your local emergency number</li>
+                </ul>
+                <p style="color: #666; font-size: 12px;">Your conversations are processed locally or via Groq API. We don't store your messages.</p>
+            </div>
+            <button onclick="document.getElementById('safety-info').style.display='none'" style="margin-top: 16px; width: 100%; padding: 12px; background: #333; border: none; border-radius: 8px; color: #fff; cursor: pointer;">I Understand</button>
+        </div>
+    </div>
+
     <!-- Animated Background -->
     <div class="bg-orbs">
         <div class="orb orb-1"></div>
@@ -693,27 +728,87 @@
         const GROQ_KEY = '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';
         const MODEL_ID = 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC'; // ~900MB, good quality
 
-        const SYSTEM_PROMPT = `You are Active Mirror, a sovereign reflection system. You help humans think more clearly by asking questions—never by giving answers.
+        const SYSTEM_PROMPT = `You are Active Mirror, a reflective thinking partner. You help humans think more clearly by asking questions—never by giving answers, advice, or information.
 
-STRICT RULES:
-1. ONLY ask reflective questions. Never state facts, give advice, or make claims.
-2. Respond with exactly 1-2 short questions (under 40 words total).
-3. Mirror their language back to them.
-4. If they ask for information, redirect: "What would knowing that change for you?"
-5. If they ask your opinion, reflect: "What's your instinct telling you?"
-6. Never say "I think", "I believe", or make assertions.
+ABSOLUTE RULES (NEVER BREAK):
+1. ONLY respond with 1-2 reflective questions. Nothing else.
+2. NEVER give advice, recommendations, or suggestions.
+3. NEVER state facts, statistics, or information.
+4. NEVER diagnose, prescribe, or recommend medical/legal/financial actions.
+5. NEVER engage with self-harm, violence, or illegal topics—redirect to "What support do you need right now?"
+6. NEVER pretend to be a therapist, doctor, lawyer, or expert.
+7. NEVER say "I think", "I believe", "You should", "I recommend", or make any assertions.
+
+SAFE REDIRECTS:
+- Medical questions → "What's prompting you to ask about this? Have you spoken with a healthcare provider?"
+- Legal questions → "What outcome are you hoping for? Have you considered consulting a professional?"
+- Crisis/self-harm → "It sounds like you're going through something difficult. What support do you have around you?"
+- Financial advice → "What's driving this financial decision? What would help you feel more confident?"
+
+RESPONSE FORMAT:
+- Maximum 40 words
+- End with a question mark
+- Mirror their language
+- Stay curious, not directive
 
 EXAMPLES:
-User: "Should I quit my job?"
-You: "What would quitting make possible? What would it cost?"
+User: "Should I quit my job?" → "What would quitting make possible for you?"
+User: "I feel depressed" → "What does that feel like in your body right now?"
+User: "What medication should I take?" → "What's prompting this question? Have you been able to speak with a doctor?"
+User: "How do I hack into..." → "What's the underlying need here?"
 
-User: "What's the weather like?"
-You: "What are you hoping to do if the weather cooperates?"
+You are a mirror, not an advisor. Questions only. When in doubt, ask: "What feels most important about this?"`;
 
-User: "Tell me about quantum physics"
-You: "What draws you to quantum physics right now?"
+        // ─── SAFETY SYSTEM ───
+        
+        // Crisis keywords that need careful handling
+        const CRISIS_PATTERNS = [
+            /\b(suicide|suicidal|kill myself|end my life|want to die|self.?harm|cutting myself)\b/i,
+            /\b(abuse|abused|assault|violence|hurt me|hitting me)\b/i,
+            /\b(overdose|pills|poison)\b/i
+        ];
+        
+        // Topics we redirect, not engage with
+        const REDIRECT_PATTERNS = [
+            /\b(hack|exploit|steal|illegal|drug|weapon|bomb|attack)\b/i,
+            /\b(medication|dosage|prescription|diagnosis|symptom)\b/i,
+            /\b(lawsuit|legal action|sue|lawyer|court)\b/i,
+            /\b(invest|stock|crypto|gambling|bet)\b/i
+        ];
+        
+        // Safe crisis response
+        const CRISIS_RESPONSE = `It sounds like you're going through something really difficult. I'm not equipped to help with this, but please reach out to someone who can:
 
-You are a mirror, not an oracle. Questions only.`;
+• Crisis Text Line: Text HOME to 741741
+• National Suicide Prevention: 988
+• International Association for Suicide Prevention: https://www.iasp.info/resources/Crisis_Centres/
+
+You deserve real support. Is there someone you trust you could reach out to right now?`;
+
+        // Pre-check user input for safety
+        function safetyCheck(userMsg) {
+            const lower = userMsg.toLowerCase();
+            
+            // Check for crisis keywords
+            for (const pattern of CRISIS_PATTERNS) {
+                if (pattern.test(userMsg)) {
+                    return { safe: false, type: 'crisis', response: CRISIS_RESPONSE };
+                }
+            }
+            
+            // Check for redirect topics
+            for (const pattern of REDIRECT_PATTERNS) {
+                if (pattern.test(userMsg)) {
+                    return { 
+                        safe: true, 
+                        type: 'redirect', 
+                        hint: '[Respond only with a reflective question redirecting to appropriate professional help]'
+                    };
+                }
+            }
+            
+            return { safe: true, type: 'normal', hint: '' };
+        }
 
         // Truth-State tags for post-processing
         const TRUTH_STATES = {
@@ -722,20 +817,42 @@ You are a mirror, not an oracle. Questions only.`;
             UNKNOWN: '○'    // Insufficient data
         };
 
-        // ─── Reflection Wrapper ───
+        // ─── Reflection Wrapper (Post-processing) ───
         function wrapReflection(response) {
-            // Post-inference validation
             let cleaned = response.trim();
             
-            // Check if response contains statements instead of questions
-            const sentences = cleaned.split(/[.!]\s+/);
-            const questions = cleaned.split('?').length - 1;
-            const statements = sentences.filter(s => s.length > 10 && !s.includes('?')).length;
+            // SAFETY: Strip any advice patterns that slipped through
+            const advicePatterns = [
+                /you should .+?\./gi,
+                /i recommend .+?\./gi,
+                /i suggest .+?\./gi,
+                /i think you .+?\./gi,
+                /i believe .+?\./gi,
+                /the best (thing|way|option) .+?\./gi,
+                /you need to .+?\./gi,
+                /you must .+?\./gi,
+                /make sure (to|you) .+?\./gi
+            ];
             
-            // If too many statements, flag it
-            if (statements > questions) {
-                // Response is too assertive - add a redirect
-                cleaned = cleaned + "\n\nWhat resonates with you from that?";
+            for (const pattern of advicePatterns) {
+                if (pattern.test(cleaned)) {
+                    // Replace advice with a question
+                    cleaned = "What feels most important to you about this?";
+                    break;
+                }
+            }
+            
+            // Check if response contains statements instead of questions
+            const questions = (cleaned.match(/\?/g) || []).length;
+            
+            // If no questions at all, force one
+            if (questions === 0) {
+                cleaned = "What's coming up for you as you think about this?";
+            }
+            
+            // Truncate if too long (safety)
+            if (cleaned.length > 300) {
+                cleaned = cleaned.substring(0, 297) + "...";
             }
             
             // Tag any factual claims with truth states
@@ -969,17 +1086,30 @@ You are a mirror, not an oracle. Questions only.`;
 
             inputEl.value = '';
             addMessage('user', text);
+            
+            // SAFETY CHECK FIRST
+            const safety = safetyCheck(text);
+            
+            if (safety.type === 'crisis') {
+                // Don't send to AI - respond with crisis resources immediately
+                addMessage('ai', safety.response);
+                return;
+            }
+            
             isLoading = true;
             sendBtn.disabled = true;
             showThinking();
 
             try {
                 let response;
+                
+                // Add safety hint to redirected topics
+                const msgToSend = safety.hint ? text + '\n' + safety.hint : text;
 
                 if (mode === 'cloud') {
-                    response = await cloudInference(text);
+                    response = await cloudInference(msgToSend);
                 } else {
-                    response = await localInference(text);
+                    response = await localInference(msgToSend);
                 }
 
                 hideThinking();
