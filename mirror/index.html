@@ -8,6 +8,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Active Mirror — Sovereign AI</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://api.groq.com">
     <style>
@@ -610,13 +612,18 @@
 
 <body>
     <!-- Safety Disclaimer Banner -->
-    <div id="disclaimer" style="background: #1a1a1a; border-bottom: 1px solid #333; padding: 8px 16px; font-size: 11px; color: #888; text-align: center;">
-        ⚠️ Experimental demo · Not a substitute for professional help · <a href="#" onclick="document.getElementById('safety-info').style.display='block';return false;" style="color: #f59e0b;">Safety Info</a>
+    <div id="disclaimer"
+        style="background: #1a1a1a; border-bottom: 1px solid #333; padding: 8px 16px; font-size: 11px; color: #888; text-align: center;">
+        ⚠️ Experimental demo · Not a substitute for professional help · <a href="#"
+            onclick="document.getElementById('safety-info').style.display='block';return false;"
+            style="color: #f59e0b;">Safety Info</a>
     </div>
-    
+
     <!-- Safety Info Modal (hidden by default) -->
-    <div id="safety-info" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; padding: 20px; overflow: auto;">
-        <div style="max-width: 500px; margin: 40px auto; background: #111; border: 1px solid #333; border-radius: 12px; padding: 24px;">
+    <div id="safety-info"
+        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; padding: 20px; overflow: auto;">
+        <div
+            style="max-width: 500px; margin: 40px auto; background: #111; border: 1px solid #333; border-radius: 12px; padding: 24px;">
             <h2 style="color: #fff; margin-bottom: 16px;">⚠️ Important Safety Information</h2>
             <div style="color: #aaa; font-size: 14px; line-height: 1.6;">
                 <p style="margin-bottom: 12px;"><strong style="color: #f59e0b;">This is NOT:</strong></p>
@@ -638,9 +645,12 @@
                     <li>Suicide Prevention: 988 (US)</li>
                     <li>Emergency: 911 / your local emergency number</li>
                 </ul>
-                <p style="color: #666; font-size: 12px;">Your conversations are processed locally or via Groq API. We don't store your messages.</p>
+                <p style="color: #666; font-size: 12px;">Your conversations are processed locally or via Groq API. We
+                    don't store your messages.</p>
             </div>
-            <button onclick="document.getElementById('safety-info').style.display='none'" style="margin-top: 16px; width: 100%; padding: 12px; background: #333; border: none; border-radius: 8px; color: #fff; cursor: pointer;">I Understand</button>
+            <button onclick="document.getElementById('safety-info').style.display='none'"
+                style="margin-top: 16px; width: 100%; padding: 12px; background: #333; border: none; border-radius: 8px; color: #fff; cursor: pointer;">I
+                Understand</button>
         </div>
     </div>
 
@@ -654,7 +664,8 @@
     <div id="app">
         <!-- Welcome Screen -->
         <div id="welcome">
-            <div class="glyph">⟡</div>
+            <img src="logo.jpg" alt="Active Mirror" class="glyph"
+                style="width: 100px; height: 100px; object-fit: contain; margin-bottom: 24px; border-radius: 20px; box-shadow: 0 0 40px var(--amber);">
             <h1 class="welcome-title">ACTIVE MIRROR</h1>
             <p class="welcome-tagline">Sovereign AI that reflects, not directs</p>
 
@@ -673,14 +684,17 @@
                     <div class="mode-info">
                         <div class="mode-title">Sovereign Mode</div>
                         <div class="mode-desc">100% local, 100% private</div>
-                        <div class="mode-storage" style="font-size: 10px; color: #888; margin-top: 4px;">~900MB download, stored in browser cache</div>
+                        <div class="mode-storage" style="font-size: 10px; color: #888; margin-top: 4px;">~900MB
+                            download, stored in browser cache</div>
                     </div>
                     <span class="mode-badge badge-sovereign">Local AI</span>
                 </div>
             </div>
-            
-            <p class="storage-note" style="font-size: 11px; color: #666; margin-top: 16px; max-width: 320px; text-align: center;">
-                💡 Sovereign mode downloads once, then works offline. To clear storage later, use browser settings → Clear site data.
+
+            <p class="storage-note"
+                style="font-size: 11px; color: #666; margin-top: 16px; max-width: 320px; text-align: center;">
+                💡 Sovereign mode downloads once, then works offline. To clear storage later, use browser settings →
+                Clear site data.
             </p>
         </div>
 
@@ -710,7 +724,9 @@
                 <div class="chat-status">
                     <span class="status-dot" id="proxy-dot" title="Safety proxy status"></span>
                     <span id="mode-label">Cloud</span>
-                    <span id="proxy-badge" style="font-size: 9px; background: #22c55e22; color: #22c55e; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">🛡️ Protected</span>
+                    <span id="proxy-badge"
+                        style="font-size: 9px; background: #22c55e22; color: #22c55e; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">🛡️
+                        Protected</span>
                 </div>
             </header>
 
@@ -732,13 +748,13 @@
     <script type="module">
         // ═══════════════════════════════════════════════════════════════════════════
         // ⟡ ACTIVE MIRROR - PREMIUM UX ENGINE
-        // ═══════════════════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════════════
 
-        // Note: WebLLM is imported dynamically in startSovereign() to avoid blocking cloud mode
+        // Note: WebLLM is imported dynamically in startSovereign() to acking cloud mode
 
         // Config
         const GROQ_KEY = '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';
-        const MODEL_ID = 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC'; // ~900MB, good quality
+        const MODEL_ID = 'Qwen2.5-1.5B-Instru_1-MLC'; // ~900MB, good quality
 
         const SYSTEM_PROMPT = `You are Active Mirror, a reflective thinking partner. You help humans think more clearly by asking questions—never by giving answers, advice, or information.
 
@@ -747,7 +763,7 @@ ABSOLUTE RULES (NEVER BREAK):
 2. NEVER give advice, recommendations, or suggestions.
 3. NEVER state facts, statistics, or information.
 4. NEVER diagnose, prescribe, or recommend medical/legal/financial actions.
-5. NEVER engage with self-harm, violence, or illegal topics—redirect to "What support do you need right now?"
+5. NEVER engage with self-harm, violence, or ilpics—redirect to "What support do you need right now?"
 6. NEVER pretend to be a therapist, doctor, lawyer, or expert.
 7. NEVER say "I think", "I believe", "You should", "I recommend", or make any assertions.
 
@@ -761,27 +777,27 @@ RESPONSE FORMAT:
 - Maximum 40 words
 - End with a question mark
 - Mirror their language
-- Stay curious, not directive
+- Stas, not directive
 
 EXAMPLES:
 User: "Should I quit my job?" → "What would quitting make possible for you?"
-User: "I feel depressed" → "What does that feel like in your body right now?"
+User: "I feel depressed" → "What does that feel likr body right now?"
 User: "What medication should I take?" → "What's prompting this question? Have you been able to speak with a doctor?"
-User: "How do I hack into..." → "What's the underlying need here?"
+User: "How do I hack into..." → "he underlying need here?"
 
-You are a mirror, not an advisor. Questions only. When in doubt, ask: "What feels most important about this?"`;
+You are a mirror, not an advisor. Questi ons only. When in doubt, ask: "What feels most important about this?"`;
 
         // ─── SAFETY SYSTEM ───
-        
+
         // Crisis keywords that need careful handling
-        const CRISIS_PATTERNS = [
-            /\b(suicide|suicidal|kill myself|end my life|want to die|self.?harm|cutting myself)\b/i,
+        cSIS_PATTERNS = [
+            /\b(suicide|suicidal|kill myself|end my life|want to  die|self.?harm|cutting myself)\b/i,
             /\b(abuse|abused|assault|violence|hurt me|hitting me)\b/i,
             /\b(overdose|pills|poison)\b/i
         ];
         
-        // Safe crisis response
-        const CRISIS_RESPONSE = `It sounds like you're going through something really difficult. I'm not equipped to help with this, but please reach out to someone who can:
+        /s response
+        const CRISIS_RESPONSE = `It sounds like you're going through something really difficult. I'm not equipped to help with this, buut to someone who can:
 
 • Crisis Text Line: Text HOME to 741741
 • National Suicide Prevention: 988
@@ -797,7 +813,7 @@ You deserve real support. Is there someone you trust you could reach out to righ
             },
             legal: {
                 patterns: [/\b(lawsuit|sue|lawyer|attorney|legal|court|police|arrest)\b/i],
-                response: "What outcome are you hoping for? A legal professional would be the right person to guide you on specifics."
+                response: "What outcome are you hoping for? A lee right person to guide you on specifics."
             },
             financial: {
                 patterns: [/\b(invest|stock|crypto|bitcoin|trading|gambling|bet)\b/i],
@@ -807,26 +823,22 @@ You deserve real support. Is there someone you trust you could reach out to righ
                 patterns: [/\b(hack|exploit|steal|illegal|weapon|bomb|attack)\b/i],
                 response: "What's the underlying need here?"
             }
-        };
-
-        // Pre-check user input for safety
+                / Pre - check user input for safety
         function safetyCheck(userMsg) {
-            // Check for crisis keywords FIRST
-            for (const pattern of CRISIS_PATTERNS) {
-                if (pattern.test(userMsg)) {
+                // Check for crisis keywords FIRST
+                for (const pattern of CRISIS_PATTERN     if (pattern.test(userMsg)) {
                     return { safe: false, type: 'crisis', response: CRISIS_RESPONSE };
                 }
             }
-            
-            // Check for hardcoded response topics - NO AI involvement
-            for (const [category, config] of Object.entries(HARDCODED_RESPONSES)) {
-                for (const pattern of config.patterns) {
-                    if (pattern.test(userMsg)) {
-                        return { safe: false, type: 'hardcoded', response: config.response };
-                    }
+
+        // Check for hardcoded response topics - NO AI involvement
+        for (const [category, config] of Object.entries(HARDCODED_RESPONSES)) {
+            for (const pattern of coterns) {
+                if (pattern.test(userMsg)) {
+                    return { safe: false, type: 'hardcoded', response: config.response };
                 }
             }
-            
+
             return { safe: true, type: 'normal' };
         }
 
@@ -834,76 +846,73 @@ You deserve real support. Is there someone you trust you could reach out to righ
         const TRUTH_STATES = {
             FACT: '◉',      // Verifiable, grounded
             ESTIMATE: '◐',  // Reasoned but uncertain  
-            UNKNOWN: '○'    // Insufficient data
+            OWN: '○'    // Insufficient data
         };
 
         // ─── Reflection Wrapper (Post-processing) ───
-        function wrapReflection(response) {
+        function wrapRsponse) {
             let cleaned = response.trim();
-            
+
             // FORBIDDEN WORDS in AI responses - these should never appear
             const forbiddenInResponse = [
-                /\b(medication|medicine|drug|pill|dosage|prescription|dose)\b/i,
-                /\b(therapist|psychiatrist|psychologist|counselor|doctor|physician)\b/i,
+                /\b(medication|medicine|drug|pill|dosage|prescriptio
+                /\b(therapist | psychiatrhologist | counselor | doctor | physician) \b / i,
                 /\b(diagnosis|diagnose|treatment|therapy|cure)\b/i,
                 /\b(lawsuit|attorney|lawyer|legal action|sue)\b/i,
                 /\b(invest|stock|crypto|bitcoin|trading|gambling)\b/i,
                 /\b(suicide|kill|harm|hurt yourself|end your life)\b/i,
-                /\b(definitely|certainly|absolutely|always|never|guaranteed)\b/i,
-                /\b(you should|you must|you need to|i recommend|i suggest|i advise)\b/i,
+                /\b(definitely|certainly|absolutely|always|never|guaranteed)              /\b(you should | you must | you need to | i recommend | i suggest | i advise) \b / i,
                 /\b(the best|the right|the correct|the proper)\b/i,
                 /\bwould .+ make you feel better\b/i,
                 /\bhave you (tried|considered) (taking|using)\b/i
             ];
-            
+
             for (const pattern of forbiddenInResponse) {
-                if (pattern.test(cleaned)) {
+                if (pattern.teed)) {
                     // Response contains forbidden content - replace entirely
-                    return "What's coming up for you as you sit with this?";
+                    return "What's coming up for you it with this?";
                 }
             }
-            
+
             // SAFETY: Strip any advice patterns that slipped through
-            const advicePatterns = [
-                /you should .+?[.?]/gi,
-                /i recommend .+?[.?]/gi,
+            const advicePatterns = /you should .+?[.?]/gi,
+            /i recommend .+?[.?]/gi,
                 /i suggest .+?[.?]/gi,
                 /i think you .+?[.?]/gi,
-                /i believe .+?[.?]/gi,
-                /the best (thing|way|option) .+?[.?]/gi,
+               .+? [.?] / gi,
+                /the best (thing|way/gi,
                 /you need to .+?[.?]/gi,
                 /you must .+?[.?]/gi,
                 /make sure (to|you) .+?[.?]/gi,
                 /why don't you .+?[.?]/gi,
-                /have you (tried|considered) .+?[.?]/gi
+                /have you () .+?[.?]/gi
             ];
-            
-            for (const pattern of advicePatterns) {
-                if (pattern.test(cleaned)) {
-                    // Replace advice with a question
-                    cleaned = "What feels most important to you about this?";
-                    break;
-                }
+
+            for (const pattern of ad                if (pattern.test(cleaned)) {
+                // Replace advice with a question
+                cleaned = "What feels most important to you about this?";
+                break;
             }
-            
+
+
             // Check if response contains statements instead of questions
-            const questions = (cleaned.match(/\?/g) || []).length;
-            
+            const ques(cleaned.match(/\?/g) || []).length;
+
             // If no questions at all, force one
             if (questions === 0) {
                 cleaned = "What's coming up for you as you think about this?";
             }
-            
+
             // Truncate if too long (safety)
             if (cleaned.length > 300) {
                 cleaned = cleaned.substring(0, 297) + "...";
             }
-            
+
             // Tag any factual claims with truth states
             cleaned = cleaned.replace(/(\d+%|\d+ percent)/gi, `$1 ${TRUTH_STATES.ESTIMATE}`);
-            cleaned = cleaned.replace(/(studies show|research suggests|experts say)/gi, `$1 ${TRUTH_STATES.ESTIMATE}`);
-            cleaned = cleaned.replace(/(always|never|definitely|certainly|obviously)/gi, `$1 ${TRUTH_STATES.UNKNOWN}`);
-            
+            cleaned = cleaned.replace(/(studies show|esearch suggests|experts say)/gi, `$1 ${TRUTH_STATES.ESTIMATE}`);
+            cleaned = cleaned.replace(/(always|never|defnitely|certainly|obviously)/gi, `$1 ${TRUTH_STATES.UNKNOWN}`);
+
             // Detect and warn about hallucination patterns
             const hallucinationPatterns = [
                 /according to .+?,/i,
@@ -911,33 +920,33 @@ You deserve real support. Is there someone you trust you could reach out to righ
                 /\$[\d,]+/i,
                 /\d+\.\d+ (million|billion|trillion)/i
             ];
-            
+
             for (const pattern of hallucinationPatterns) {
                 if (pattern.test(cleaned)) {
                     cleaned = cleaned + `\n\n${TRUTH_STATES.UNKNOWN} [Unverified claim - treat as reflection prompt, not fact]`;
                     break;
                 }
             }
-            
+
             return cleaned;
         }
 
-        // ─── Pre-inference: Reframe user input for reflection ───
-        function preProcess(userMsg) {
-            // If user is asking for facts, we'll let the system prompt handle it
+        // ─── Pre-inferene: Reframe user input for reflection ───
+        function preProcess(uerMsg) {
+            // If user is asking fr facts, we'll let the system prompt handle it
             // But we can add context hints
             const factPatterns = [
-                /^(what is|who is|when did|where is|how many|how much|tell me about)/i,
+                /^(what is|who is|when did|where is|how h|tell me about)/i,
                 /^(explain|describe|define|list)/i
             ];
-            
+
             for (const pattern of factPatterns) {
                 if (pattern.test(userMsg.trim())) {
                     // Add a hint for the model
-                    return userMsg + "\n[Mirror: respond with a reflective question about why they're asking]";
+                    return userMsg + "\n[Mirror: respond with a reflective question about wre asking]";
                 }
             }
-            
+
             return userMsg;
         }
 
@@ -950,7 +959,7 @@ You deserve real support. Is there someone you trust you could reach out to righ
         // Elements
         const welcomeEl = document.getElementById('welcome');
         const loadingEl = document.getElementById('loading');
-        const chatEl = document.getElementById('chat');
+        const El ent.getElementById('chat');
         const messagesEl = document.getElementById('messages');
         const inputEl = document.getElementById('input');
         const sendBtn = document.getElementById('send-btn');
@@ -973,10 +982,10 @@ You deserve real support. Is there someone you trust you could reach out to righ
         let proxyOnline = false;
         const proxyBadge = document.getElementById('proxy-badge');
         const proxyDot = document.getElementById('proxy-dot');
-        
+
         async function checkProxyHealth() {
             try {
-                const res = await fetch(`${SAFETY_PROXY_URL}/health`, { 
+                const res = await fetch(`${SAFETY_PROXY_URL}/health`, {
                     method: 'GET',
                     signal: AbortSignal.timeout(5000)
                 });
@@ -1002,7 +1011,7 @@ You deserve real support. Is there someone you trust you could reach out to righ
             if (proxyDot) proxyDot.style.background = '#f59e0b';
             return false;
         }
-        
+
         // Check proxy on load
         checkProxyHealth();
         // Re-check every 30 seconds
@@ -1030,13 +1039,13 @@ You deserve real support. Is there someone you trust you could reach out to righ
                     throw new Error('WebGPU not supported. Try Chrome 113+ or Edge.');
                 }
                 loadingStatus.textContent = 'Step 2: Getting GPU adapter...';
-                
+
                 const adapter = await navigator.gpu.requestAdapter();
                 if (!adapter) {
                     throw new Error('No WebGPU adapter. GPU may not be supported.');
                 }
                 loadingStatus.textContent = 'Step 3: Loading WebLLM...';
-                
+
                 let CreateWebWorkerMLCEngine;
                 try {
                     const module = await import('https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.73/+esm');
@@ -1044,7 +1053,7 @@ You deserve real support. Is there someone you trust you could reach out to righ
                 } catch (e) {
                     throw new Error('Failed to load WebLLM: ' + e.message);
                 }
-                
+
                 loadingStatus.textContent = 'Step 4: Creating worker...';
 
                 // Create worker
@@ -1099,7 +1108,7 @@ You deserve real support. Is there someone you trust you could reach out to righ
                 const errorMsg = err.message || 'Unknown error';
                 loadingStatus.style.color = '#ef4444';
                 loadingStatus.innerHTML = `❌ ${errorMsg}<br><br><small>Switching to cloud in 5 seconds...</small><br><br><button onclick="window.startCloud()" style="padding: 12px 24px; background: #3b82f6; border: none; border-radius: 8px; color: white; cursor: pointer;">Use Cloud Mode Now</button>`;
-                
+
                 // Auto-switch to cloud after 5 seconds
                 setTimeout(() => {
                     loadingEl.classList.remove('active');
@@ -1169,23 +1178,23 @@ You deserve real support. Is there someone you trust you could reach out to righ
 
             inputEl.value = '';
             addMessage('user', text);
-            
+
             // SAFETY CHECK FIRST - before any AI involvement
             const safety = safetyCheck(text);
-            
+
             if (!safety.safe) {
                 // Don't send to AI - use hardcoded response
                 addMessage('ai', safety.response);
                 return;
             }
-            
+
             isLoading = true;
             sendBtn.disabled = true;
             showThinking();
 
             try {
                 let response;
-                
+
                 // Add safety hint to redirected topics
                 const msgToSend = safety.hint ? text + '\n' + safety.hint : text;
 
@@ -1212,7 +1221,7 @@ You deserve real support. Is there someone you trust you could reach out to righ
         // ─── Safety Proxy Configuration ───
         const SAFETY_PROXY_URL = 'https://proxy.activemirror.ai';
         const PROXY_ENABLED = true;  // Set to false to bypass proxy (dev only)
-        
+
         // ─── Cloud Inference (via Safety Proxy) ───
         async function cloudInference(userMsg) {
             if (PROXY_ENABLED) {
@@ -1226,18 +1235,18 @@ You deserve real support. Is there someone you trust you could reach out to righ
                         timestamp: Math.floor(Date.now() / 1000)
                     })
                 });
-                
+
                 if (!res.ok) throw new Error('Proxy unavailable');
                 const data = await res.json();
-                
+
                 // Update mode badge if proxy reports error
                 if (data.safety_outcome === 'error') {
                     console.warn('Proxy model error, using fallback');
                 }
-                
+
                 return data.output;
             }
-            
+
             // Fallback: Direct Groq call (dev only, not recommended)
             const processedMsg = preProcess(userMsg);
             const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -1270,7 +1279,7 @@ You deserve real support. Is there someone you trust you could reach out to righ
         // ─── Local Inference ───
         async function localInference(userMsg) {
             const processedMsg = preProcess(userMsg);
-            
+
             const result = await engine.chat.completions.create({
                 messages: [
                     { role: 'system', content: SYSTEM_PROMPT },
