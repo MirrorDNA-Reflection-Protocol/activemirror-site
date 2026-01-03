@@ -21,12 +21,12 @@ export default function Home() {
             <main className="relative z-10 w-full min-h-screen flex items-center justify-center p-6">
                 <SpotlightCard className="w-full max-w-2xl text-center p-12 md:p-16 border-white/5 bg-black/40 backdrop-blur-3xl shadow-2xl">
 
-                    {/* LOGO */}
+                    {/* LOGO HERO */}
                     <div className="mb-8 flex justify-center">
                         <MirrorLogo className="w-20 h-20 text-white" />
                     </div>
 
-                    {/* POSITIVE COPY (Universal & Elegant) */}
+                    {/* HEADLINE */}
                     <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-6 bg-gradient-to-b from-white via-white to-zinc-500 bg-clip-text text-transparent">
                         Intelligence,<br />Reflected.
                     </h1>
@@ -36,39 +36,41 @@ export default function Home() {
                         Native to your hardware. Owned by you.
                     </p>
 
-                    {/* ACTIONS */}
-                    <div className="flex flex-col gap-4 mb-12">
-                        {/* Primary: Demo */}
+                    {/* ACTIONS STACK */}
+                    <div className="flex flex-col gap-4 mb-12 max-w-md mx-auto w-full">
+                        {/* 1. START REFLECTION (Primary) */}
                         <Link to="/demo" className="group w-full py-4 rounded-xl bg-white text-black font-bold text-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_30px_rgba(255,255,255,0.25)]">
-                            Initialize System <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+                            Start Reflection <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                         </Link>
 
-                        {/* Secondary: Socials */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="py-3 rounded-xl border border-white/10 hover:bg-white/5 transition-colors flex items-center justify-center gap-2 text-zinc-300 text-sm font-medium">
+                        {/* 2. VISIT SITE (Secondary, Glowing) */}
+                        <a href="./legacy/index.html" className="w-full py-4 rounded-xl border border-white/10 bg-white/5 text-white font-medium hover:bg-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-3 shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_25px_rgba(255,255,255,0.1)] group">
+                            <Globe size={18} className="group-hover:rotate-12 transition-transform text-zinc-400 group-hover:text-white" />
+                            Visit Full Website
+                        </a>
+
+                        {/* 3. SOCIALS (Tertiary) */}
+                        <div className="grid grid-cols-2 gap-4 mt-2">
+                            <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="py-3 rounded-xl border border-white/5 hover:bg-white/5 transition-colors flex items-center justify-center gap-2 text-zinc-500 hover:text-zinc-300 text-sm font-medium">
                                 <Github size={16} /> Protocol
                             </a>
-                            <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/" className="py-3 rounded-xl border border-white/10 hover:bg-white/5 transition-colors flex items-center justify-center gap-2 text-zinc-300 text-sm font-medium">
+                            <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/" className="py-3 rounded-xl border border-white/5 hover:bg-white/5 transition-colors flex items-center justify-center gap-2 text-zinc-500 hover:text-zinc-300 text-sm font-medium">
                                 <Book size={16} /> Manifesto
                             </a>
                         </div>
                     </div>
 
-                    {/* FOOTER: SYSTEM & LEGACY LINK */}
+                    {/* FOOTER: LEGALS */}
                     <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] md:text-xs font-mono text-zinc-600 uppercase tracking-widest">
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                                v2.0 UNIVERSAL
-                            </div>
-                            <Link to="/legal" className="hover:text-white transition-colors">Legal & Risk</Link>
+                        <div className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                            v2.0 UNIVERSAL
                         </div>
 
-                        {/* THE LEGACY LINK (Glowing) */}
-                        <a href="./legacy/index.html" className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-zinc-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_25px_rgba(255,255,255,0.15)] cursor-pointer group">
-                            <Globe size={14} className="group-hover:rotate-12 transition-transform text-white/80" />
-                            <span className="font-bold tracking-wide">Visit Site</span>
-                        </a>
+                        <div className="flex items-center gap-6">
+                            <Link to="/legal#terms" className="hover:text-zinc-400 transition-colors">Terms and Conditions</Link>
+                            <Link to="/legal#privacy" className="hover:text-zinc-400 transition-colors">Privacy Policy</Link>
+                        </div>
                     </div>
                 </SpotlightCard>
             </main>

@@ -17,7 +17,7 @@ export default function Legal() {
                     <p className="text-sm">Legal & Risk Framework v2.0</p>
                 </div>
 
-                <section className="mb-12 space-y-4">
+                <section id="terms" className="mb-12 space-y-4">
                     <h2 className="flex items-center gap-2 text-white font-medium"><Scale size={18} /> Terms of Service</h2>
                     <p className="text-sm leading-relaxed">
                         Active MirrorOS is a local-first intelligence protocol. By initializing the system, you acknowledge that:
@@ -27,7 +27,7 @@ export default function Legal() {
                     </p>
                 </section>
 
-                <section className="mb-12 space-y-4">
+                <section id="privacy" className="mb-12 space-y-4">
                     <h2 className="flex items-center gap-2 text-white font-medium"><Shield size={18} /> Privacy Policy</h2>
                     <p className="text-sm leading-relaxed">
                         We do not collect your prompts, outputs, or identity. Your reflection remains on your device (Apple Silicon / Local GPU).
@@ -35,7 +35,7 @@ export default function Legal() {
                     </p>
                 </section>
 
-                <section className="mb-12 space-y-4">
+                <section id="risk" className="mb-12 space-y-4">
                     <h2 className="flex items-center gap-2 text-white font-medium"><AlertTriangle size={18} /> Risk Mitigant</h2>
                     <p className="text-sm leading-relaxed">
                         Large Language Models can hallucinate and generate inaccurate information.
