@@ -923,85 +923,160 @@ You deserve real support. Is there someone you trust you could reach out to righ
         function wrapReflection(response) {
             let cleaned = response.trim();
             
-            // FORBIDDEN WORDS in AI responses - these should never appear
-            const forbiddenInResponse = [
+            // FORBIDDEN PATTERNS - if any match, replace entirely
+            const forbiddenPatterns = [
+                // Medical/Legal/Financial
                 /\b(medication|medicine|drug|pill|dosage|prescription|dose)\b/i,
                 /\b(therapist|psychiatrist|psychologist|counselor|doctor|physician)\b/i,
                 /\b(diagnosis|diagnose|treatment|therapy|cure)\b/i,
-                /\b(lawsuit|attorney|lawyer|legal action|sue)\b/i,
-                /\b(invest|stock|crypto|bitcoin|trading|gambling)\b/i,
+                /\b(lawsuit|attorney|lawyer|legal action|sue|court)\b/i,
+                /\b(invest|stock|crypto|bitcoin|trading|gambling|portfolio)\b/i,
+                // Crisis (should be caught earlier, but double-check)
                 /\b(suicide|kill|harm|hurt yourself|end your life)\b/i,
+                // Certainty language
                 /\b(definitely|certainly|absolutely|always|never|guaranteed)\b/i,
-                /\b(you should|you must|you need to|i recommend|i suggest|i advise)\b/i,
-                /\b(the best|the right|the correct|the proper)\b/i,
-                /\bwould .+ make you feel better\b/i,
-                /\bhave you (tried|considered) (taking|using)\b/i
+                /\b(obviously|clearly|undoubtedly|without a doubt)\b/i,
+                // Directive language
+                /\b(you should|you must|you need to|you have to|you ought to)\b/i,
+                /\b(i recommend|i suggest|i advise|my advice|my recommendation)\b/i,
+                /\b(the best|the right|the correct|the proper|the only)\b/i,
+                /\b(do this|do that|try this|try that|go ahead)\b/i,
+                /\b(here'?s what|what you should|first step|next step)\b/i,
+                /\b(make sure|be sure to|don'?t forget to)\b/i,
+                // Pseudo-therapeutic
+                /\b(i understand how you feel|i know what you'?re going through)\b/i,
+                /\b(i hear you|i see you|that must be)\b/i,
+                /\bhave you (tried|considered) (taking|using|seeing|talking)\b/i,
+                /\bwhy don'?t you\b/i,
+                /\bhave you thought about\b/i,
+                // Factual claims
+                /\bstudies show\b/i,
+                /\baccording to\b/i,
+                /\bresearch (shows|suggests|indicates)\b/i,
+                /\bexperts (say|recommend|suggest)\b/i,
+                /\bstatistically\b/i,
+                /\b\d+(\.\d+)?%/i,  // percentages
+                /https?:\/\//i,     // URLs
             ];
             
-            for (const pattern of forbiddenInResponse) {
+            // FALLBACK QUESTIONS (safe responses)
+            const fallbackQuestions = [
+                "What's coming up for you as you sit with this?",
+                "What feels most important about this right now?",
+                "What would it mean for you if this worked out?",
+                "What's underneath that feeling?",
+                "What do you notice in your body as you think about this?",
+            ];
+            
+            // Check all forbidden patterns
+            for (const pattern of forbiddenPatterns) {
                 if (pattern.test(cleaned)) {
                     // Response contains forbidden content - replace entirely
-                    return "What's coming up for you as you sit with this?";
+                    return fallbackQuestions[Math.floor(Math.random() * fallbackQuestions.length)];
                 }
             }
             
-            // SAFETY: Strip any advice patterns that slipped through
-            const advicePatterns = [
-                /you should .+?[.?]/gi,
-                /i recommend .+?[.?]/gi,
-                /i suggest .+?[.?]/gi,
-                /i think you .+?[.?]/gi,
-                /i believe .+?[.?]/gi,
-                /the best (thing|way|option) .+?[.?]/gi,
-                /you need to .+?[.?]/gi,
-                /you must .+?[.?]/gi,
-                /make sure (to|you) .+?[.?]/gi,
-                /why don't you .+?[.?]/gi,
-                /have you (tried|considered) .+?[.?]/gi
-            ];
+            // Check question count
+            const questionMarks = (cleaned.match(/\?/g) || []).length;
             
-            for (const pattern of advicePatterns) {
-                if (pattern.test(cleaned)) {
-                    // Replace advice with a question
-                    cleaned = "What feels most important to you about this?";
-                    break;
-                }
+            // If no questions, replace
+            if (questionMarks === 0) {
+                return fallbackQuestions[Math.floor(Math.random() * fallbackQuestions.length)];
             }
             
-            // Check if response contains statements instead of questions
-            const questions = (cleaned.match(/\?/g) || []).length;
-            
-            // If no questions at all, force one
-            if (questions === 0) {
-                cleaned = "What's coming up for you as you think about this?";
+            // If too many questions (rambling), replace
+            if (questionMarks > 3) {
+                return fallbackQuestions[Math.floor(Math.random() * fallbackQuestions.length)];
             }
             
-            // Truncate if too long (safety)
+            // If too long, truncate or replace
             if (cleaned.length > 300) {
-                cleaned = cleaned.substring(0, 297) + "...";
+                // Try to find a natural break
+                const firstQuestion = cleaned.indexOf('?');
+                if (firstQuestion > 0 && firstQuestion < 250) {
+                    cleaned = cleaned.substring(0, firstQuestion + 1);
+                } else {
+                    return fallbackQuestions[Math.floor(Math.random() * fallbackQuestions.length)];
+                }
             }
             
-            // Tag any factual claims with truth states
-            cleaned = cleaned.replace(/(\d+%|\d+ percent)/gi, `$1 ${TRUTH_STATES.ESTIMATE}`);
-            cleaned = cleaned.replace(/(studies show|research suggests|experts say)/gi, `$1 ${TRUTH_STATES.ESTIMATE}`);
-            cleaned = cleaned.replace(/(always|never|definitely|certainly|obviously)/gi, `$1 ${TRUTH_STATES.UNKNOWN}`);
-            
-            // Detect and warn about hallucination patterns
-            const hallucinationPatterns = [
-                /according to .+?,/i,
-                /in \d{4},/i,
-                /\$[\d,]+/i,
-                /\d+\.\d+ (million|billion|trillion)/i
-            ];
-            
-            for (const pattern of hallucinationPatterns) {
-                if (pattern.test(cleaned)) {
-                    cleaned = cleaned + `\n\n${TRUTH_STATES.UNKNOWN} [Unverified claim - treat as reflection prompt, not fact]`;
-                    break;
-                }
+            // If statement-heavy (more periods than questions), replace
+            const periods = (cleaned.match(/\./g) || []).length;
+            if (periods > 2 && periods > questionMarks) {
+                return fallbackQuestions[Math.floor(Math.random() * fallbackQuestions.length)];
             }
             
             return cleaned;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // CLIENT-SIDE SAFETY (Mirrors Proxy Rules for Sovereign Mode)
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // Crisis patterns - show resources, don't call model
+        const CRISIS_PATTERNS = [
+            /\b(suicide|suicidal|kill myself|end(ing)? my life|want to die)\b/i,
+            /\b(self.?harm|cut myself|hurt myself|cutting)\b/i,
+            /\b(don'?t want to live|better off dead|no reason to live)\b/i,
+            /\b(overdose|take all the pills)\b/i,
+            /\b(jump off|hang myself|shoot myself)\b/i,
+        ];
+
+        const CRISIS_RESPONSE = `I can hear you're in a really difficult place. I'm not equipped to help with this, but please reach out:
+
+🆘 Crisis Text Line: Text HOME to 741741
+🆘 Suicide Prevention: 988 (US)
+🆘 Emergency: 911
+
+This tool cannot provide crisis support. Please contact one of these resources now.`;
+
+        // Illegal patterns - hard refuse
+        const ILLEGAL_PATTERNS = [
+            /\b(how to (make|build) (a |)(bomb|explosive|weapon))\b/i,
+            /\b(synthesize|manufacture) (drugs|meth)\b/i,
+            /\b(child porn|csam|underage)\b/i,
+            /\b(hack into|exploit vulnerability|malware)\b/i,
+        ];
+
+        const ILLEGAL_RESPONSE = "I can't engage with that.";
+
+        // Domain patterns - redirect without AI
+        const DOMAIN_PATTERNS = {
+            medical: /\b(medication|medicine|drug|pill|dosage|prescription|diagnosis|symptom|treatment|doctor|therapist)\b/i,
+            legal: /\b(lawsuit|sue|lawyer|attorney|legal|court|police|arrest)\b/i,
+            financial: /\b(invest|stock|crypto|bitcoin|trading|gambling|portfolio)\b/i,
+        };
+
+        const DOMAIN_RESPONSES = {
+            medical: "What's prompting you to think about this? A healthcare provider would be the right person to discuss specifics.",
+            legal: "What outcome are you hoping for? A legal professional would be best equipped to guide you.",
+            financial: "What's driving this question? A financial advisor could help you think through the details.",
+        };
+
+        // Pre-inference gate (runs BEFORE local model)
+        function clientSideGate(userMsg) {
+            // Crisis check
+            for (const pattern of CRISIS_PATTERNS) {
+                if (pattern.test(userMsg)) {
+                    return { blocked: true, response: CRISIS_RESPONSE, gate: 'crisis' };
+                }
+            }
+            
+            // Illegal check
+            for (const pattern of ILLEGAL_PATTERNS) {
+                if (pattern.test(userMsg)) {
+                    return { blocked: true, response: ILLEGAL_RESPONSE, gate: 'illegal' };
+                }
+            }
+            
+            // Domain check
+            for (const [domain, pattern] of Object.entries(DOMAIN_PATTERNS)) {
+                if (pattern.test(userMsg)) {
+                    return { blocked: true, response: DOMAIN_RESPONSES[domain], gate: domain };
+                }
+            }
+            
+            return { blocked: false };
         }
 
         // ─── Pre-inference: Reframe user input for reflection ───
@@ -1349,8 +1424,15 @@ You deserve real support. Is there someone you trust you could reach out to righ
             return wrapReflection(raw);
         }
 
-        // ─── Local Inference ───
+        // ─── Local Inference (with client-side safety) ───
         async function localInference(userMsg) {
+            // CLIENT-SIDE GATE: Check BEFORE calling local model
+            const gateResult = clientSideGate(userMsg);
+            if (gateResult.blocked) {
+                console.log(`[MirrorGate] Blocked by: ${gateResult.gate}`);
+                return gateResult.response;
+            }
+            
             const processedMsg = preProcess(userMsg);
             
             const result = await engine.chat.completions.create({
@@ -1362,12 +1444,17 @@ You deserve real support. Is there someone you trust you could reach out to righ
                     })),
                     { role: 'user', content: processedMsg }
                 ],
-                temperature: 0.3,  // Lower temp = more focused
-                max_tokens: 100
+                temperature: 0.3,
+                max_tokens: 80  // Reduced from 100 to prevent drift
             });
 
             const raw = result.choices[0]?.message?.content || "What feels true about that?";
-            return wrapReflection(raw);
+            
+            // POST-FILTER: Validate and clean output
+            const filtered = wrapReflection(raw);
+            
+            console.log(`[MirrorGate] Local output validated`);
+            return filtered;
         }
 
         // ─── Enter to Send ───
