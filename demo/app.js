@@ -1,47 +1,4 @@
-// Active Mirror - Sovereign AI Demo
-// Hybrid approach: Uses WebWorker if available, falls back to main thread
-
-// Try to use WebWorker first (more reliable), fallback to main thread
-let CreateEngine;
-let useWorker = false;
-
-async function initWebLLM() {
-    const webllm = await import("https://esm.run/@mlc-ai/web-llm");
-
-    // Test if module workers are supported
-    try {
-        // Create test worker with module type
-        const testWorkerBlob = new Blob([
-            'self.postMessage("ok");'
-        ], { type: 'text/javascript' });
-        const testWorker = new Worker(URL.createObjectURL(testWorkerBlob), { type: 'module' });
-
-        await new Promise((resolve, reject) => {
-            testWorker.onmessage = () => resolve(true);
-            testWorker.onerror = () => reject(false);
-            setTimeout(() => reject(false), 1000);
-        });
-
-        testWorker.terminate();
-
-        // Worker supported - use WebWorker engine
-        CreateEngine = async (modelId, config) => {
-            const worker = new Worker(
-                new URL('./worker.js', import.meta.url),
-                { type: 'module' }
-            );
-            return await webllm.CreateWebWorkerMLCEngine(worker, modelId, config);
-        };
-        useWorker = true;
-        console.log('[ActiveMirror] Using WebWorker engine');
-
-    } catch (e) {
-        // Worker not supported - use main thread engine
-        CreateEngine = webllm.CreateMLCEngine;
-        useWorker = false;
-        console.log('[ActiveMirror] Using main thread engine (worker not available)');
-    }
-}
+import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 
 const MODELS = [
     {
@@ -75,24 +32,16 @@ const SYSTEM = `You are Active Mirror — sovereign AI running in the user's bro
 Be direct, clear, concise. You run locally, no data leaves this device.
 Keep responses 1-3 paragraphs unless asked for more.`;
 
-// Global state - on window to prevent GC
-window.activeMirror = {
-    engine: null,
-    messages: [],
-    ready: false,
-    loading: false
-};
+let engine = null;
+let messages = [];
 
 function show(id) {
     document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
-    const el = document.getElementById(id);
-    if (el) el.classList.remove('hidden');
+    document.getElementById(id).classList.remove('hidden');
 }
 
 function renderModels() {
     const grid = document.getElementById('model-grid');
-    if (!grid) return;
-
     grid.innerHTML = MODELS.map(m => `
         <button class="model-card" data-id="${m.id}">
             <div class="model-icon">${m.icon}</div>
@@ -109,12 +58,9 @@ function renderModels() {
 }
 
 async function loadModel(id) {
-    if (window.activeMirror.loading) return;
-
     const model = MODELS.find(m => m.id === id);
     if (!model) return;
 
-    window.activeMirror.loading = true;
     show('view-loading');
 
     const pct = document.getElementById('loading-percent');
@@ -122,119 +68,57 @@ async function loadModel(id) {
     const ring = document.getElementById('progress-ring');
 
     try {
-        console.log('[ActiveMirror] Loading model:', model.name);
-
-        // Initialize WebLLM if not done yet
-        if (!CreateEngine) {
-            status.textContent = 'Initializing...';
-            await initWebLLM();
-        }
-
-        // Create engine (worker or main thread)
-        window.activeMirror.engine = await CreateEngine(model.webllm, {
+        engine = await CreateMLCEngine(model.webllm, {
             initProgressCallback: (report) => {
                 const p = Math.round(report.progress * 100);
-                if (pct) pct.textContent = p + '%';
-                if (status) status.textContent = report.text;
-                if (ring) ring.style.strokeDashoffset = 283 - (p / 100) * 283;
+                pct.textContent = p + '%';
+                status.textContent = report.text;
+                ring.style.strokeDashoffset = 283 - (p / 100) * 283;
             }
         });
 
-        console.log('[ActiveMirror] Engine created');
-
-        // Warmup - do a tiny inference to ensure engine is ready
-        if (status) status.textContent = 'Warming up...';
-        try {
-            await window.activeMirror.engine.chat.completions.create({
-                messages: [{ role: 'user', content: 'Hi' }],
-                max_tokens: 1
-            });
-            console.log('[ActiveMirror] Warmup complete');
-        } catch (warmupErr) {
-            console.warn('[ActiveMirror] Warmup skipped:', warmupErr.message);
-        }
-
-        window.activeMirror.messages = [];
-        window.activeMirror.ready = true;
-        window.activeMirror.loading = false;
-
+        messages = [];
         show('view-chat');
-
-        const input = document.getElementById('user-input');
-        if (input) input.focus();
-
+        document.getElementById('user-input').focus();
         addMessage('ai', "Ready. What's on your mind?");
 
     } catch (err) {
-        console.error('[ActiveMirror] Engine error:', err);
-        if (status) {
-            status.textContent = 'Error: ' + err.message;
-            status.style.color = '#ff4444';
-        }
-        window.activeMirror.loading = false;
+        status.textContent = 'Error: ' + err.message;
+        status.style.color = '#ff4444';
     }
 }
 
 function addMessage(role, text) {
     const container = document.getElementById('chat-messages');
-    if (!container) return;
-
     const div = document.createElement('div');
     div.className = 'chat-message ' + role;
     div.innerHTML = text.replace(/\n/g, '<br>');
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
-
-    // Don't add welcome message to history
-    if (!(role === 'ai' && text === "Ready. What's on your mind?")) {
-        window.activeMirror.messages.push({
-            role: role === 'ai' ? 'assistant' : 'user',
-            content: text
-        });
+    if (role !== 'ai' || text !== "Ready. What's on your mind?") {
+        messages.push({ role: role === 'ai' ? 'assistant' : 'user', content: text });
     }
-
-    return div;
 }
 
 async function send() {
     const input = document.getElementById('user-input');
-    const sendBtn = document.getElementById('btn-send');
-    const text = input ? input.value.trim() : '';
+    const text = input.value.trim();
+    if (!text || !engine) return;
 
-    if (!text) return;
-
-    if (!window.activeMirror.engine || !window.activeMirror.ready) {
-        alert('Model not ready. Please wait for it to load.');
-        return;
-    }
-
-    const suggestions = document.getElementById('suggestions');
-    if (suggestions) suggestions.style.display = 'none';
-
+    document.getElementById('suggestions').style.display = 'none';
     addMessage('user', text);
-    if (input) input.value = '';
-    if (sendBtn) sendBtn.disabled = true;
+    input.value = '';
+    document.getElementById('btn-send').disabled = true;
 
     const aiDiv = document.createElement('div');
     aiDiv.className = 'chat-message ai';
-    aiDiv.innerHTML = '<span class="thinking">Thinking...</span>';
-
-    const container = document.getElementById('chat-messages');
-    if (container) {
-        container.appendChild(aiDiv);
-        container.scrollTop = container.scrollHeight;
-    }
+    aiDiv.innerHTML = '...';
+    document.getElementById('chat-messages').appendChild(aiDiv);
 
     let full = '';
-
     try {
-        console.log('[ActiveMirror] Generating response...');
-
-        const stream = await window.activeMirror.engine.chat.completions.create({
-            messages: [
-                { role: 'system', content: SYSTEM },
-                ...window.activeMirror.messages
-            ],
+        const stream = await engine.chat.completions.create({
+            messages: [{ role: 'system', content: SYSTEM }, ...messages],
             stream: true,
             max_tokens: 800
         });
@@ -243,67 +127,51 @@ async function send() {
             const delta = chunk.choices[0]?.delta?.content || '';
             full += delta;
             aiDiv.innerHTML = full.replace(/\n/g, '<br>');
-            if (container) container.scrollTop = container.scrollHeight;
+            document.getElementById('chat-messages').scrollTop = 99999;
         }
 
-        window.activeMirror.messages.push({ role: 'assistant', content: full });
-        console.log('[ActiveMirror] Response complete');
-
+        messages.push({ role: 'assistant', content: full });
     } catch (err) {
-        console.error('[ActiveMirror] Generation error:', err);
         aiDiv.innerHTML = '<span style="color:#ff4444">Error: ' + err.message + '</span>';
     }
 
-    if (sendBtn) sendBtn.disabled = false;
-    if (input) input.focus();
+    document.getElementById('btn-send').disabled = false;
+}
+
+// Check WebGPU support
+function checkWebGPU() {
+    if (!navigator.gpu) {
+        const hint = document.querySelector('.model-hint');
+        if (hint) {
+            hint.innerHTML = '⚠️ <strong>WebGPU not supported</strong><br>This demo requires Chrome, Edge, or Opera on desktop.<br>iPhone/Safari not yet supported.';
+            hint.style.color = '#ff6b6b';
+        }
+        document.querySelectorAll('.model-card').forEach(card => {
+            card.style.opacity = '0.5';
+            card.style.pointerEvents = 'none';
+        });
+        return false;
+    }
+    return true;
 }
 
 // Initialize
-async function init() {
-    console.log('[ActiveMirror] Starting...');
+renderModels();
+checkWebGPU();
 
-    // Check WebGPU
-    if (!navigator.gpu) {
-        const status = document.getElementById('loading-status');
-        if (status) {
-            status.textContent = 'WebGPU not supported. Please use Chrome or Edge.';
-            status.style.color = '#ff4444';
-        }
-        return;
-    }
+document.getElementById('user-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
 
-    renderModels();
+document.getElementById('user-input').addEventListener('input', e => {
+    document.getElementById('btn-send').disabled = !e.target.value.trim();
+});
 
-    const input = document.getElementById('user-input');
-    const sendBtn = document.getElementById('btn-send');
+document.getElementById('btn-send').addEventListener('click', send);
 
-    if (input) {
-        input.addEventListener('keydown', e => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                send();
-            }
-        });
-
-        input.addEventListener('input', e => {
-            if (sendBtn) sendBtn.disabled = !e.target.value.trim();
-        });
-    }
-
-    if (sendBtn) {
-        sendBtn.addEventListener('click', send);
-    }
-
-    document.querySelectorAll('.suggestion-chip').forEach(chip => {
-        chip.onclick = () => {
-            if (input) {
-                input.value = chip.dataset.prompt;
-                if (sendBtn) sendBtn.disabled = false;
-            }
-        };
-    });
-
-    console.log('[ActiveMirror] Ready');
-}
-
-init();
+document.querySelectorAll('.suggestion-chip').forEach(chip => {
+    chip.onclick = () => {
+        document.getElementById('user-input').value = chip.dataset.prompt;
+        document.getElementById('btn-send').disabled = false;
+    };
+});
