@@ -264,13 +264,10 @@ export default function Demo() {
 
                     {messages.map((msg, i) => (
                         <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[85%] px-6 py-4 rounded-2xl backdrop-blur-md shadow-sm ${msg.role === 'user' ? 'bg-white text-black rounded-tr-sm' : 'bg-white/10 border border-white/20 text-white rounded-tl-sm'
-                                }`}>
-                                {msg.role === 'assistant' && i === messages.length - 1 ? (
-                                    <ChatText text={msg.content} isUser={false} />
-                                ) : (
-                                    <div className="text-[15px] leading-7 text-zinc-50 font-normal drop-shadow-sm">{msg.content}</div>
-                                )}
+                            <div className={`max-w-[85%] px-6 py-4 rounded-2xl backdrop-blur-md shadow-sm ${msg.role === 'user' ? 'bg-white rounded-tr-sm' : 'bg-white/10 border border-white/20 rounded-tl-sm'}`}>
+                                <div className={`text-[15px] leading-7 whitespace-pre-wrap ${msg.role === 'user' ? 'text-black font-medium' : 'text-zinc-50 font-normal'}`}>
+                                    {msg.content}
+                                </div>
                             </div>
                         </div>
                     ))}
