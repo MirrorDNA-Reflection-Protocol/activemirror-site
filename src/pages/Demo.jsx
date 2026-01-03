@@ -96,11 +96,18 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
             const hasValidKey = GROQ_API_KEY && GROQ_API_KEY.startsWith("gsk_");
             console.log("⟡ API Key:", hasValidKey ? "Valid" : "Not found");
 
-            // INSTANT START: If we have API key and online, user can chat immediately
+            // INSTANT START: Mobile and cloud-capable devices start immediately
+            // Mobile devices (canRunLocal=false) MUST start in cloud mode instantly
             if (hasValidKey && navigator.onLine) {
                 setCurrentTier('cloud');
                 setInitComplete(true);
                 console.log("⟡ Cloud Mode Ready - Instant Start");
+            } else if (!caps.canRunLocal) {
+                // Mobile/low-capability: Try cloud anyway, mark init complete
+                // This ensures mobile UI isn't stuck on "Initializing..."
+                setCurrentTier('cloud');
+                setInitComplete(true);
+                console.log("⟡ Mobile/Cloud-Only Mode - Instant Start (will fail gracefully if offline)");
             }
 
             // SMART DOWNLOAD: Check conditions before loading local models
