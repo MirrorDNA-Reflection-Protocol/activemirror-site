@@ -66,46 +66,56 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
     // ⟡ 3. ENGINE INIT 
     useEffect(() => {
         async function init() {
-            // ⟡ V3.1 - SMOLLM2: Purpose-built for instruction following
-            // SmolLM2 by HuggingFace is specifically designed for small but capable instruction following
-            // Much better at following personas than Qwen or Llama at similar sizes
+            // ⟡ INSTANT CHAT: If API key exists, enable chat immediately
+            // Local model will load in background as fallback
+            if (GROQ_API_KEY) {
+                setProgress(""); // Clear loading screen - API is ready
+                setUseCloud(true);
+            }
+
+            // ⟡ V3.1 - SMOLLM2: Purpose-built for instruction following (loads in background)
             const modelId = "SmolLM2-1.7B-Instruct-q4f32_1-MLC";
 
-            // Use Vite's worker import for reliable bundling
             const worker = new Worker(new URL('../worker.js', import.meta.url), { type: 'module' });
 
-            // ⟡ WORKER ERROR HANDLER: Catch silent worker failures
             worker.onerror = (e) => {
                 console.error("Worker Error:", e);
-                setProgress("Worker Load Failed. Please refresh.");
-                setError("Worker Crash: " + (e.message || "Unknown"));
+                if (!GROQ_API_KEY) {
+                    setProgress("Worker Load Failed. Please refresh.");
+                    setError("Worker Crash: " + (e.message || "Unknown"));
+                }
             };
 
             try {
                 const eng = await CreateWebWorkerMLCEngine(worker, modelId, {
                     initProgressCallback: (report) => {
-                        // Keep showing 100% until engine is effectively set
-                        if (report.progress === 1) {
-                            setProgress("Verifying Logic Gates...");
-                            setProgressDetails("");
-                        } else {
-                            setProgress(`Loading Identity Kernel... ${Math.round(report.progress * 100)}%`);
-                            setProgressDetails(report.text || "Downloading Neural Weights...");
+                        // Only show progress if no API key (user is waiting for local)
+                        if (!GROQ_API_KEY) {
+                            if (report.progress === 1) {
+                                setProgress("Verifying Logic Gates...");
+                                setProgressDetails("");
+                            } else {
+                                setProgress(`Loading Identity Kernel... ${Math.round(report.progress * 100)}%`);
+                                setProgressDetails(report.text || "Downloading Neural Weights...");
+                            }
                         }
                     }
                 });
                 setEngine(eng);
-                setProgress(""); // Clear progress only after engine is ready
-            } catch (e) {
-                // ⟡ UNIFIED FALLBACK: Don't block iOS. Allow engine to attempt WASM or show error.
-                console.error("Engine Init Error:", e);
-                const isIOS = /iPhone|iPad/i.test(navigator.userAgent);
-                if (isIOS) {
-                    setProgress("Neural Engine Limit. Try enabling 'WebGPU' in Safari or switching to Desktop.");
-                } else {
-                    setProgress("Neural Engine Start Failed. Please check console.");
+                if (!GROQ_API_KEY) {
+                    setProgress(""); // Clear progress only if no API key
                 }
-                setError(e.message || "Initialization Failed");
+            } catch (e) {
+                console.error("Engine Init Error:", e);
+                if (!GROQ_API_KEY) {
+                    const isIOS = /iPhone|iPad/i.test(navigator.userAgent);
+                    if (isIOS) {
+                        setProgress("Neural Engine Limit. Try enabling 'WebGPU' in Safari or switching to Desktop.");
+                    } else {
+                        setProgress("Neural Engine Start Failed. Please check console.");
+                    }
+                    setError(e.message || "Initialization Failed");
+                }
             }
         }
         init();
