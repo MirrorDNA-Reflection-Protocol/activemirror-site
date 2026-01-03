@@ -161,7 +161,8 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
                 });
 
                 if (!response.ok) {
-                    throw new Error("API limit reached");
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error?.message || `API Error: ${response.status}`);
                 }
 
                 const data = await response.json();
@@ -178,8 +179,13 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
 
         // ⟡ FALLBACK: Local SmolLM2 inference
         if (!engine) {
-            setError("No reflection engine available");
+            // If no local engine AND API failed, show helpful error
+            setError("Connecting... Please wait while the local engine loads.");
             setIsLoading(false);
+            // Retry after a delay if engine is still loading
+            setTimeout(() => {
+                if (engine) handleSend(userMsg);
+            }, 3000);
             return;
         }
 
