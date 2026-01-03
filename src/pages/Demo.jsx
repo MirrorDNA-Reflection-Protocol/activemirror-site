@@ -65,11 +65,10 @@ Stay in character. Begin.`;
     // ⟡ 3. ENGINE INIT 
     useEffect(() => {
         async function init() {
-            // ⟡ UNIFIED SOUL (HYBRID): 
-            // - Mobile: Qwen2.5-0.5B (Stability First, 1GB RAM limit)
-            // - Desktop: Llama-3.2-1B (High Fidelity)
-            const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
-            const modelId = isMobile ? "Qwen2.5-0.5B-Instruct-q4f16_1-MLC" : "Llama-3.2-1B-Instruct-q4f16_1-MLC";
+            // ⟡ V3.1 - SMOLLM2: Purpose-built for instruction following
+            // SmolLM2 by HuggingFace is specifically designed for small but capable instruction following
+            // Much better at following personas than Qwen or Llama at similar sizes
+            const modelId = "SmolLM2-1.7B-Instruct-q4f32_1-MLC";
 
             // Use Vite's worker import for reliable bundling
             const worker = new Worker(new URL('../worker.js', import.meta.url), { type: 'module' });
@@ -170,7 +169,7 @@ Stay in character. Begin.`;
             messages,
             outcome,
             {
-                model: isMobile ? "Qwen2.5-0.5B" : "Llama-3.2-1B",
+                model: "SmolLM2-1.7B",
                 online: false,
                 id: "local-session"
             }
