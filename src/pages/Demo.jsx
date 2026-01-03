@@ -10,29 +10,12 @@ import ReflectionPrompt from '../components/ReflectionPrompt';
 import ReflectionHistory from '../components/ReflectionHistory';
 import SessionCloseControls from '../components/SessionCloseControls';
 
-// ⟡ UI COMPONENT: BLUR REVEAL TEXT
-const BlurText = ({ text, isUser }) => {
-    const words = text.split(" ");
-    return (
-        <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={{ visible: { transition: { staggerChildren: 0.01 } } }}
-            className={`text-[15px] leading-7 ${isUser ? 'text-black font-medium' : 'text-zinc-50 font-normal shadow-black/50 drop-shadow-sm'}`}
-        >
-            {words.map((word, i) => (
-                <motion.span
-                    key={i}
-                    variants={{ hidden: { filter: "blur(10px)", opacity: 0, y: 5 }, visible: { filter: "blur(0px)", opacity: 1, y: 0 } }}
-                    transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="inline-block mr-1"
-                >
-                    {word}
-                </motion.span>
-            ))}
-        </motion.div>
-    );
-};
+// ⟡ UI COMPONENT: TEXT DISPLAY (Simplified - no animation)
+const ChatText = ({ text, isUser }) => (
+    <div className={`text-[15px] leading-7 whitespace-pre-wrap ${isUser ? 'text-black font-medium' : 'text-zinc-50 font-normal'}`}>
+        {text}
+    </div>
+);
 
 export default function Demo() {
     const [messages, setMessages] = useState([]);
@@ -51,11 +34,11 @@ export default function Demo() {
 
     const [suggestions, setSuggestions] = useState([]);
 
-    // ⟡ 1. THE SOUL (V2.2 - ZERO FEW-SHOT)
-    // No examples = no leakage. Just pure instruction.
-    const SYSTEM_PROMPT = `You are Active Mirror. Your only job is to reflect the user's words back as questions. DO NOT advise. DO NOT use examples from training. Respond ONLY to what the user just said. End with 3 follow-ups: >>> Q1 | Q2 | Q3`;
+    // ⟡ 1. THE SOUL (V2.3 - PURE REFLECTION)
+    // Simple, clear instruction. No formatting requirements.
+    const SYSTEM_PROMPT = `You are Active Mirror. When the user speaks, reflect their words back as clarifying questions. Do not give advice. Just ask questions that help them think deeper.`;
 
-    // ⟡ 2. CONTEXT (System Only - No Few-Shot Examples)
+    // ⟡ 2. CONTEXT (System Only)
     const BASE_CONTEXT = [
         { role: "system", content: SYSTEM_PROMPT }
     ];
@@ -284,7 +267,7 @@ export default function Demo() {
                             <div className={`max-w-[85%] px-6 py-4 rounded-2xl backdrop-blur-md shadow-sm ${msg.role === 'user' ? 'bg-white text-black rounded-tr-sm' : 'bg-white/10 border border-white/20 text-white rounded-tl-sm'
                                 }`}>
                                 {msg.role === 'assistant' && i === messages.length - 1 ? (
-                                    <BlurText text={msg.content} isUser={false} />
+                                    <ChatText text={msg.content} isUser={false} />
                                 ) : (
                                     <div className="text-[15px] leading-7 text-zinc-50 font-normal drop-shadow-sm">{msg.content}</div>
                                 )}
