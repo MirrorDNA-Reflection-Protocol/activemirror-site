@@ -46,7 +46,7 @@ export default function Home() {
                         {/* 2. VISIT SITE (Secondary, Glowing) */}
                         <a href="./legacy/index.html" className="w-full py-4 rounded-xl border border-white/10 bg-white/5 text-white font-medium hover:bg-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-3 shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_25px_rgba(255,255,255,0.1)] group">
                             <Globe size={18} className="group-hover:rotate-12 transition-transform text-zinc-400 group-hover:text-white" />
-                            Visit Full Website
+                            Visit Site
                         </a>
 
                         {/* 3. SOCIALS (Tertiary) */}
@@ -61,15 +61,15 @@ export default function Home() {
                     </div>
 
                     {/* FOOTER: LEGALS */}
-                    <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] md:text-xs font-mono text-zinc-600 uppercase tracking-widest">
+                    <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] md:text-xs font-mono text-zinc-600 uppercase tracking-widest w-full">
                         <div className="flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
                             v2.0 UNIVERSAL
                         </div>
 
-                        <div className="flex items-center gap-6">
-                            <Link to="/legal#terms" className="hover:text-zinc-400 transition-colors">Terms and Conditions</Link>
-                            <Link to="/legal#privacy" className="hover:text-zinc-400 transition-colors">Privacy Policy</Link>
+                        <div className="flex flex-wrap justify-center md:justify-end gap-x-6 gap-y-2 text-center">
+                            <Link to="/legal#terms" className="hover:text-zinc-400 transition-colors whitespace-nowrap">Terms and Conditions</Link>
+                            <Link to="/legal#privacy" className="hover:text-zinc-400 transition-colors whitespace-nowrap">Privacy Policy</Link>
                         </div>
                     </div>
                 </SpotlightCard>
