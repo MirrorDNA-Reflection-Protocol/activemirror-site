@@ -16,7 +16,7 @@ export async function detectCapabilities() {
     // Check if mobile
     const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
 
-    // Check iOS specifically (has stricter memory limits)
+    // Check iOS specifically (WebGPU is disabled by default)
     const isIOS = /iPhone|iPad/i.test(navigator.userAgent);
 
     // Get storage quota
@@ -33,15 +33,19 @@ export async function detectCapabilities() {
     // Determine recommended tier
     let recommendedTier = 'cloud'; // Default to cloud
 
-    if (!hasWebGPU) {
-        recommendedTier = 'cloud-only'; // Can't run local at all
-    } else if (isIOS || memoryGB < 2) {
-        recommendedTier = 'tier1'; // Only small model (135M)
-    } else if (memoryGB >= 4 && !isMobile) {
-        recommendedTier = 'tier2'; // Can handle full model (1.7B)
+    if (!hasWebGPU || isMobile) {
+        recommendedTier = 'cloud-only'; // Mobile devices use cloud
+    } else if (memoryGB >= 4) {
+        recommendedTier = 'tier2'; // Desktop with 4GB+ can handle full model
+    } else if (memoryGB >= 2) {
+        recommendedTier = 'tier1'; // Desktop with 2-4GB uses small model
     } else {
-        recommendedTier = 'tier1'; // Safe default for mobile
+        recommendedTier = 'cloud-only'; // Low memory devices use cloud
     }
+
+    // CRITICAL: Mobile devices should NOT attempt local model loading
+    // It fails silently and blocks the UI
+    const canRunLocal = hasWebGPU && !isMobile && memoryGB >= 2;
 
     return {
         hasWebGPU,
@@ -51,7 +55,7 @@ export async function detectCapabilities() {
         isIOS,
         storageQuotaMB,
         recommendedTier,
-        canRunLocal: hasWebGPU && memoryGB >= 1
+        canRunLocal
     };
 }
 
