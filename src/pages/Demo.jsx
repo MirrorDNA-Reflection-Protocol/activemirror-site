@@ -501,12 +501,16 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
                             <ArrowLeft size={18} />
                         </Link>
 
-                        {/* ⟡ GLOWING MODE INDICATORS - Simple & Clear */}
+                        {/* ⟡ LOGO / BRAND */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-purple-400 text-lg">⟡</span>
+                            <span className="text-sm font-medium text-white hidden sm:inline">Active Mirror</span>
+                        </div>
                         <div className="flex items-center gap-1 text-xs">
                             {/* Cloud Icon - Glows Blue ONLY when no local available */}
                             <div className={`relative p-2 rounded-lg transition-all duration-300 ${!tier1Engine && !isSovereign
-                                    ? 'bg-blue-500/20 text-blue-400'
-                                    : 'bg-white/5 text-zinc-600'
+                                ? 'bg-blue-500/20 text-blue-400'
+                                : 'bg-white/5 text-zinc-600'
                                 }`}>
                                 {!tier1Engine && !isSovereign && (
                                     <div className="absolute inset-0 bg-blue-500/30 rounded-lg blur-md animate-pulse"></div>
@@ -527,10 +531,10 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
 
                             {/* Local Icon - Glows Purple when local/sovereign ready */}
                             <div className={`relative p-2 rounded-lg transition-all duration-300 ${isSovereign
-                                    ? 'bg-purple-500/30 text-purple-400'
-                                    : tier1Engine
-                                        ? 'bg-amber-500/20 text-amber-400'
-                                        : 'bg-white/5 text-zinc-600'
+                                ? 'bg-purple-500/30 text-purple-400'
+                                : tier1Engine
+                                    ? 'bg-amber-500/20 text-amber-400'
+                                    : 'bg-white/5 text-zinc-600'
                                 }`}>
                                 {(tier1Engine || isSovereign) && (
                                     <div className={`absolute inset-0 rounded-lg blur-md animate-pulse ${isSovereign ? 'bg-purple-500/30' : 'bg-amber-500/20'
