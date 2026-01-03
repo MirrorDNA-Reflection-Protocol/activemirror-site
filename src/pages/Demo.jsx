@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CreateMLCEngine } from "@mlc-ai/web-llm";
-import { ArrowLeft, Send, Zap } from 'lucide-react';
+import { ArrowLeft, Send, Zap, Trash2 } from 'lucide-react';
 import MirrorLogo from '../components/MirrorLogo';
 import { Link } from 'react-router-dom';
 
@@ -9,7 +9,17 @@ const MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
 
 export default function Demo() {
     const [input, setInput] = useState("");
-    const [messages, setMessages] = useState([{ role: "assistant", content: "⟡ Intelligence Reflected. Ready." }]);
+
+    // Lazy init from storage
+    const [messages, setMessages] = useState(() => {
+        try {
+            const saved = localStorage.getItem("mirror_chat_history");
+            return saved ? JSON.parse(saved) : [{ role: "assistant", content: "⟡ Intelligence Reflected. Ready." }];
+        } catch {
+            return [{ role: "assistant", content: "⟡ Intelligence Reflected. Ready." }];
+        }
+    });
+
     const [isLoading, setIsLoading] = useState(false);
     const [engine, setEngine] = useState(null);
     const [progress, setProgress] = useState("");
@@ -36,7 +46,19 @@ export default function Demo() {
     // 2. Auto-scroll
     useEffect(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), [messages]);
 
-    // 3. Handle Chat
+    // 3. Sync to Storage
+    useEffect(() => {
+        localStorage.setItem("mirror_chat_history", JSON.stringify(messages));
+    }, [messages]);
+
+    // 4. Handle Clear
+    const handleClear = () => {
+        const fresh = [{ role: "assistant", content: "⟡ Intelligence Reflected. Ready." }];
+        setMessages(fresh);
+        localStorage.setItem("mirror_chat_history", JSON.stringify(fresh));
+    };
+
+    // 5. Handle Chat
     const handleSend = async () => {
         if (!input.trim() || !engine) return;
         const userMsg = input;
@@ -85,9 +107,17 @@ export default function Demo() {
                 <Link to="/" className="p-2 rounded-full bg-white/5 backdrop-blur border border-white/10 pointer-events-auto hover:bg-white/10 transition-colors">
                     <ArrowLeft size={16} />
                 </Link>
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-black/40 backdrop-blur border border-white/10 text-[10px] font-mono text-zinc-400">
-                    <Zap size={10} className={stats.tps > 0 ? "text-green-500" : "text-zinc-600"} />
-                    {stats.tps > 0 ? `${stats.tps} T/s` : "IDLE"}
+                <div className="flex items-center gap-3 px-3 py-1 rounded-full bg-black/40 backdrop-blur border border-white/10 text-[10px] font-mono text-zinc-400 pointer-events-auto">
+                    {/* Clear Button */}
+                    <button onClick={handleClear} className="hover:text-red-400 transition-colors flex items-center gap-1" title="Clear Memory">
+                        <Trash2 size={12} />
+                    </button>
+                    <div className="w-px h-3 bg-white/10"></div>
+
+                    <div className="flex items-center gap-2">
+                        <Zap size={10} className={stats.tps > 0 ? "text-green-500" : "text-zinc-600"} />
+                        {stats.tps > 0 ? `${stats.tps} T/s` : "IDLE"}
+                    </div>
                 </div>
             </header>
 
