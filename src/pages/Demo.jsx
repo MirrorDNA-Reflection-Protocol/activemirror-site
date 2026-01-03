@@ -40,6 +40,7 @@ export default function Demo() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [progress, setProgress] = useState("Initializing Neural Core...");
+    const [progressDetails, setProgressDetails] = useState(""); // New: Granular details
     const [engine, setEngine] = useState(null);
     const bottomRef = useRef(null);
 
@@ -76,8 +77,13 @@ export default function Demo() {
                 const eng = await CreateWebWorkerMLCEngine(worker, modelId, {
                     initProgressCallback: (report) => {
                         // Keep showing 100% until engine is effectively set
-                        if (report.progress === 1) setProgress("Initializing Logic...");
-                        else setProgress(`Loading Identity Kernel... ${Math.round(report.progress * 100)}%`);
+                        if (report.progress === 1) {
+                            setProgress("Verifying Logic Gates...");
+                            setProgressDetails("");
+                        } else {
+                            setProgress(`Loading Identity Kernel... ${Math.round(report.progress * 100)}%`);
+                            setProgressDetails(report.text || "Downloading Neural Weights...");
+                        }
                     }
                 });
                 setEngine(eng);
@@ -244,9 +250,16 @@ export default function Demo() {
                 {/* Chat Area */}
                 <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 scrollbar-hide">
                     {progress && (
-                        <div className="h-full flex flex-col items-center justify-center text-zinc-500 gap-6">
-                            <Cpu className="animate-pulse text-zinc-700" size={40} />
-                            <div className="font-mono text-xs tracking-widest uppercase animate-pulse">{progress}</div>
+                        <div className="h-full flex flex-col items-center justify-center text-zinc-500 gap-6 px-8 text-center animate-pulse">
+                            <Cpu className="text-zinc-700" size={40} />
+                            <div className="space-y-2">
+                                <div className="font-mono text-xs tracking-widest uppercase">{progress}</div>
+                                {progressDetails && <div className="text-[10px] text-zinc-600 font-mono">{progressDetails}</div>}
+                            </div>
+                            <div className="text-[11px] text-zinc-600 max-w-[200px] leading-relaxed border border-white/5 p-3 rounded-lg bg-white/[0.02]">
+                                ⟡ <strong>First Run Note:</strong><br />
+                                We are downloading the brain (~500MB) directly to your device. Future visits will be instant.
+                            </div>
                         </div>
                     )}
 
