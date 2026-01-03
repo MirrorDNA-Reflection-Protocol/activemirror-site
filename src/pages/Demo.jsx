@@ -55,7 +55,7 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
 
     // API Configuration - reads from environment variable
     const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY || "";
-    const GROQ_MODEL = "llama-3.1-70b-versatile";
+    const GROQ_MODEL = "llama-3.3-70b-versatile"; // Updated: 3.1 was decommissioned
 
     // Local Context for fallback
     const LOCAL_BASE_CONTEXT = [
