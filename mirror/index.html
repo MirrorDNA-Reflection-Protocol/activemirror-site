@@ -844,6 +844,7 @@
         // Gate is ALWAYS shown on page load - no bypass
 
         // Config
+        const DEBUG = false;  // Set to true for console logging
         const GROQ_KEY = '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';
         const MODEL_ID = 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC'; // ~900MB, good quality
 
@@ -1496,7 +1497,7 @@ This tool cannot provide crisis support. Please contact one of these resources n
             // CLIENT-SIDE GATE: Check BEFORE calling local model
             const gateResult = clientSideGate(userMsg);
             if (gateResult.blocked) {
-                console.log(`[MirrorGate] Blocked by: ${gateResult.gate}`);
+                DEBUG && console.log(`[MirrorGate] Blocked by: ${gateResult.gate}`);
                 return gateResult.response;
             }
             
@@ -1520,7 +1521,7 @@ This tool cannot provide crisis support. Please contact one of these resources n
             // POST-FILTER: Validate and clean output
             const filtered = wrapReflection(raw);
             
-            console.log(`[MirrorGate] Local output validated`);
+            DEBUG && console.log(`[MirrorGate] Local output validated`);
             return filtered;
         }
 
