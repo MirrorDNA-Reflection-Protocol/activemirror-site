@@ -806,32 +806,17 @@
         // Note: WebLLM is imported dynamically in startSovereign() to avoid blocking cloud mode
 
         // ─── Consent Gate ───
-        const consentKey = 'activemirror_consent_v1';
+        // User MUST accept every single visit - no localStorage, no persistence
+        // This ensures informed consent is obtained each session
         
         function acceptConsent() {
-            localStorage.setItem(consentKey, Date.now().toString());
             document.getElementById('consent-gate').style.display = 'none';
-        }
-        
-        // Check if already consented (valid for 24 hours)
-        function checkConsent() {
-            const consent = localStorage.getItem(consentKey);
-            if (consent) {
-                const consentTime = parseInt(consent);
-                const hoursSince = (Date.now() - consentTime) / (1000 * 60 * 60);
-                if (hoursSince < 24) {
-                    document.getElementById('consent-gate').style.display = 'none';
-                    return true;
-                }
-            }
-            return false;
         }
         
         // Expose to window for onclick
         window.acceptConsent = acceptConsent;
         
-        // Check on load
-        checkConsent();
+        // Gate is ALWAYS shown on page load - no bypass
 
         // Config
         const GROQ_KEY = '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';
