@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Demo from './pages/Demo';
+import Legal from './pages/Legal';
 
 export default function App() {
     return (
@@ -10,6 +11,7 @@ export default function App() {
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/legal" element={<Legal />} />
                 <Route path="/demo" element={<Demo />} />
             </Routes>
         </BrowserRouter>

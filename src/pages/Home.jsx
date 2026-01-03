@@ -55,16 +55,19 @@ export default function Home() {
                     </div>
 
                     {/* FOOTER: SYSTEM & LEGACY LINK */}
-                    <div className="pt-8 border-t border-white/5 flex justify-between items-center text-[10px] md:text-xs font-mono text-zinc-600 uppercase tracking-widest">
-                        <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                            v2.0 UNIVERSAL
+                    <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] md:text-xs font-mono text-zinc-600 uppercase tracking-widest">
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                v2.0 UNIVERSAL
+                            </div>
+                            <Link to="/legal" className="hover:text-white transition-colors">Legal & Risk</Link>
                         </div>
 
-                        {/* THE LEGACY LINK (Informational Site) */}
-                        <a href="./legacy/index.html" className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer group">
-                            <Globe size={12} className="group-hover:rotate-12 transition-transform" />
-                            Visit Full Website
+                        {/* THE LEGACY LINK (Glowing) */}
+                        <a href="./legacy/index.html" className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-zinc-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_25px_rgba(255,255,255,0.15)] cursor-pointer group">
+                            <Globe size={14} className="group-hover:rotate-12 transition-transform text-white/80" />
+                            <span className="font-bold tracking-wide">Visit Site</span>
                         </a>
                     </div>
                 </SpotlightCard>
