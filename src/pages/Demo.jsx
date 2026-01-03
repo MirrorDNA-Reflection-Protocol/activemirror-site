@@ -13,6 +13,9 @@ import SessionCloseControls from '../components/SessionCloseControls';
 // Capability Detection
 import { detectCapabilities, MODEL_TIERS } from '../utils/capabilities';
 
+// Smart Download System
+import { checkDownloadConditions, watchDownloadConditions, DOWNLOAD_CONDITIONS } from '../utils/smartDownload';
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // ⟡ SOVEREIGN MIRROR PWA - PROGRESSIVE INTELLIGENCE ARCHITECTURE
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -45,6 +48,12 @@ export default function Demo() {
     const [isHistoryOpen, setHistoryOpen] = useState(false);
     const [showInfo, setShowInfo] = useState(false); // Hybrid mode info panel
 
+    // Smart Download State
+    const [downloadCondition, setDownloadCondition] = useState(null);
+    const [showDownloadConsent, setShowDownloadConsent] = useState(false);
+    const [downloadPaused, setDownloadPaused] = useState(false);
+    const [userDeclinedDownload, setUserDeclinedDownload] = useState(false);
+
     // ─────────────────────────────────────────────────────────────────────────
     // CONFIGURATION
     // ─────────────────────────────────────────────────────────────────────────
@@ -67,7 +76,7 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
     const LOCAL_SYSTEM_PROMPT = `You are Active Mirror. Reflect the user's words back as questions. Do not advise. Ask questions that help them think deeper.`;
 
     // ─────────────────────────────────────────────────────────────────────────
-    // INITIALIZATION - PROGRESSIVE LOADING
+    // INITIALIZATION - PROGRESSIVE LOADING WITH SMART DOWNLOAD
     // ─────────────────────────────────────────────────────────────────────────
     useEffect(() => {
         async function init() {
@@ -77,6 +86,11 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
             const caps = await detectCapabilities();
             setCapabilities(caps);
             console.log("⟡ Capabilities:", caps);
+
+            // Check download conditions
+            const conditions = await checkDownloadConditions();
+            setDownloadCondition(conditions);
+            console.log("⟡ Download Conditions:", conditions);
 
             // Check API key
             const hasValidKey = GROQ_API_KEY && GROQ_API_KEY.startsWith("gsk_");
@@ -89,10 +103,44 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
                 console.log("⟡ Cloud Mode Ready - Instant Start");
             }
 
-            // BACKGROUND: Load local models progressively
+            // SMART DOWNLOAD: Check conditions before loading local models
             if (caps.canRunLocal) {
-                loadLocalModels(caps.recommendedTier);
+                if (conditions.shouldAutoDownload) {
+                    console.log("⟡ Auto-downloading local models:", conditions.reason);
+                    loadLocalModels(caps.recommendedTier);
+                } else if (conditions.condition === DOWNLOAD_CONDITIONS.METERED) {
+                    console.log("⟡ Metered connection - asking user consent");
+                    setShowDownloadConsent(true);
+                } else if (conditions.condition === DOWNLOAD_CONDITIONS.BATTERY_LOW) {
+                    console.log("⟡ Battery low - pausing download");
+                    setDownloadPaused(true);
+                } else {
+                    console.log("⟡ Download conditions not met:", conditions.reason);
+                }
             }
+
+            // Watch for condition changes
+            watchDownloadConditions((newConditions) => {
+                console.log("⟡ Conditions changed:", newConditions);
+                setDownloadCondition(newConditions);
+
+                // Auto-resume if conditions improve
+                if (newConditions.shouldAutoDownload && downloadPaused && !userDeclinedDownload) {
+                    console.log("⟡ Conditions improved - resuming download");
+                    setDownloadPaused(false);
+                    if (caps.canRunLocal && !tier1Engine) {
+                        loadLocalModels(caps.recommendedTier);
+                    }
+                }
+
+                // Auto-pause if conditions worsen
+                if (!newConditions.shouldAutoDownload && !downloadPaused) {
+                    if (newConditions.condition === DOWNLOAD_CONDITIONS.BATTERY_LOW) {
+                        console.log("⟡ Battery low - pausing download");
+                        setDownloadPaused(true);
+                    }
+                }
+            });
         }
 
         // Online/Offline listeners
@@ -116,17 +164,25 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
     }, []);
 
     // ─────────────────────────────────────────────────────────────────────────
-    // PROGRESSIVE MODEL LOADING
+    // PROGRESSIVE MODEL LOADING (with idle-time awareness)
     // ─────────────────────────────────────────────────────────────────────────
     async function loadLocalModels(recommendedTier) {
+        // Skip if user declined
+        if (userDeclinedDownload) {
+            console.log("⟡ User declined download - skipping");
+            return;
+        }
+
         const worker = new Worker(new URL('../worker.js', import.meta.url), { type: 'module' });
 
-        // TIER 1: Load small model first (fast fallback)
+        // TIER 1: Load small model first (fast fallback) - always try this
         try {
             console.log("⟡ Loading Tier 1 (SmolLM2-135M)...");
             const eng1 = await CreateWebWorkerMLCEngine(worker, MODEL_TIERS.tier1.modelId, {
                 initProgressCallback: (report) => {
-                    setTier1Progress(Math.round(report.progress * 100));
+                    if (!downloadPaused) {
+                        setTier1Progress(Math.round(report.progress * 100));
+                    }
                 }
             });
             setTier1Engine(eng1);
@@ -142,14 +198,23 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
             console.error("⟡ Tier 1 Failed:", e.message);
         }
 
-        // TIER 2: Load full model in background (better quality)
-        if (recommendedTier === 'tier2' || recommendedTier === 'cloud') {
+        // TIER 2: Only load if conditions are good and device supports it
+        if ((recommendedTier === 'tier2' || recommendedTier === 'cloud') && !downloadPaused) {
+            // Re-check conditions before heavy download
+            const currentConditions = await checkDownloadConditions();
+            if (!currentConditions.shouldAutoDownload && currentConditions.condition !== DOWNLOAD_CONDITIONS.GOOD) {
+                console.log("⟡ Conditions degraded - skipping Tier 2 for now");
+                return;
+            }
+
             try {
                 console.log("⟡ Loading Tier 2 (SmolLM2-1.7B) in background...");
                 const worker2 = new Worker(new URL('../worker.js', import.meta.url), { type: 'module' });
                 const eng2 = await CreateWebWorkerMLCEngine(worker2, MODEL_TIERS.tier2.modelId, {
                     initProgressCallback: (report) => {
-                        setTier2Progress(Math.round(report.progress * 100));
+                        if (!downloadPaused) {
+                            setTier2Progress(Math.round(report.progress * 100));
+                        }
                     }
                 });
                 setTier2Engine(eng2);
@@ -159,6 +224,20 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
             } catch (e) {
                 console.error("⟡ Tier 2 Failed:", e.message);
             }
+        }
+    }
+
+    // Handle user consent for metered download
+    function handleDownloadConsent(accepted) {
+        setShowDownloadConsent(false);
+        if (accepted) {
+            console.log("⟡ User accepted download on metered connection");
+            if (capabilities?.canRunLocal) {
+                loadLocalModels(capabilities.recommendedTier);
+            }
+        } else {
+            console.log("⟡ User declined download - staying cloud-only");
+            setUserDeclinedDownload(true);
         }
     }
 
@@ -332,6 +411,87 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
                 )}
             </AnimatePresence>
 
+            {/* ⟡ DOWNLOAD CONSENT MODAL - Mobile Data Warning */}
+            <AnimatePresence>
+                {showDownloadConsent && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-sm w-full"
+                        >
+                            <div className="text-center space-y-4">
+                                <div className="w-12 h-12 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto">
+                                    <Download className="text-amber-400" size={24} />
+                                </div>
+                                <h3 className="text-lg font-medium text-white">Enable Offline Mode?</h3>
+                                <p className="text-sm text-zinc-400">
+                                    Download the local AI model (~40MB) for offline use.
+                                    You appear to be on mobile data.
+                                </p>
+                                <div className="text-xs text-zinc-500 bg-white/5 rounded-lg p-3">
+                                    ⟡ Your reflections will work without internet once downloaded
+                                </div>
+                                <div className="flex gap-3 pt-2">
+                                    <button
+                                        onClick={() => handleDownloadConsent(false)}
+                                        className="flex-1 py-2 px-4 rounded-lg border border-white/10 text-zinc-400 hover:bg-white/5 transition-colors"
+                                    >
+                                        Stay Cloud
+                                    </button>
+                                    <button
+                                        onClick={() => handleDownloadConsent(true)}
+                                        className="flex-1 py-2 px-4 rounded-lg bg-purple-600 hover:bg-purple-500 text-white transition-colors"
+                                    >
+                                        Download
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ⟡ DOWNLOAD STATUS BANNER - Shows when paused */}
+            <AnimatePresence>
+                {downloadPaused && !userDeclinedDownload && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="bg-amber-500/10 border-b border-amber-500/20 overflow-hidden"
+                    >
+                        <div className="px-4 py-2 flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-2 text-amber-400">
+                                <Download size={14} />
+                                <span>
+                                    {downloadCondition?.condition === DOWNLOAD_CONDITIONS.BATTERY_LOW
+                                        ? 'Download paused - battery low'
+                                        : 'Download paused - will resume when conditions improve'}
+                                </span>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setDownloadPaused(false);
+                                    if (capabilities?.canRunLocal && !tier1Engine) {
+                                        loadLocalModels(capabilities.recommendedTier);
+                                    }
+                                }}
+                                className="px-2 py-1 text-amber-300 hover:bg-amber-500/20 rounded transition-colors"
+                            >
+                                Resume Now
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Main Chat Interface */}
             <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full">
                 {/* Header */}
@@ -345,8 +505,8 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
                         <div className="flex items-center gap-1 text-xs">
                             {/* Cloud Icon - Glows Blue when active */}
                             <div className={`relative p-2 rounded-lg transition-all duration-300 ${currentTier === 'cloud'
-                                    ? 'bg-blue-500/20 text-blue-400'
-                                    : 'bg-white/5 text-zinc-600'
+                                ? 'bg-blue-500/20 text-blue-400'
+                                : 'bg-white/5 text-zinc-600'
                                 }`}>
                                 {currentTier === 'cloud' && (
                                     <div className="absolute inset-0 bg-blue-500/30 rounded-lg blur-md animate-pulse"></div>
@@ -367,12 +527,12 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
 
                             {/* Local Icon - Glows Purple when active */}
                             <div className={`relative p-2 rounded-lg transition-all duration-300 ${currentTier !== 'cloud'
-                                    ? isSovereign
-                                        ? 'bg-purple-500/30 text-purple-400'
-                                        : 'bg-amber-500/20 text-amber-400'
-                                    : tier2Progress === 100 || isSovereign
-                                        ? 'bg-purple-500/10 text-purple-400/60'
-                                        : 'bg-white/5 text-zinc-600'
+                                ? isSovereign
+                                    ? 'bg-purple-500/30 text-purple-400'
+                                    : 'bg-amber-500/20 text-amber-400'
+                                : tier2Progress === 100 || isSovereign
+                                    ? 'bg-purple-500/10 text-purple-400/60'
+                                    : 'bg-white/5 text-zinc-600'
                                 }`}>
                                 {(currentTier !== 'cloud' || isSovereign) && (
                                     <div className={`absolute inset-0 rounded-lg blur-md animate-pulse ${isSovereign ? 'bg-purple-500/30' : 'bg-amber-500/20'
@@ -384,7 +544,7 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
                             {/* Status Label */}
                             <div className="ml-2 px-2 py-1 rounded bg-white/5 border border-white/10">
                                 <span className={`font-medium ${currentTier === 'cloud' ? 'text-blue-400' :
-                                        isSovereign ? 'text-purple-400' : 'text-amber-400'
+                                    isSovereign ? 'text-purple-400' : 'text-amber-400'
                                     }`}>
                                     {currentTier === 'cloud' ? 'Cloud' :
                                         isSovereign ? 'Sovereign' : 'Local'}
