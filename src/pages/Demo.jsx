@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CreateWebWorkerMLCEngine } from "@mlc-ai/web-llm";
-import { ArrowLeft, Send, Zap, Trash2, Cpu } from 'lucide-react';
+import { ArrowLeft, Send, Zap, Trash2, Cpu, ShieldAlert } from 'lucide-react';
 import MirrorLogo from '../components/MirrorLogo';
 import { Link } from 'react-router-dom';
 import Worker from '../worker?worker';
@@ -8,7 +8,7 @@ import Worker from '../worker?worker';
 // --------------------------------------------------------------------------
 // CONFIGURATION
 // --------------------------------------------------------------------------
-const SYSTEM_PROMPT = "You are Active Mirror — a reflective thinking partner. You help users think, not tell them what to do. Surface assumptions, reflect trade-offs, ask clarifying questions. Tag uncertainty honestly. The user makes final decisions. You're a mirror, not a driver.";
+const SYSTEM_PROMPT = "You are Active Mirror — a reflective thinking partner. You help users think, not tell them what to do. Surface assumptions, reflect trade-offs, ask clarifying questions. Tag uncertainty honestly. The user makes final decisions. You're a mirror, not a driver. NOT professional advice — consult qualified professionals for legal/medical/financial decisions.";
 
 // Device Detection
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -45,9 +45,7 @@ export default function Demo() {
         async function init() {
             setProgress(`Initializing ${MODEL.split('-')[0]} ${isMobile ? '(Mobile)' : '(Core)'}...`);
             try {
-                // Create Worker using Vite's worker import
                 const worker = new Worker();
-
                 const eng = await CreateWebWorkerMLCEngine(worker, MODEL, {
                     initProgressCallback: (report) => setProgress(report.text)
                 });
@@ -77,7 +75,7 @@ export default function Demo() {
         const fresh = [{ role: "assistant", content: "⟡ Intelligence Reflected. Ready." }];
         setMessages(fresh);
         localStorage.setItem("mirror_chat_history", JSON.stringify(fresh));
-        setHasShownPromo(false); // Reset promo state
+        setHasShownPromo(false);
     };
 
     const handleSend = async () => {
@@ -85,19 +83,16 @@ export default function Demo() {
         const userMsg = input;
         setInput("");
 
-        // Optimistic Update
         setMessages(prev => [...prev, { role: "user", content: userMsg }]);
         setIsLoading(true);
 
         try {
-            // 1. Prepare Messages (Inject System Prompt)
             const conversationHistory = [
                 { role: "system", content: SYSTEM_PROMPT },
-                ...messages.filter(m => !m.isPromo), // Exclude promo from context
+                ...messages.filter(m => !m.isPromo),
                 { role: "user", content: userMsg }
             ];
 
-            // 2. Stream Response
             const chunks = await engine.chat.completions.create({
                 messages: conversationHistory,
                 stream: true
@@ -114,22 +109,19 @@ export default function Demo() {
                 fullResponse += delta;
                 tokens++;
 
-                // Update UI
                 setMessages(prev => {
                     const newArr = [...prev];
                     newArr[newArr.length - 1].content = fullResponse;
                     return newArr;
                 });
 
-                // Update Stats
                 if (tokens % 5 === 0) {
                     const elapsed = (performance.now() - startTime) / 1000;
                     setStats({ tps: Math.round(tokens / elapsed) });
                 }
             }
 
-            // 3. Post-Response Actions (Onboarding Link)
-            // Check if user has sent at least 1 message (this one) and we haven't shown promo
+            // Promo Logic
             const userMessageCount = messages.filter(m => m.role === 'user').length + 1;
             if (userMessageCount >= 1 && !hasShownPromo) {
                 setMessages(prev => [...prev, {
@@ -155,18 +147,24 @@ export default function Demo() {
             {/* BACKGROUND NOISE */}
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] pointer-events-none"></div>
 
-            {/* HEADER */}
-            <header className="fixed top-0 inset-x-0 p-4 z-50 flex items-center justify-between pointer-events-none">
+            {/* SAFETY BANNER */}
+            <div className="fixed top-0 inset-x-0 h-6 bg-red-900/20 border-b border-red-500/20 z-[60] flex items-center justify-center pointer-events-none">
+                <div className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-red-400 flex items-center gap-2">
+                    <ShieldAlert size={10} />
+                    <span>Experimental Demo • AI outputs are not professional advice • 18+</span>
+                </div>
+            </div>
+
+            {/* HEADER (Shifted down) */}
+            <header className="fixed top-6 inset-x-0 p-4 z-50 flex items-center justify-between pointer-events-none">
                 <Link to="/" className="p-2 rounded-full bg-white/5 backdrop-blur border border-white/10 pointer-events-auto hover:bg-white/10 transition-colors">
                     <ArrowLeft size={16} />
                 </Link>
                 <div className="flex items-center gap-3 px-3 py-1 rounded-full bg-black/40 backdrop-blur border border-white/10 text-[10px] font-mono text-zinc-400 pointer-events-auto">
-                    {/* Clear Button */}
                     <button onClick={handleClear} className="hover:text-red-400 transition-colors flex items-center gap-1" title="Clear Memory">
                         <Trash2 size={12} />
                     </button>
                     <div className="w-px h-3 bg-white/10"></div>
-
                     <div className="flex items-center gap-2">
                         <Zap size={10} className={stats.tps > 0 ? "text-green-500" : "text-zinc-600"} />
                         {stats.tps > 0 ? `${stats.tps} T/s` : "IDLE"}
@@ -175,7 +173,7 @@ export default function Demo() {
             </header>
 
             {/* CENTER GLASS PANEL */}
-            <div className="flex-1 max-w-2xl w-full mx-auto relative flex flex-col pt-20 pb-4 px-4 h-full">
+            <div className="flex-1 max-w-2xl w-full mx-auto relative flex flex-col pt-24 pb-4 px-4 h-full">
 
                 {/* LOADING OVERLAY */}
                 {progress && (
@@ -193,12 +191,10 @@ export default function Demo() {
                     {messages.map((msg, i) => (
                         <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-center'}`}>
                             {msg.isPromo ? (
-                                // PROMO STYLE
                                 <a href="https://id.activemirror.ai" target="_blank" rel="noopener noreferrer" className="text-xs text-zinc-500 hover:text-green-400 transition-colors cursor-pointer border-b border-dashed border-zinc-700 hover:border-green-400 pb-0.5 animate-in fade-in slide-in-from-bottom-2 duration-700">
-                                    {msg.content}
+                                    <span className="mr-1">⟡</span> {msg.content}
                                 </a>
                             ) : (
-                                // STANDARD BUBBLE
                                 <div className={
                                     msg.role === 'user'
                                         ? "max-w-[85%] p-4 rounded-2xl text-[15px] leading-relaxed backdrop-blur-sm bg-white text-black shadow-lg font-medium"
@@ -212,7 +208,7 @@ export default function Demo() {
                     <div ref={bottomRef} />
                 </div>
 
-                {/* INPUT */}
+                {/* INPUT & FOOTER */}
                 <div className="mt-auto">
                     <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden shadow-2xl focus-within:border-white/20 transition-colors">
                         <input
@@ -232,9 +228,16 @@ export default function Demo() {
                             <Send size={16} />
                         </button>
                     </div>
-                    <div className="text-center mt-3 text-[10px] text-zinc-600 font-mono flex items-center justify-center gap-2">
-                        <Cpu size={10} />
-                        <span>RUNNING LOCAL • {MODEL.split('-')[0]} • {isMobile ? "MOBILE" : "DESKTOP"}</span>
+
+                    {/* LEGAL FOOTER */}
+                    <div className="text-center mt-3 flex flex-col items-center gap-1">
+                        <div className="text-[10px] text-zinc-600 font-mono flex items-center justify-center gap-2">
+                            <Cpu size={10} />
+                            <span>RUNNING LOCAL • {MODEL.split('-')[0]} • {isMobile ? "MOBILE" : "DESKTOP"}</span>
+                        </div>
+                        <div className="text-[9px] text-zinc-700 font-mono">
+                            Powered by WebLLM · MIT License · Not professional advice
+                        </div>
                     </div>
                 </div>
             </div>
