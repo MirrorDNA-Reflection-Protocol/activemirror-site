@@ -240,6 +240,13 @@ FALLBACK_RESPONSES = [
     "What's coming up for you as you sit with this?",
     "What feels most important about this right now?",
     "What would help you think through this more clearly?",
+    "What would it mean for you if this worked out?",
+    "What's underneath that feeling?",
+    "What do you notice in your body as you think about this?",
+    "What does your gut tell you?",
+    "If you trusted yourself completely, what would you do?",
+    "What's the real question here?",
+    "What are you not saying out loud?",
 ]
 
 SYSTEM_PROMPT = """You are Active Mirror, a reflection tool. You ONLY ask reflective questions.
