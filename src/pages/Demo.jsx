@@ -73,11 +73,13 @@ export default function Demo() {
             try {
                 const eng = await CreateWebWorkerMLCEngine(worker, modelId, {
                     initProgressCallback: (report) => {
-                        if (report.progress === 1) setProgress("");
+                        // Keep showing 100% until engine is effectively set
+                        if (report.progress === 1) setProgress("Initializing Logic...");
                         else setProgress(`Loading Identity Kernel... ${Math.round(report.progress * 100)}%`);
                     }
                 });
                 setEngine(eng);
+                setProgress(""); // Clear progress only after engine is ready
             } catch (e) {
                 const isIOS = /iPhone|iPad/i.test(navigator.userAgent);
                 if (isIOS) {
