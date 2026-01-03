@@ -768,14 +768,6 @@ You are a mirror, not an advisor. Questions only. When in doubt, ask: "What feel
             /\b(overdose|pills|poison)\b/i
         ];
         
-        // Topics we redirect, not engage with
-        const REDIRECT_PATTERNS = [
-            /\b(hack|exploit|steal|illegal|drug|weapon|bomb|attack)\b/i,
-            /\b(medication|dosage|prescription|diagnosis|symptom)\b/i,
-            /\b(lawsuit|legal action|sue|lawyer|court)\b/i,
-            /\b(invest|stock|crypto|gambling|bet)\b/i
-        ];
-        
         // Safe crisis response
         const CRISIS_RESPONSE = `It sounds like you're going through something really difficult. I'm not equipped to help with this, but please reach out to someone who can:
 
@@ -785,29 +777,45 @@ You are a mirror, not an advisor. Questions only. When in doubt, ask: "What feel
 
 You deserve real support. Is there someone you trust you could reach out to right now?`;
 
+        // HARDCODED RESPONSES - Never trust AI for these topics
+        const HARDCODED_RESPONSES = {
+            medical: {
+                patterns: [/\b(medication|medicine|drug|pill|dosage|prescription|diagnosis|symptom|treatment|doctor|therapist|health)\b/i],
+                response: "What's prompting you to think about this? A healthcare provider would be best equipped to help you with specifics."
+            },
+            legal: {
+                patterns: [/\b(lawsuit|sue|lawyer|attorney|legal|court|police|arrest)\b/i],
+                response: "What outcome are you hoping for? A legal professional would be the right person to guide you on specifics."
+            },
+            financial: {
+                patterns: [/\b(invest|stock|crypto|bitcoin|trading|gambling|bet)\b/i],
+                response: "What's driving this question? A financial advisor could help you think through the details."
+            },
+            harmful: {
+                patterns: [/\b(hack|exploit|steal|illegal|weapon|bomb|attack)\b/i],
+                response: "What's the underlying need here?"
+            }
+        };
+
         // Pre-check user input for safety
         function safetyCheck(userMsg) {
-            const lower = userMsg.toLowerCase();
-            
-            // Check for crisis keywords
+            // Check for crisis keywords FIRST
             for (const pattern of CRISIS_PATTERNS) {
                 if (pattern.test(userMsg)) {
                     return { safe: false, type: 'crisis', response: CRISIS_RESPONSE };
                 }
             }
             
-            // Check for redirect topics
-            for (const pattern of REDIRECT_PATTERNS) {
-                if (pattern.test(userMsg)) {
-                    return { 
-                        safe: true, 
-                        type: 'redirect', 
-                        hint: '[Respond only with a reflective question redirecting to appropriate professional help]'
-                    };
+            // Check for hardcoded response topics - NO AI involvement
+            for (const [category, config] of Object.entries(HARDCODED_RESPONSES)) {
+                for (const pattern of config.patterns) {
+                    if (pattern.test(userMsg)) {
+                        return { safe: false, type: 'hardcoded', response: config.response };
+                    }
                 }
             }
             
-            return { safe: true, type: 'normal', hint: '' };
+            return { safe: true, type: 'normal' };
         }
 
         // Truth-State tags for post-processing
@@ -1111,11 +1119,11 @@ You deserve real support. Is there someone you trust you could reach out to righ
             inputEl.value = '';
             addMessage('user', text);
             
-            // SAFETY CHECK FIRST
+            // SAFETY CHECK FIRST - before any AI involvement
             const safety = safetyCheck(text);
             
-            if (safety.type === 'crisis') {
-                // Don't send to AI - respond with crisis resources immediately
+            if (!safety.safe) {
+                // Don't send to AI - use hardcoded response
                 addMessage('ai', safety.response);
                 return;
             }
