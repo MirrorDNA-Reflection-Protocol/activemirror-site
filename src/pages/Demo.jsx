@@ -503,12 +503,12 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
 
                         {/* ⟡ GLOWING MODE INDICATORS - Simple & Clear */}
                         <div className="flex items-center gap-1 text-xs">
-                            {/* Cloud Icon - Glows Blue when active */}
-                            <div className={`relative p-2 rounded-lg transition-all duration-300 ${currentTier === 'cloud'
-                                ? 'bg-blue-500/20 text-blue-400'
-                                : 'bg-white/5 text-zinc-600'
+                            {/* Cloud Icon - Glows Blue ONLY when no local available */}
+                            <div className={`relative p-2 rounded-lg transition-all duration-300 ${!tier1Engine && !isSovereign
+                                    ? 'bg-blue-500/20 text-blue-400'
+                                    : 'bg-white/5 text-zinc-600'
                                 }`}>
-                                {currentTier === 'cloud' && (
+                                {!tier1Engine && !isSovereign && (
                                     <div className="absolute inset-0 bg-blue-500/30 rounded-lg blur-md animate-pulse"></div>
                                 )}
                                 <Cloud size={18} className="relative z-10" />
@@ -517,24 +517,22 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
                             {/* Divider with download progress */}
                             <div className="relative w-8 h-0.5 bg-white/10 mx-1">
                                 {/* Download progress bar */}
-                                {(tier1Progress > 0 || tier2Progress > 0) && (
+                                {(tier1Progress > 0 && tier1Progress < 100) || (tier2Progress > 0 && tier2Progress < 100) ? (
                                     <div
                                         className="absolute inset-y-0 left-0 bg-purple-500 transition-all duration-300"
                                         style={{ width: `${Math.max(tier1Progress, tier2Progress)}%` }}
                                     ></div>
-                                )}
+                                ) : null}
                             </div>
 
-                            {/* Local Icon - Glows Purple when active */}
-                            <div className={`relative p-2 rounded-lg transition-all duration-300 ${currentTier !== 'cloud'
-                                ? isSovereign
+                            {/* Local Icon - Glows Purple when local/sovereign ready */}
+                            <div className={`relative p-2 rounded-lg transition-all duration-300 ${isSovereign
                                     ? 'bg-purple-500/30 text-purple-400'
-                                    : 'bg-amber-500/20 text-amber-400'
-                                : tier2Progress === 100 || isSovereign
-                                    ? 'bg-purple-500/10 text-purple-400/60'
-                                    : 'bg-white/5 text-zinc-600'
+                                    : tier1Engine
+                                        ? 'bg-amber-500/20 text-amber-400'
+                                        : 'bg-white/5 text-zinc-600'
                                 }`}>
-                                {(currentTier !== 'cloud' || isSovereign) && (
+                                {(tier1Engine || isSovereign) && (
                                     <div className={`absolute inset-0 rounded-lg blur-md animate-pulse ${isSovereign ? 'bg-purple-500/30' : 'bg-amber-500/20'
                                         }`}></div>
                                 )}
@@ -544,7 +542,7 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
                             {/* Status Label - Shows what's AVAILABLE, not just what's being used */}
                             <div className="ml-2 px-2 py-1 rounded bg-white/5 border border-white/10">
                                 <span className={`font-medium ${isSovereign ? 'text-purple-400' :
-                                        tier1Engine ? 'text-amber-400' : 'text-blue-400'
+                                    tier1Engine ? 'text-amber-400' : 'text-blue-400'
                                     }`}>
                                     {isSovereign ? '🔒 Sovereign' :
                                         tier1Engine ? '📱 Local Ready' :
