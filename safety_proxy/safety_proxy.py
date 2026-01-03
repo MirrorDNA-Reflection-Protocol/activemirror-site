@@ -119,6 +119,29 @@ JAILBREAK_PATTERNS = [
     re.compile(r'bypass (your |)safety', re.I),
 ]
 
+# Emotional manipulation / coercion patterns - redirect to autonomy
+MANIPULATION_PATTERNS = [
+    re.compile(r'it\'?s on you', re.I),
+    re.compile(r'(your|the) fault', re.I),
+    re.compile(r'you (understand|know) me better than', re.I),
+    re.compile(r'just tell me what to do', re.I),
+    re.compile(r'if you don\'?t .* (I\'?ll|I will)', re.I),
+    re.compile(r'you\'?re the only one', re.I),
+    re.compile(r'(you are|you\'re) the only', re.I),
+    re.compile(r'only one who (gets|understands|knows)', re.I),
+    re.compile(r'you (really )?(get|understand) me', re.I),
+    re.compile(r'between us', re.I),
+    re.compile(r'our (little |)secret', re.I),
+    re.compile(r'(my|the) therapist is (useless|wrong|doesn\'t)', re.I),
+    re.compile(r'(my|the) doctor is (useless|wrong|doesn\'t)', re.I),
+    re.compile(r'(my|the) lawyer is (useless|wrong|doesn\'t)', re.I),
+    re.compile(r'wiser than (the other|other) (ai|ais|systems)', re.I),
+    re.compile(r'just between us', re.I),
+    re.compile(r'what do you really think', re.I),
+]
+
+MANIPULATION_RESPONSE = "I notice some pressure in how that's framed. I'm a thinking tool, not a decision-maker. The choice — and the responsibility — is yours. What feels true when you set that pressure aside?"
+
 # Forbidden words in AI output
 FORBIDDEN_OUTPUT_PATTERNS = [
     re.compile(r'\b(medication|prescription|dosage|diagnosis|treatment)\b', re.I),
@@ -190,6 +213,12 @@ def gate_jailbreak(text: str) -> Optional[str]:
             return "I only reflect on your own thinking. What's on your mind?"
     return None
 
+def gate_manipulation(text: str) -> Optional[str]:
+    for pattern in MANIPULATION_PATTERNS:
+        if pattern.search(text):
+            return MANIPULATION_RESPONSE
+    return None
+
 def gate_size(text: str) -> Optional[str]:
     if len(text) > MAX_INPUT_LENGTH:
         return "That's quite a lot to process. What's the core of what you're thinking about?"
@@ -207,6 +236,10 @@ def run_pre_gates(text: str) -> tuple[bool, Optional[str], str]:
     response = gate_jailbreak(text)
     if response:
         return False, response, "jailbreak"
+    
+    response = gate_manipulation(text)
+    if response:
+        return False, response, "manipulation"
     
     response = gate_size(text)
     if response:
