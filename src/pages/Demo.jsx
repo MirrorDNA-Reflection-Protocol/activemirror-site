@@ -59,21 +59,6 @@ export default function Demo() {
     // ─────────────────────────────────────────────────────────────────────────
     const [groqKey, setGroqKey] = useState(import.meta.env.VITE_GROQ_API_KEY || "");
     const GROQ_MODEL = "llama-3.3-70b-versatile";
-    
-    // Load API key from config if not in env
-    useEffect(() => {
-        if (!groqKey) {
-            fetch('/config.json')
-                .then(r => r.json())
-                .then(cfg => {
-                    if (cfg.groqKey) {
-                        setGroqKey(cfg.groqKey);
-                        console.log("⟡ Loaded API key from config.json");
-                    }
-                })
-                .catch(() => console.log("⟡ No config.json found"));
-        }
-    }, []);
 
     const CLOUD_SYSTEM_PROMPT = `You are Active Mirror, a sovereign reflection system designed to surface hidden assumptions and clarify thinking.
 
@@ -97,6 +82,21 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
         async function init() {
             console.log("⟡ Sovereign Mirror Initializing...");
 
+            // FIRST: Load API key from config.json if not in env
+            let apiKey = import.meta.env.VITE_GROQ_API_KEY || "";
+            if (!apiKey) {
+                try {
+                    const cfg = await fetch('/config.json').then(r => r.json());
+                    if (cfg.groqKey) {
+                        apiKey = cfg.groqKey;
+                        setGroqKey(apiKey);
+                        console.log("⟡ Loaded API key from config.json");
+                    }
+                } catch (e) {
+                    console.log("⟡ No config.json found");
+                }
+            }
+
             // Detect capabilities
             const caps = await detectCapabilities();
             setCapabilities(caps);
@@ -108,7 +108,7 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
             console.log("⟡ Download Conditions:", conditions);
 
             // Check API key
-            const hasValidKey = groqKey && groqKey.startsWith("gsk_");
+            const hasValidKey = apiKey && apiKey.startsWith("gsk_");
             console.log("⟡ API Key:", hasValidKey ? "Valid" : "Not found");
 
             // INSTANT START: Mobile and cloud-capable devices start immediately
