@@ -1,246 +1,167 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CreateWebWorkerMLCEngine } from "@mlc-ai/web-llm";
-import { ArrowLeft, Send, Zap, Trash2, Cpu, ShieldAlert } from 'lucide-react';
-import MirrorLogo from '../components/MirrorLogo';
+import { ArrowLeft, Send, Sparkles, Fingerprint } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Worker from '../worker?worker';
-
-// --------------------------------------------------------------------------
-// CONFIGURATION
-// --------------------------------------------------------------------------
-const SYSTEM_PROMPT = "You are Active Mirror — a reflective thinking partner. You help users think, not tell them what to do. Surface assumptions, reflect trade-offs, ask clarifying questions. Tag uncertainty honestly. The user makes final decisions. You're a mirror, not a driver. NOT professional advice — consult qualified professionals for legal/medical/financial decisions.";
-
-// Device Detection
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-const MODEL = isMobile
-    ? "Qwen2.5-0.5B-Instruct-q4f16_1-MLC"
-    : "Llama-3.2-1B-Instruct-q4f16_1-MLC";
 
 export default function Demo() {
+    const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
-
-    // Persistence with Lazy Init
-    const [messages, setMessages] = useState(() => {
-        try {
-            const saved = localStorage.getItem("mirror_chat_history");
-            return saved ? JSON.parse(saved) : [{ role: "assistant", content: "⟡ Intelligence Reflected. Ready." }];
-        } catch {
-            return [{ role: "assistant", content: "⟡ Intelligence Reflected. Ready." }];
-        }
-    });
-
     const [isLoading, setIsLoading] = useState(false);
+    const [progress, setProgress] = useState("Initializing Reflection Protocol...");
     const [engine, setEngine] = useState(null);
-    const [progress, setProgress] = useState("");
-    const [stats, setStats] = useState({ tps: 0 });
-    const [hasShownPromo, setHasShownPromo] = useState(false);
     const bottomRef = useRef(null);
 
-    // --------------------------------------------------------------------------
-    // 1. ENGINE INITIALIZATION (WEB WORKER)
-    // --------------------------------------------------------------------------
-    useEffect(() => {
-        if (engine) return;
+    // 1. THE SOUL (System Prompt)
+    const SYSTEM_PROMPT = "You are Active Mirror — a reflective thinking partner. You help users think, not tell them what to do. Surface assumptions, reflect trade-offs, ask clarifying questions. Tag uncertainty honestly. The user makes final decisions. You're a mirror, not a driver.";
 
+    // 2. THE ENGINE MOUNT
+    useEffect(() => {
         async function init() {
-            setProgress(`Initializing ${MODEL.split('-')[0]} ${isMobile ? '(Mobile)' : '(Core)'}...`);
+            // Device Detection
+            const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
+            const modelId = isMobile ? "Qwen2.5-0.5B-Instruct-q4f16_1-MLC" : "Llama-3.2-1B-Instruct-q4f16_1-MLC";
+
+            // The Worker Blob (Fixes UI Freeze)
+            const workerScript = `
+        import { WebWorkerMLCEngineHandler } from "https://esm.run/@mlc-ai/web-llm";
+        const handler = new WebWorkerMLCEngineHandler();
+        self.onmessage = (msg) => { handler.onmessage(msg); };
+      `;
+            const worker = new Worker(URL.createObjectURL(new Blob([workerScript], { type: "application/javascript" })), { type: "module" });
+
             try {
-                const worker = new Worker();
-                const eng = await CreateWebWorkerMLCEngine(worker, MODEL, {
-                    initProgressCallback: (report) => setProgress(report.text)
+                const eng = await CreateWebWorkerMLCEngine(worker, modelId, {
+                    initProgressCallback: (report) => {
+                        // User-Friendly Loading Logic
+                        if (report.progress === 1) {
+                            setProgress("");
+                        } else {
+                            // Extract percentage if available, or just show text
+                            // The report object structure usually has text. report.progress is 0-1.
+                            setProgress(`Downloading Neural Weights... ${Math.round(report.progress * 100)}%`);
+                        }
+                    }
                 });
                 setEngine(eng);
-                setProgress("");
+                // Inject System Prompt logic handled in chat loop
             } catch (e) {
                 console.error(e);
-                setProgress(`Error: ${e.message || String(e)}`);
+                setProgress("Error: WebGPU not supported or initialization failed.");
             }
         }
         init();
-    }, [engine]);
+    }, []);
 
-    // --------------------------------------------------------------------------
-    // 2. AUTO-SCROLL & SYNC
-    // --------------------------------------------------------------------------
+    // Auto-scroll
     useEffect(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), [messages]);
-
-    useEffect(() => {
-        localStorage.setItem("mirror_chat_history", JSON.stringify(messages));
-    }, [messages]);
-
-    // --------------------------------------------------------------------------
-    // 3. HANDLERS
-    // --------------------------------------------------------------------------
-    const handleClear = () => {
-        const fresh = [{ role: "assistant", content: "⟡ Intelligence Reflected. Ready." }];
-        setMessages(fresh);
-        localStorage.setItem("mirror_chat_history", JSON.stringify(fresh));
-        setHasShownPromo(false);
-    };
 
     const handleSend = async () => {
         if (!input.trim() || !engine) return;
         const userMsg = input;
         setInput("");
-
         setMessages(prev => [...prev, { role: "user", content: userMsg }]);
         setIsLoading(true);
 
         try {
-            const conversationHistory = [
+            // 3. THE WRAPPER (Pre-Inference)
+            // We combine System Prompt + History
+            const chatHistory = [
                 { role: "system", content: SYSTEM_PROMPT },
-                ...messages.filter(m => !m.isPromo),
+                ...messages,
                 { role: "user", content: userMsg }
             ];
 
-            const chunks = await engine.chat.completions.create({
-                messages: conversationHistory,
-                stream: true
-            });
+            const chunks = await engine.chat.completions.create({ messages: chatHistory, stream: true, temperature: 0.7 });
 
             let fullResponse = "";
             setMessages(prev => [...prev, { role: "assistant", content: "" }]);
 
-            let startTime = performance.now();
-            let tokens = 0;
-
             for await (const chunk of chunks) {
                 const delta = chunk.choices[0]?.delta?.content || "";
                 fullResponse += delta;
-                tokens++;
-
                 setMessages(prev => {
                     const newArr = [...prev];
                     newArr[newArr.length - 1].content = fullResponse;
                     return newArr;
                 });
-
-                if (tokens % 5 === 0) {
-                    const elapsed = (performance.now() - startTime) / 1000;
-                    setStats({ tps: Math.round(tokens / elapsed) });
-                }
             }
-
-            // Promo Logic
-            const userMessageCount = messages.filter(m => m.role === 'user').length + 1;
-            if (userMessageCount >= 1 && !hasShownPromo) {
-                setMessages(prev => [...prev, {
-                    role: "system",
-                    content: "Want your own identity kernel? → id.activemirror.ai",
-                    isPromo: true
-                }]);
-                setHasShownPromo(true);
-            }
-
         } catch (err) {
-            setMessages(prev => [...prev, { role: "assistant", content: `[ERROR]: ${err.message || String(err)}` }]);
+            console.error(err);
+            setMessages(prev => [...prev, { role: "assistant", content: "Error: Reflection failed." }]);
         } finally {
             setIsLoading(false);
         }
     };
 
-    // --------------------------------------------------------------------------
-    // UI RENDER
-    // --------------------------------------------------------------------------
     return (
-        <main className="relative min-h-screen bg-black text-white font-sans selection:bg-green-500/30 flex flex-col overflow-hidden">
+        <div className="relative min-h-screen font-sans text-white overflow-hidden selection:bg-green-500/30 bg-black flex items-center justify-center p-4">
             {/* BACKGROUND NOISE */}
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] pointer-events-none"></div>
 
-            {/* SAFETY BANNER */}
-            <div className="fixed top-0 inset-x-0 h-6 bg-red-900/20 border-b border-red-500/20 z-[60] flex items-center justify-center pointer-events-none">
-                <div className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-red-400 flex items-center gap-2">
-                    <ShieldAlert size={10} />
-                    <span>Experimental Demo • AI outputs are not professional advice • 18+</span>
+            {/* THE GLASS MONOLITH */}
+            <div className="relative z-10 w-full max-w-2xl h-[85vh] flex flex-col rounded-3xl border border-white/5 bg-black/40 backdrop-blur-3xl shadow-2xl overflow-hidden">
+
+                {/* Header */}
+                <div className="h-16 border-b border-white/5 flex items-center justify-between px-6 bg-white/[0.02]">
+                    <Link to="/" className="text-zinc-400 hover:text-white transition-colors flex items-center gap-2 text-sm"><ArrowLeft size={16} /> Exit</Link>
+                    <span className="text-xs font-mono tracking-widest text-zinc-600 uppercase">Active Mirror v2</span>
                 </div>
-            </div>
 
-            {/* HEADER (Shifted down) */}
-            <header className="fixed top-6 inset-x-0 p-4 z-50 flex items-center justify-between pointer-events-none">
-                <Link to="/" className="p-2 rounded-full bg-white/5 backdrop-blur border border-white/10 pointer-events-auto hover:bg-white/10 transition-colors">
-                    <ArrowLeft size={16} />
-                </Link>
-                <div className="flex items-center gap-3 px-3 py-1 rounded-full bg-black/40 backdrop-blur border border-white/10 text-[10px] font-mono text-zinc-400 pointer-events-auto">
-                    <button onClick={handleClear} className="hover:text-red-400 transition-colors flex items-center gap-1" title="Clear Memory">
-                        <Trash2 size={12} />
-                    </button>
-                    <div className="w-px h-3 bg-white/10"></div>
-                    <div className="flex items-center gap-2">
-                        <Zap size={10} className={stats.tps > 0 ? "text-green-500" : "text-zinc-600"} />
-                        {stats.tps > 0 ? `${stats.tps} T/s` : "IDLE"}
-                    </div>
-                </div>
-            </header>
-
-            {/* CENTER GLASS PANEL */}
-            <div className="flex-1 max-w-2xl w-full mx-auto relative flex flex-col pt-24 pb-4 px-4 h-full">
-
-                {/* LOADING OVERLAY */}
-                {progress && (
-                    <div className="absolute inset-x-4 top-20 z-50 p-6 rounded-2xl border border-white/10 bg-zinc-900/80 backdrop-blur-xl text-center shadow-2xl">
-                        <MirrorLogo className="w-8 h-8 mx-auto mb-4 animate-spin-slow text-green-500" />
-                        <div className="text-sm font-medium animate-pulse">{progress}</div>
-                        <div className="text-xs text-zinc-500 mt-2 font-mono uppercase tracking-widest">
-                            {isMobile ? "Mobile Neural Engine" : "Desktop Matrix Core"}
+                {/* Chat Area */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
+                    {progress && (
+                        <div className="h-full flex flex-col items-center justify-center text-zinc-500 gap-4">
+                            <Sparkles className="animate-pulse text-zinc-700" size={32} />
+                            <div className="font-mono text-xs">{progress}</div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {/* MESSAGES */}
-                <div className="flex-1 overflow-y-auto space-y-6 pb-4 no-scrollbar">
+                    {!progress && messages.length === 0 && (
+                        <div className="h-full flex flex-col items-center justify-center text-zinc-600 gap-4 opacity-50">
+                            <p>System Ready. Initialize thought.</p>
+                        </div>
+                    )}
+
                     {messages.map((msg, i) => (
-                        <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-center'}`}>
-                            {msg.isPromo ? (
-                                <a href="https://id.activemirror.ai" target="_blank" rel="noopener noreferrer" className="text-xs text-zinc-500 hover:text-green-400 transition-colors cursor-pointer border-b border-dashed border-zinc-700 hover:border-green-400 pb-0.5 animate-in fade-in slide-in-from-bottom-2 duration-700">
-                                    <span className="mr-1">⟡</span> {msg.content}
-                                </a>
-                            ) : (
-                                <div className={
-                                    msg.role === 'user'
-                                        ? "max-w-[85%] p-4 rounded-2xl text-[15px] leading-relaxed backdrop-blur-sm bg-white text-black shadow-lg font-medium"
-                                        : "max-w-[85%] w-full p-4 rounded-2xl text-[15px] leading-relaxed backdrop-blur-sm bg-white/5 border border-white/10 text-zinc-200"
-                                }>
-                                    {msg.content}
-                                </div>
-                            )}
+                        <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`max-w-[85%] px-5 py-3 rounded-2xl text-sm leading-relaxed backdrop-blur-md ${msg.role === 'user' ? 'bg-white text-black font-medium' : 'bg-white/5 border border-white/5 text-zinc-300'
+                                }`}>{msg.content}</div>
                         </div>
                     ))}
+
+                    {/* 4. THE WRAPPER (Post-Inference Upsell) */}
+                    {messages.length > 1 && !isLoading && (
+                        <div className="flex justify-center animate-fade-in-up pt-4">
+                            <a href="https://id.activemirror.ai" target="_blank" rel="noopener noreferrer" className="text-xs flex items-center gap-2 text-green-500/80 hover:text-green-400 bg-green-500/10 px-3 py-1.5 rounded-full border border-green-500/20 transition-all cursor-pointer">
+                                <Fingerprint size={12} /> Claim your Identity Kernel
+                            </a>
+                        </div>
+                    )}
                     <div ref={bottomRef} />
                 </div>
 
-                {/* INPUT & FOOTER */}
-                <div className="mt-auto">
-                    <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden shadow-2xl focus-within:border-white/20 transition-colors">
+                {/* Input */}
+                <div className="p-4 bg-white/[0.02] border-t border-white/5">
+                    <div className="relative flex items-center">
                         <input
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                            placeholder={isLoading ? "Reflecting..." : "Initialize instruction..."}
-                            disabled={isLoading || !!progress}
-                            className="w-full bg-transparent p-4 pr-12 outline-none text-white placeholder-zinc-600 text-base"
+                            placeholder={progress ? "Loading Neural Weights..." : "Reflect on this..."}
+                            disabled={!!progress || isLoading}
+                            className="w-full bg-black/50 border border-white/10 rounded-xl py-4 pl-5 pr-12 text-white placeholder-zinc-600 focus:outline-none focus:border-white/20 transition-colors"
                             autoFocus
                         />
                         <button
                             onClick={handleSend}
-                            disabled={isLoading || !!progress}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/10 text-white rounded-xl hover:bg-white/20 disabled:opacity-0 transition-all"
+                            disabled={!!progress || isLoading || !input.trim()}
+                            className="absolute right-3 p-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition-all disabled:opacity-0"
                         >
                             <Send size={16} />
                         </button>
                     </div>
-
-                    {/* LEGAL FOOTER */}
-                    <div className="text-center mt-3 flex flex-col items-center gap-1">
-                        <div className="text-[10px] text-zinc-600 font-mono flex items-center justify-center gap-2">
-                            <Cpu size={10} />
-                            <span>RUNNING LOCAL • {MODEL.split('-')[0]} • {isMobile ? "MOBILE" : "DESKTOP"}</span>
-                        </div>
-                        <div className="text-[9px] text-zinc-700 font-mono">
-                            Powered by WebLLM · MIT License · Not professional advice
-                        </div>
-                    </div>
                 </div>
             </div>
-        </main>
+        </div>
     );
 }
