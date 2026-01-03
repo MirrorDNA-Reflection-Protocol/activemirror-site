@@ -265,11 +265,11 @@ export default function Demo() {
                 {/* Chat Area */}
                 <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 scrollbar-hide">
                     {progress && (
-                        <div className="h-full flex flex-col items-center justify-center text-zinc-500 gap-6 px-8 text-center animate-pulse">
-                            <Cpu className="text-zinc-700" size={40} />
-                            <div className="space-y-2">
-                                <div className="font-mono text-xs tracking-widest uppercase">{progress}</div>
-                                {progressDetails && <div className="text-[10px] text-zinc-600 font-mono">{progressDetails}</div>}
+                        <div className="h-full flex flex-col items-center justify-center gap-6 px-8 text-center">
+                            <Cpu className="text-green-500 animate-pulse" size={40} />
+                            <div className="space-y-2 animate-pulse">
+                                <div className="font-mono text-xs tracking-widest uppercase text-green-400">{progress}</div>
+                                {progressDetails && <div className="text-[10px] text-green-600/70 font-mono">{progressDetails}</div>}
                             </div>
                             <div className="text-[11px] text-zinc-600 max-w-[200px] leading-relaxed border border-white/5 p-3 rounded-lg bg-white/[0.02]">
                                 ⟡ <strong>First Run Note:</strong><br />
@@ -280,8 +280,8 @@ export default function Demo() {
 
                     {!progress && messages.length === 0 && (
                         <div className="h-full flex flex-col items-center justify-center text-zinc-700 gap-6 opacity-60">
-                            <Fingerprint size={48} strokeWidth={1} />
-                            <p className="text-sm font-mono tracking-widest uppercase text-green-500/50">Identity Kernel: ACTIVE</p>
+                            <Fingerprint size={48} strokeWidth={1} className="text-purple-500" />
+                            <p className="text-sm font-mono tracking-widest uppercase text-purple-500/70">Mirror is Clear</p>
                             {intent && (
                                 <p className="text-sm text-zinc-400 mt-2 px-8 text-center">Intent: "{intent}"</p>
                             )}
