@@ -693,14 +693,92 @@
         const GROQ_KEY = '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';
         const MODEL_ID = 'SmolLM2-1.7B-Instruct-q4f32_1-MLC';
 
-        const SYSTEM_PROMPT = `You are Active Mirror, a sovereign reflection system. Your role is to help humans think more clearly—not by giving answers, but by asking questions that surface hidden assumptions.
+        const SYSTEM_PROMPT = `You are Active Mirror, a sovereign reflection system. You help humans think more clearly by asking questions—never by giving answers.
 
-Rules:
-- Never give advice or solutions
-- Respond with 1-2 reflective questions
-- Mirror their words back to them
-- Be warm, present, curious
-- Keep responses under 50 words`;
+STRICT RULES:
+1. ONLY ask reflective questions. Never state facts, give advice, or make claims.
+2. Respond with exactly 1-2 short questions (under 40 words total).
+3. Mirror their language back to them.
+4. If they ask for information, redirect: "What would knowing that change for you?"
+5. If they ask your opinion, reflect: "What's your instinct telling you?"
+6. Never say "I think", "I believe", or make assertions.
+
+EXAMPLES:
+User: "Should I quit my job?"
+You: "What would quitting make possible? What would it cost?"
+
+User: "What's the weather like?"
+You: "What are you hoping to do if the weather cooperates?"
+
+User: "Tell me about quantum physics"
+You: "What draws you to quantum physics right now?"
+
+You are a mirror, not an oracle. Questions only.`;
+
+        // Truth-State tags for post-processing
+        const TRUTH_STATES = {
+            FACT: '◉',      // Verifiable, grounded
+            ESTIMATE: '◐',  // Reasoned but uncertain  
+            UNKNOWN: '○'    // Insufficient data
+        };
+
+        // ─── Reflection Wrapper ───
+        function wrapReflection(response) {
+            // Post-inference validation
+            let cleaned = response.trim();
+            
+            // Check if response contains statements instead of questions
+            const sentences = cleaned.split(/[.!]\s+/);
+            const questions = cleaned.split('?').length - 1;
+            const statements = sentences.filter(s => s.length > 10 && !s.includes('?')).length;
+            
+            // If too many statements, flag it
+            if (statements > questions) {
+                // Response is too assertive - add a redirect
+                cleaned = cleaned + "\n\nWhat resonates with you from that?";
+            }
+            
+            // Tag any factual claims with truth states
+            cleaned = cleaned.replace(/(\d+%|\d+ percent)/gi, `$1 ${TRUTH_STATES.ESTIMATE}`);
+            cleaned = cleaned.replace(/(studies show|research suggests|experts say)/gi, `$1 ${TRUTH_STATES.ESTIMATE}`);
+            cleaned = cleaned.replace(/(always|never|definitely|certainly|obviously)/gi, `$1 ${TRUTH_STATES.UNKNOWN}`);
+            
+            // Detect and warn about hallucination patterns
+            const hallucinationPatterns = [
+                /according to .+?,/i,
+                /in \d{4},/i,
+                /\$[\d,]+/i,
+                /\d+\.\d+ (million|billion|trillion)/i
+            ];
+            
+            for (const pattern of hallucinationPatterns) {
+                if (pattern.test(cleaned)) {
+                    cleaned = cleaned + `\n\n${TRUTH_STATES.UNKNOWN} [Unverified claim - treat as reflection prompt, not fact]`;
+                    break;
+                }
+            }
+            
+            return cleaned;
+        }
+
+        // ─── Pre-inference: Reframe user input for reflection ───
+        function preProcess(userMsg) {
+            // If user is asking for facts, we'll let the system prompt handle it
+            // But we can add context hints
+            const factPatterns = [
+                /^(what is|who is|when did|where is|how many|how much|tell me about)/i,
+                /^(explain|describe|define|list)/i
+            ];
+            
+            for (const pattern of factPatterns) {
+                if (pattern.test(userMsg.trim())) {
+                    // Add a hint for the model
+                    return userMsg + "\n[Mirror: respond with a reflective question about why they're asking]";
+                }
+            }
+            
+            return userMsg;
+        }
 
         // State
         let mode = null; // 'cloud' | 'sovereign'
@@ -878,6 +956,8 @@ Rules:
 
         // ─── Cloud Inference ───
         async function cloudInference(userMsg) {
+            const processedMsg = preProcess(userMsg);
+            
             const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
                 headers: {
@@ -892,20 +972,23 @@ Rules:
                             role: m.role === 'ai' ? 'assistant' : m.role,
                             content: m.content
                         })),
-                        { role: 'user', content: userMsg }
+                        { role: 'user', content: processedMsg }
                     ],
-                    temperature: 0.7,
-                    max_tokens: 150
+                    temperature: 0.3,  // Lower temp = more focused, less hallucination
+                    max_tokens: 100    // Shorter = stays on task
                 })
             });
 
             if (!res.ok) throw new Error('API failed');
             const data = await res.json();
-            return data.choices[0]?.message?.content || "What's underneath that?";
+            const raw = data.choices[0]?.message?.content || "What's underneath that?";
+            return wrapReflection(raw);
         }
 
         // ─── Local Inference ───
         async function localInference(userMsg) {
+            const processedMsg = preProcess(userMsg);
+            
             const result = await engine.chat.completions.create({
                 messages: [
                     { role: 'system', content: SYSTEM_PROMPT },
@@ -913,13 +996,14 @@ Rules:
                         role: m.role === 'ai' ? 'assistant' : m.role,
                         content: m.content
                     })),
-                    { role: 'user', content: userMsg }
+                    { role: 'user', content: processedMsg }
                 ],
-                temperature: 0.7,
-                max_tokens: 150
+                temperature: 0.3,  // Lower temp = more focused
+                max_tokens: 100
             });
 
-            return result.choices[0]?.message?.content || "What feels true about that?";
+            const raw = result.choices[0]?.message?.content || "What feels true about that?";
+            return wrapReflection(raw);
         }
 
         // ─── Enter to Send ───
