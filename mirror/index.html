@@ -702,8 +702,9 @@
                     <span class="chat-title">Active Mirror</span>
                 </div>
                 <div class="chat-status">
-                    <span class="status-dot"></span>
+                    <span class="status-dot" id="proxy-dot" title="Safety proxy status"></span>
                     <span id="mode-label">Cloud</span>
+                    <span id="proxy-badge" style="font-size: 9px; background: #22c55e22; color: #22c55e; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">🛡️ Protected</span>
                 </div>
             </header>
 
@@ -962,6 +963,45 @@ You deserve real support. Is there someone you trust you could reach out to righ
             document.getElementById('sovereign-card').style.display = 'none';
         }
 
+        // ─── Proxy Health Check ───
+        let proxyOnline = false;
+        const proxyBadge = document.getElementById('proxy-badge');
+        const proxyDot = document.getElementById('proxy-dot');
+        
+        async function checkProxyHealth() {
+            try {
+                const res = await fetch(`${SAFETY_PROXY_URL}/health`, { 
+                    method: 'GET',
+                    signal: AbortSignal.timeout(5000)
+                });
+                if (res.ok) {
+                    proxyOnline = true;
+                    if (proxyBadge) {
+                        proxyBadge.textContent = '🛡️ Protected';
+                        proxyBadge.style.background = '#22c55e22';
+                        proxyBadge.style.color = '#22c55e';
+                    }
+                    if (proxyDot) proxyDot.style.background = '#22c55e';
+                    return true;
+                }
+            } catch (e) {
+                console.warn('Proxy offline:', e);
+            }
+            proxyOnline = false;
+            if (proxyBadge) {
+                proxyBadge.textContent = '⚠️ Direct';
+                proxyBadge.style.background = '#f59e0b22';
+                proxyBadge.style.color = '#f59e0b';
+            }
+            if (proxyDot) proxyDot.style.background = '#f59e0b';
+            return false;
+        }
+        
+        // Check proxy on load
+        checkProxyHealth();
+        // Re-check every 30 seconds
+        setInterval(checkProxyHealth, 30000);
+
         // ─── Cloud Mode ───
         window.startCloud = function () {
             mode = 'cloud';
@@ -1163,10 +1203,37 @@ You deserve real support. Is there someone you trust you could reach out to righ
             inputEl.focus();
         };
 
-        // ─── Cloud Inference ───
+        // ─── Safety Proxy Configuration ───
+        const SAFETY_PROXY_URL = 'https://justify-bomb-petition-subcommittee.trycloudflare.com';
+        const PROXY_ENABLED = true;  // Set to false to bypass proxy (dev only)
+        
+        // ─── Cloud Inference (via Safety Proxy) ───
         async function cloudInference(userMsg) {
-            const processedMsg = preProcess(userMsg);
+            if (PROXY_ENABLED) {
+                // Route through Mac Mini safety proxy
+                const res = await fetch(`${SAFETY_PROXY_URL}/api/reflect`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        input: userMsg,
+                        mode: 'cloud',
+                        timestamp: Math.floor(Date.now() / 1000)
+                    })
+                });
+                
+                if (!res.ok) throw new Error('Proxy unavailable');
+                const data = await res.json();
+                
+                // Update mode badge if proxy reports error
+                if (data.safety_outcome === 'error') {
+                    console.warn('Proxy model error, using fallback');
+                }
+                
+                return data.output;
+            }
             
+            // Fallback: Direct Groq call (dev only, not recommended)
+            const processedMsg = preProcess(userMsg);
             const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
                 headers: {
@@ -1183,8 +1250,8 @@ You deserve real support. Is there someone you trust you could reach out to righ
                         })),
                         { role: 'user', content: processedMsg }
                     ],
-                    temperature: 0.3,  // Lower temp = more focused, less hallucination
-                    max_tokens: 100    // Shorter = stays on task
+                    temperature: 0.3,
+                    max_tokens: 100
                 })
             });
 
