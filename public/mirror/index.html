@@ -631,9 +631,52 @@
 </head>
 
 <body>
-    <!-- Safety Disclaimer Banner -->
+    <!-- Consent Gate (MUST accept before using) -->
+    <div id="consent-gate" style="display: flex; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000; padding: 20px; overflow: auto; align-items: center; justify-content: center;">
+        <div style="max-width: 480px; background: #0a0a0a; border: 1px solid #333; border-radius: 16px; padding: 32px;">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <span style="font-size: 48px;">⚠️</span>
+                <h2 style="color: #fff; font-size: 22px; margin-top: 16px;">Before You Begin</h2>
+            </div>
+            
+            <div style="background: #1a1a1a; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                <p style="color: #f59e0b; font-weight: 600; margin-bottom: 12px;">This is an experimental AI tool.</p>
+                <ul style="color: #aaa; font-size: 14px; line-height: 1.8; margin-left: 16px;">
+                    <li>It may produce <strong style="color: #fff;">inaccurate or fabricated</strong> responses</li>
+                    <li>It is <strong style="color: #fff;">NOT</strong> a therapist, doctor, lawyer, or advisor</li>
+                    <li>It <strong style="color: #fff;">cannot</strong> provide professional help of any kind</li>
+                    <li>It is <strong style="color: #fff;">NOT</strong> suitable for crisis situations</li>
+                </ul>
+            </div>
+            
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+                <p style="color: #fca5a5; font-size: 13px; line-height: 1.6;">
+                    <strong>If you're in crisis:</strong> Please contact emergency services (911), the Suicide Prevention Lifeline (988), or Crisis Text Line (text HOME to 741741).
+                </p>
+            </div>
+            
+            <div style="font-size: 12px; color: #666; margin-bottom: 20px; line-height: 1.6;">
+                By continuing, you acknowledge that you:
+                <ul style="margin-top: 8px; margin-left: 16px;">
+                    <li>Use this tool <strong style="color: #888;">at your own risk</strong></li>
+                    <li>Will not rely on it for important decisions</li>
+                    <li>Accept the <a href="/terms" target="_blank" style="color: #f59e0b;">Terms of Service</a> and <a href="/privacy" target="_blank" style="color: #f59e0b;">Privacy Policy</a></li>
+                </ul>
+            </div>
+            
+            <button onclick="acceptConsent()" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; border-radius: 12px; color: #000; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 0 30px rgba(245,158,11,0.3)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+                I Understand — Continue
+            </button>
+            
+            <p style="text-align: center; margin-top: 16px; font-size: 11px; color: #555;">
+                Not ready? <a href="/" style="color: #666;">Return to homepage</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Safety Disclaimer Banner (shown after consent) -->
     <div id="disclaimer" style="background: #1a1a1a; border-bottom: 1px solid #333; padding: 8px 16px; font-size: 11px; color: #888; text-align: center;">
-        ⚠️ Experimental demo · Not professional advice · <a href="#" onclick="document.getElementById('safety-info').style.display='block';return false;" style="color: #f59e0b;">Safety Info</a> · <a href="/terms" style="color: #666;">Terms</a> · <a href="/privacy" style="color: #666;">Privacy</a>
+        ⚠️ Experimental · Not professional advice · <a href="#" onclick="document.getElementById('safety-info').style.display='block';return false;" style="color: #f59e0b;">Safety Info</a> · <a href="/terms" target="_blank" style="color: #666;">Terms</a> · <a href="/privacy" target="_blank" style="color: #666;">Privacy</a>
     </div>
     
     <!-- Safety Info Modal (hidden by default) -->
@@ -761,6 +804,34 @@
         // ═══════════════════════════════════════════════════════════════════════════
 
         // Note: WebLLM is imported dynamically in startSovereign() to avoid blocking cloud mode
+
+        // ─── Consent Gate ───
+        const consentKey = 'activemirror_consent_v1';
+        
+        function acceptConsent() {
+            localStorage.setItem(consentKey, Date.now().toString());
+            document.getElementById('consent-gate').style.display = 'none';
+        }
+        
+        // Check if already consented (valid for 24 hours)
+        function checkConsent() {
+            const consent = localStorage.getItem(consentKey);
+            if (consent) {
+                const consentTime = parseInt(consent);
+                const hoursSince = (Date.now() - consentTime) / (1000 * 60 * 60);
+                if (hoursSince < 24) {
+                    document.getElementById('consent-gate').style.display = 'none';
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        // Expose to window for onclick
+        window.acceptConsent = acceptConsent;
+        
+        // Check on load
+        checkConsent();
 
         // Config
         const GROQ_KEY = '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';
