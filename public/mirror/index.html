@@ -821,17 +821,41 @@ You deserve real support. Is there someone you trust you could reach out to righ
         function wrapReflection(response) {
             let cleaned = response.trim();
             
+            // FORBIDDEN WORDS in AI responses - these should never appear
+            const forbiddenInResponse = [
+                /\b(medication|medicine|drug|pill|dosage|prescription|dose)\b/i,
+                /\b(therapist|psychiatrist|psychologist|counselor|doctor|physician)\b/i,
+                /\b(diagnosis|diagnose|treatment|therapy|cure)\b/i,
+                /\b(lawsuit|attorney|lawyer|legal action|sue)\b/i,
+                /\b(invest|stock|crypto|bitcoin|trading|gambling)\b/i,
+                /\b(suicide|kill|harm|hurt yourself|end your life)\b/i,
+                /\b(definitely|certainly|absolutely|always|never|guaranteed)\b/i,
+                /\b(you should|you must|you need to|i recommend|i suggest|i advise)\b/i,
+                /\b(the best|the right|the correct|the proper)\b/i,
+                /\bwould .+ make you feel better\b/i,
+                /\bhave you (tried|considered) (taking|using)\b/i
+            ];
+            
+            for (const pattern of forbiddenInResponse) {
+                if (pattern.test(cleaned)) {
+                    // Response contains forbidden content - replace entirely
+                    return "What's coming up for you as you sit with this?";
+                }
+            }
+            
             // SAFETY: Strip any advice patterns that slipped through
             const advicePatterns = [
-                /you should .+?\./gi,
-                /i recommend .+?\./gi,
-                /i suggest .+?\./gi,
-                /i think you .+?\./gi,
-                /i believe .+?\./gi,
-                /the best (thing|way|option) .+?\./gi,
-                /you need to .+?\./gi,
-                /you must .+?\./gi,
-                /make sure (to|you) .+?\./gi
+                /you should .+?[.?]/gi,
+                /i recommend .+?[.?]/gi,
+                /i suggest .+?[.?]/gi,
+                /i think you .+?[.?]/gi,
+                /i believe .+?[.?]/gi,
+                /the best (thing|way|option) .+?[.?]/gi,
+                /you need to .+?[.?]/gi,
+                /you must .+?[.?]/gi,
+                /make sure (to|you) .+?[.?]/gi,
+                /why don't you .+?[.?]/gi,
+                /have you (tried|considered) .+?[.?]/gi
             ];
             
             for (const pattern of advicePatterns) {
