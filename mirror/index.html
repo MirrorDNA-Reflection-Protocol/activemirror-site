@@ -7,11 +7,36 @@
     <meta name="theme-color" content="#050505">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Active Mirror — Sovereign AI</title>
+    
+    <!-- SEO -->
+    <title>Active Mirror — Sovereign AI That Reflects, Not Directs</title>
+    <meta name="description" content="A reflective AI thinking partner. No advice, no data collection, no manipulation. Just questions that help you think more clearly. Run locally or in the cloud.">
+    <meta name="keywords" content="AI, reflection, sovereign AI, privacy, local AI, thinking partner, no advice">
+    <meta name="author" content="N1 Intelligence">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://activemirror.ai/mirror/">
+    <meta property="og:title" content="Active Mirror — Sovereign AI That Reflects, Not Directs">
+    <meta property="og:description" content="A reflective AI thinking partner. No advice, no data collection. Just questions that help you think more clearly.">
+    <meta property="og:image" content="https://activemirror.ai/active-mirror-logo.jpg">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Active Mirror — Sovereign AI">
+    <meta name="twitter:description" content="AI that reflects, not directs. No advice, no data collection.">
+    <meta name="twitter:image" content="https://activemirror.ai/active-mirror-logo.jpg">
+    
+    <!-- Favicons -->
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="logo.jpg">
+    
+    <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://api.groq.com">
+    <link rel="dns-prefetch" href="https://proxy.activemirror.ai">
+    
     <style>
         /* ═══════════════════════════════════════════════════════════════════════════
            ⟡ ACTIVE MIRROR - PREMIUM GLASSMORPHISM UI
@@ -1319,10 +1344,52 @@ This tool cannot provide crisis support. Please contact one of these resources n
             if (el) el.remove();
         }
 
+        // ─── Client-Side Rate Limiting ───
+        const rateLimitState = {
+            lastSend: 0,
+            count: 0,
+            windowStart: Date.now()
+        };
+        
+        function checkClientRateLimit() {
+            const now = Date.now();
+            const minInterval = 2000;  // 2 seconds between messages
+            const maxPerMinute = 20;   // Max 20 messages per minute
+            
+            // Check minimum interval
+            if (now - rateLimitState.lastSend < minInterval) {
+                return { allowed: false, message: "Please slow down. Take a breath between thoughts." };
+            }
+            
+            // Reset window if over a minute
+            if (now - rateLimitState.windowStart > 60000) {
+                rateLimitState.count = 0;
+                rateLimitState.windowStart = now;
+            }
+            
+            // Check messages per minute
+            if (rateLimitState.count >= maxPerMinute) {
+                return { allowed: false, message: "You're moving quickly. What's the urgency underneath?" };
+            }
+            
+            return { allowed: true };
+        }
+
         // ─── Send Message ───
         window.send = async function () {
             const text = inputEl.value.trim();
             if (!text || isLoading) return;
+            
+            // Client-side rate limit
+            const rateCheck = checkClientRateLimit();
+            if (!rateCheck.allowed) {
+                addMessage('ai', rateCheck.message);
+                return;
+            }
+            
+            // Update rate limit state
+            rateLimitState.lastSend = Date.now();
+            rateLimitState.count++;
 
             inputEl.value = '';
             addMessage('user', text);
