@@ -66,11 +66,18 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
     // ⟡ 3. ENGINE INIT 
     useEffect(() => {
         async function init() {
-            // ⟡ INSTANT CHAT: If API key exists, enable chat immediately
-            // Local model will load in background as fallback
-            if (GROQ_API_KEY) {
+            // ⟡ DEBUG: Log API key status
+            console.log("⟡ API Key Status:", GROQ_API_KEY ? `Present (${GROQ_API_KEY.substring(0, 10)}...)` : "NOT FOUND");
+
+            // ⟡ INSTANT CHAT: If API key exists AND is valid format, enable cloud
+            const hasValidKey = GROQ_API_KEY && GROQ_API_KEY.startsWith("gsk_");
+            if (hasValidKey) {
+                console.log("⟡ Cloud Mode Enabled");
                 setProgress(""); // Clear loading screen - API is ready
                 setUseCloud(true);
+            } else {
+                console.log("⟡ Local Mode - No valid API key, waiting for engine");
+                setUseCloud(false); // Force local mode
             }
 
             // ⟡ V3.1 - SMOLLM2: Purpose-built for instruction following (loads in background)
