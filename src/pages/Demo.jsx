@@ -94,10 +94,13 @@ export default function Demo() {
 
     useEffect(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), [messages]);
 
-    const handleSend = async () => {
-        if (!input.trim() || !engine) return;
-        const userMsg = input;
-        setInput("");
+    const handleSend = async (overrideText = null) => {
+        const textToSend = overrideText || input;
+        if (!textToSend.trim() || !engine) return;
+
+        const userMsg = textToSend;
+        if (!overrideText) setInput(""); // Only clear input if typed in box
+
         setMessages(prev => [...prev, { role: "user", content: userMsg }]);
         setIsLoading(true);
 
@@ -128,6 +131,12 @@ export default function Demo() {
         }
     };
 
+    // Handler: seamless start from Prompt
+    const handleStartSession = (intentText) => {
+        setIntent(intentText);
+        handleSend(intentText);
+    };
+
     // Handler: Close Session
     const handleOutcome = (outcome) => {
         const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
@@ -150,7 +159,7 @@ export default function Demo() {
 
             {/* 1. DAILY INTENT PROMPT (If not reflected today) */}
             {!hasReflectedToday && !intent && (
-                <ReflectionPrompt onSetIntent={setIntent} />
+                <ReflectionPrompt onSetIntent={handleStartSession} ready={!progress} />
             )}
 
             {/* 2. HISTORY SIDEBAR */}

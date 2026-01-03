@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function ReflectionPrompt({ onSetIntent }) {
+export default function ReflectionPrompt({ onSetIntent, ready }) {
     const [intent, setIntent] = useState("");
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (intent.trim()) {
+        if (intent.trim() && ready) {
             onSetIntent(intent);
         }
     };
@@ -38,14 +38,20 @@ export default function ReflectionPrompt({ onSetIntent }) {
                         className="w-full bg-white/5 border border-white/10 rounded-full py-4 pl-6 pr-14 text-white placeholder-zinc-700 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all text-center"
                         placeholder="My intent is..."
                         autoFocus
+                        disabled={!ready}
                     />
                     <button
                         type="submit"
-                        disabled={!intent.trim()}
+                        disabled={!intent.trim() || !ready}
                         className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white text-black rounded-full hover:bg-zinc-200 disabled:opacity-0 disabled:scale-95 transition-all"
                     >
                         <ArrowRight size={20} />
                     </button>
+                    {!ready && (
+                        <div className="absolute -bottom-8 left-0 right-0 text-[10px] text-zinc-600 font-mono tracking-widest uppercase animate-pulse">
+                            Initializing Neural Core...
+                        </div>
+                    )}
                 </form>
 
                 <div className="text-xs text-zinc-600 font-mono tracking-widest uppercase mt-12">
