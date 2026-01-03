@@ -882,18 +882,15 @@ You are a mirror, not an oracle. Questions only.`;
 
             } catch (err) {
                 console.error('Sovereign mode failed:', err);
-                loadingStatus.textContent = '❌ ' + err.message;
+                const errorMsg = err.message || 'Unknown error';
                 loadingStatus.style.color = '#ef4444';
+                loadingStatus.innerHTML = `❌ ${errorMsg}<br><br><small>Switching to cloud in 5 seconds...</small><br><br><button onclick="window.startCloud()" style="padding: 12px 24px; background: #3b82f6; border: none; border-radius: 8px; color: white; cursor: pointer;">Use Cloud Mode Now</button>`;
                 
-                // Show fallback option after 3 seconds
-                setTimeout(() => {
-                    loadingStatus.innerHTML = `❌ ${err.message}<br><br><button onclick="window.startCloud()" style="padding: 12px 24px; background: #3b82f6; border: none; border-radius: 8px; color: white; cursor: pointer;">Use Cloud Mode Instead</button>`;
-                }, 2000);
-                loadingStatus.textContent = 'Failed to load. Switching to cloud...';
+                // Auto-switch to cloud after 5 seconds
                 setTimeout(() => {
                     loadingEl.classList.remove('active');
                     window.startCloud();
-                }, 2000);
+                }, 5000);
             }
         };
 
