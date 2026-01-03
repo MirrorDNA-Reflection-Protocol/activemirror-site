@@ -51,25 +51,20 @@ export default function Home() {
 
                         {/* 3. SOCIALS (Tertiary) */}
                         <div className="grid grid-cols-2 gap-4 mt-2">
-                            <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="py-3 rounded-xl border border-white/5 hover:bg-white/5 transition-colors flex items-center justify-center gap-2 text-zinc-500 hover:text-zinc-300 text-sm font-medium">
+                            <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-white text-sm font-medium">
                                 <Github size={16} /> Protocol
                             </a>
-                            <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/" className="py-3 rounded-xl border border-white/5 hover:bg-white/5 transition-colors flex items-center justify-center gap-2 text-zinc-500 hover:text-zinc-300 text-sm font-medium">
+                            <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/" className="py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-white text-sm font-medium">
                                 <Book size={16} /> Manifesto
                             </a>
                         </div>
                     </div>
 
-                    {/* FOOTER: LEGALS */}
-                    <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] md:text-xs font-mono text-zinc-600 uppercase tracking-widest w-full">
-                        <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                            v2.0 UNIVERSAL
-                        </div>
-
-                        <div className="flex flex-wrap justify-center md:justify-end gap-x-6 gap-y-2 text-center">
-                            <Link to="/legal#terms" className="hover:text-zinc-400 transition-colors whitespace-nowrap">Terms and Conditions</Link>
-                            <Link to="/legal#privacy" className="hover:text-zinc-400 transition-colors whitespace-nowrap">Privacy Policy</Link>
+                    {/* FOOTER: LEGALS ONLY */}
+                    <div className="pt-8 border-t border-white/5 flex justify-center items-center text-[10px] md:text-xs font-mono text-zinc-600 uppercase tracking-widest w-full">
+                        <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-center">
+                            <Link to="/legal#terms" className="hover:text-zinc-400 transition-colors">Terms and Conditions</Link>
+                            <Link to="/legal#privacy" className="hover:text-zinc-400 transition-colors">Privacy Policy</Link>
                         </div>
                     </div>
                 </SpotlightCard>
