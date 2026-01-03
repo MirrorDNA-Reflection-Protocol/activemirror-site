@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CreateWebWorkerMLCEngine } from "@mlc-ai/web-llm";
-import { ArrowLeft, Send, Sparkles, Fingerprint, Activity, Cpu, Menu } from 'lucide-react';
+import { ArrowLeft, Send, Sparkles, Fingerprint, Activity, Cpu, Menu, Square, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -38,6 +38,7 @@ export default function Demo() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
     const [progress, setProgress] = useState("Initializing Neural Core...");
     const [engine, setEngine] = useState(null);
     const bottomRef = useRef(null);
@@ -126,9 +127,15 @@ export default function Demo() {
             }
         } catch (err) {
             console.error(err);
+            setError(err.message || "Neural Interruption");
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleStop = () => {
+        if (engine) engine.interruptGenerate();
+        setIsLoading(false);
     };
 
     // Handler: seamless start from Prompt
@@ -188,6 +195,12 @@ export default function Demo() {
                     </div>
 
                     <div className="flex items-center gap-4">
+                        {error && (
+                            <div className="flex items-center gap-2 text-red-400 text-xs animate-pulse mr-4">
+                                <AlertCircle size={12} />
+                                <span className="max-w-[150px] truncate">{error}</span>
+                            </div>
+                        )}
                         <div className="flex items-center gap-3">
                             <div className="relative">
                                 <div className={`absolute inset-0 bg-green-500 rounded-full blur-sm ${isLoading ? 'animate-ping' : 'opacity-0'}`}></div>
@@ -252,13 +265,21 @@ export default function Demo() {
                         <input
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                            onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSend()}
                             placeholder={progress ? "Loading Neural Weights..." : "Reflect on this..."}
-                            disabled={!!progress || isLoading}
+                            disabled={!!progress || (isLoading && !engine)}
                             className="w-full bg-white/10 border border-white/20 rounded-2xl py-4 pl-6 pr-14 text-white placeholder-zinc-400 focus:outline-none focus:border-white/40 transition-all font-medium"
                             autoFocus
                         />
-                        <button onClick={handleSend} disabled={!!progress || isLoading || !input.trim()} className="absolute right-3 p-2 bg-white text-black rounded-xl hover:bg-zinc-200 transition-all disabled:opacity-0"><Send size={18} /></button>
+                        {isLoading ? (
+                            <button onClick={handleStop} className="absolute right-3 p-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all animate-pulse">
+                                <Square size={18} fill="currentColor" />
+                            </button>
+                        ) : (
+                            <button onClick={() => handleSend()} disabled={!!progress || !input.trim()} className="absolute right-3 p-2 bg-white text-black rounded-xl hover:bg-zinc-200 transition-all disabled:opacity-0">
+                                <Send size={18} />
+                            </button>
+                        )}
                     </div>
                 </div>
             </motion.div>
