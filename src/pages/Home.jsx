@@ -63,8 +63,8 @@ export default function Home() {
                     {/* FOOTER: LEGALS ONLY */}
                     <div className="pt-8 border-t border-white/5 flex justify-center items-center text-[10px] md:text-xs font-mono text-zinc-600 uppercase tracking-widest w-full">
                         <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-center">
-                            <Link to="/legal#terms" className="hover:text-zinc-400 transition-colors">Terms and Conditions</Link>
-                            <Link to="/legal#privacy" className="hover:text-zinc-400 transition-colors">Privacy Policy</Link>
+                            <Link to="/terms" className="hover:text-zinc-400 transition-colors">Terms of Service</Link>
+                            <Link to="/privacy" className="hover:text-zinc-400 transition-colors">Privacy Policy</Link>
                         </div>
                     </div>
                 </SpotlightCard>
