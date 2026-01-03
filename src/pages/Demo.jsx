@@ -48,8 +48,10 @@ export default function Demo() {
     const [intent, setIntent] = useState(null); // Current session intent
     const [isHistoryOpen, setHistoryOpen] = useState(false);
 
+    const [suggestions, setSuggestions] = useState([]);
+
     // ⟡ 1. THE SOUL (V1.5 DEFINITION) 
-    const SYSTEM_PROMPT = "You are Active Mirror. Your role is to surface assumptions, reflect trade-offs, and ask clarifying questions. Do not give advice. Hold space for complexity. You are a mirror, not a driver.";
+    const SYSTEM_PROMPT = "You are Active Mirror. Your role is to surface assumptions, reflect trade-offs, and ask clarifying questions. Do not give advice. Hold space for complexity. You are a mirror, not a driver. At the end of your response, suggest 3 short follow-up questions for the user on a new line starting with '>>>', separated by '|'. Example: \n>>> What is the fear? | Who decides? | What is the cost?";
 
     // ⟡ 2. FEW-SHOT TRAINING DATA (Hidden Context) 
     const FEW_SHOT_HISTORY = [
@@ -127,6 +129,25 @@ export default function Demo() {
                     newArr[newArr.length - 1].content = fullResponse;
                     return newArr;
                 });
+            }
+
+            // ⟡ PARSE SUGGESTIONS (Post-Generation)
+            const parts = fullResponse.split(">>>");
+            if (parts.length > 1) {
+                const cleanText = parts[0].trim();
+                const suggestionText = parts[1].trim();
+                const newSuggestions = suggestionText.split("|").map(s => s.trim()).filter(s => s.length > 0);
+
+                setSuggestions(newSuggestions);
+
+                // Update message to hide raw footer
+                setMessages(prev => {
+                    const newArr = [...prev];
+                    newArr[newArr.length - 1].content = cleanText;
+                    return newArr;
+                });
+            } else {
+                setSuggestions([]);
             }
         } catch (err) {
             console.error(err);
@@ -254,7 +275,23 @@ export default function Demo() {
 
                     {/* Session Controls (Visible when active) */}
                     {!progress && messages.length > 1 && !isLoading && !hasReflectedToday && (
-                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000 space-y-6">
+
+                            {/* Follow-up Suggestions */}
+                            {suggestions.length > 0 && (
+                                <div className="flex flex-wrap justify-center gap-2 px-4">
+                                    {suggestions.map((s, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => handleSend(s)}
+                                            className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-zinc-300 text-sm hover:text-white transition-all hover:scale-105 active:scale-95"
+                                        >
+                                            {s}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
                             <SessionCloseControls onOutcome={handleOutcome} />
                         </div>
                     )}
