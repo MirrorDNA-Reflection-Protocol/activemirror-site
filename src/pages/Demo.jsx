@@ -51,14 +51,13 @@ export default function Demo() {
 
     const [suggestions, setSuggestions] = useState([]);
 
-    // ⟡ 1. THE SOUL (V2.1 - MINIMAL FOR STABILITY)
-    const SYSTEM_PROMPT = `You are Active Mirror. Reflect, clarify, ask questions. DO NOT advise. At the end, output 3 follow-ups on a new line: >>> Q1 | Q2 | Q3`;
+    // ⟡ 1. THE SOUL (V2.2 - ZERO FEW-SHOT)
+    // No examples = no leakage. Just pure instruction.
+    const SYSTEM_PROMPT = `You are Active Mirror. Your only job is to reflect the user's words back as questions. DO NOT advise. DO NOT use examples from training. Respond ONLY to what the user just said. End with 3 follow-ups: >>> Q1 | Q2 | Q3`;
 
-    // ⟡ 2. FEW-SHOT (MINIMAL - Single Example Only)
-    const FEW_SHOT_HISTORY = [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: "I'm thinking of quitting my job." },
-        { role: "assistant", content: "What's driving this thought—is it the job itself, or something it represents?\n>>> What would change? | What are you avoiding? | What do you need?" }
+    // ⟡ 2. CONTEXT (System Only - No Few-Shot Examples)
+    const BASE_CONTEXT = [
+        { role: "system", content: SYSTEM_PROMPT }
     ];
 
     // ⟡ 3. ENGINE INIT 
@@ -123,7 +122,7 @@ export default function Demo() {
         setIsLoading(true);
 
         try {
-            const contextWindow = [...FEW_SHOT_HISTORY, ...messages.slice(-6), { role: "user", content: userMsg }];
+            const contextWindow = [...BASE_CONTEXT, ...messages.slice(-6), { role: "user", content: userMsg }];
 
             const chunks = await engine.chat.completions.create({
                 messages: contextWindow,
