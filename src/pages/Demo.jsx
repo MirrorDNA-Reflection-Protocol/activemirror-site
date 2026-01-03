@@ -69,12 +69,8 @@ export default function Demo() {
             const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
             const modelId = isMobile ? "Qwen2.5-0.5B-Instruct-q4f16_1-MLC" : "Llama-3.2-1B-Instruct-q4f16_1-MLC";
 
-            const workerScript = `
-        import { WebWorkerMLCEngineHandler } from "https://esm.run/@mlc-ai/web-llm";
-        const handler = new WebWorkerMLCEngineHandler();
-        self.onmessage = (msg) => { handler.onmessage(msg); };
-      `;
-            const worker = new Worker(URL.createObjectURL(new Blob([workerScript], { type: "application/javascript" })), { type: "module" });
+            // Use Vite's worker import for reliable bundling
+            const worker = new Worker(new URL('../worker.js', import.meta.url), { type: 'module' });
 
             try {
                 const eng = await CreateWebWorkerMLCEngine(worker, modelId, {
