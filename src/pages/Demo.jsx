@@ -504,7 +504,7 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
                         {/* ⟡ LOGO / BRAND */}
                         <div className="flex items-center gap-2">
                             <span className="text-purple-400 text-lg">⟡</span>
-                            <span className="text-sm font-medium text-white hidden sm:inline">Active Mirror</span>
+                            <span className="text-sm font-medium text-white">Active Mirror</span>
                         </div>
                         <div className="flex items-center gap-1 text-xs">
                             {/* Cloud Icon - Glows Blue ONLY when no local available */}
