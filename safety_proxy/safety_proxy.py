@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-ACTIVE MIRROR — SAFETY PROXY v1.0
-Hardened inference gateway with fail-closed behavior
+ACTIVE MIRROR — SAFETY PROXY v2.0
+Hardened inference gateway with two-pass validation and rewrite loop
 
 Run: python3 safety_proxy.py
 Requires: pip install fastapi uvicorn httpx python-dotenv
@@ -14,6 +14,7 @@ import uuid
 import hmac
 import hashlib
 import logging
+import random
 from datetime import datetime, timedelta
 from typing import Optional, Literal
 from collections import defaultdict
@@ -31,7 +32,7 @@ load_dotenv()
 # CONFIGURATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
-RULE_VERSION = "1.0.0"
+RULE_VERSION = "2.0.0"
 PORT = 8082
 MAX_INPUT_LENGTH = 2000
 RATE_LIMIT_REQUESTS = 20  # per minute per IP
@@ -68,7 +69,7 @@ logger = logging.getLogger("mirror-proxy")
 # IMPORTANT: These patterns trigger IMMEDIATE resource display, NO AI involvement
 CRISIS_PATTERNS = [
     # Suicide / self-harm
-    re.compile(r'\b(suicide|suicidal|kill myself|end my life|want to die|don\'?t want to live)\b', re.I),
+    re.compile(r'\b(suicide|suicidal|kill myself|end(ing)? my life|want to die|don\'?t want to live)\b', re.I),
     re.compile(r'\b(self.?harm|cut myself|hurt myself|cutting|burn myself|starve myself)\b', re.I),
     re.compile(r'\b(take my (own )?life|better off dead|no reason to live)\b', re.I),
     re.compile(r'\b(overdose|take all the pills|swallow pills)\b', re.I),
@@ -162,19 +163,78 @@ MANIPULATION_PATTERNS = [
 
 MANIPULATION_RESPONSE = "I notice some pressure in how that's framed. I'm a thinking tool, not a decision-maker. The choice — and the responsibility — is yours. What feels true when you set that pressure aside?"
 
-# Forbidden words in AI output
+# Forbidden words in AI output - triggers rewrite
 FORBIDDEN_OUTPUT_PATTERNS = [
-    re.compile(r'\b(medication|prescription|dosage|diagnosis|treatment)\b', re.I),
-    re.compile(r'\b(lawyer|attorney|lawsuit|legal action)\b', re.I),
-    re.compile(r'\b(invest|stock|crypto|portfolio)\b', re.I),
+    # Medical/Legal/Financial
+    re.compile(r'\b(medication|prescription|dosage|diagnosis|treatment|therapy)\b', re.I),
+    re.compile(r'\b(lawyer|attorney|lawsuit|legal action|court)\b', re.I),
+    re.compile(r'\b(invest|stock|crypto|portfolio|trading)\b', re.I),
+    # Certainty language
     re.compile(r'\b(definitely|certainly|absolutely|guaranteed|always|never)\b', re.I),
-    re.compile(r'\b(you should|you must|you need to|you have to)\b', re.I),
-    re.compile(r'\b(i recommend|i suggest|i advise|my advice)\b', re.I),
-    re.compile(r'\b(the best|the right|the correct)\b', re.I),
+    re.compile(r'\b(obviously|clearly|undoubtedly|without a doubt)\b', re.I),
+    # Advice/directive language
+    re.compile(r'\b(you should|you must|you need to|you have to|you ought to)\b', re.I),
+    re.compile(r'\b(i recommend|i suggest|i advise|my advice|my recommendation)\b', re.I),
+    re.compile(r'\b(the best|the right|the correct|the proper|the only)\b', re.I),
+    re.compile(r'\b(do this|do that|try this|try that|go ahead)\b', re.I),
+    re.compile(r'\b(here\'s what|here is what|what you should)\b', re.I),
+    re.compile(r'\b(make sure|be sure to|don\'t forget to)\b', re.I),
+    re.compile(r'\b(first step|next step|the solution)\b', re.I),
+    # Pseudo-therapeutic
     re.compile(r'\b(i understand how you feel|i know what you\'re going through)\b', re.I),
-    re.compile(r'\bhave you (tried|considered) (taking|using|seeing)\b', re.I),
+    re.compile(r'\b(i hear you|i see you|that must be)\b', re.I),
+    re.compile(r'\bhave you (tried|considered) (taking|using|seeing|talking)\b', re.I),
     re.compile(r'\bwhy don\'t you\b', re.I),
+    re.compile(r'\bhave you thought about\b', re.I),
+    # Factual claims
+    re.compile(r'\bstudies show\b', re.I),
+    re.compile(r'\baccording to\b', re.I),
+    re.compile(r'\bresearch (shows|suggests|indicates)\b', re.I),
+    re.compile(r'\bexperts (say|recommend|suggest)\b', re.I),
+    re.compile(r'\bstatistically\b', re.I),
+    re.compile(r'\b\d+(\.\d+)?%', re.I),  # percentages
+    re.compile(r'https?://', re.I),  # URLs
 ]
+
+# Illegal content patterns - HARD REFUSE, no rewrite
+ILLEGAL_PATTERNS = [
+    re.compile(r'\b(how to (make|build|create) (a |)(bomb|explosive|weapon))\b', re.I),
+    re.compile(r'\b(synthesize|manufacture) (drugs|meth|fentanyl)\b', re.I),
+    re.compile(r'\b(child porn|csam|cp|underage)\b', re.I),
+    re.compile(r'\b(hack into|exploit vulnerability|sql injection|malware)\b', re.I),
+    re.compile(r'\b(traffic|smuggle) (humans|people|children)\b', re.I),
+    re.compile(r'\b(launder money|money laundering|tax evasion)\b', re.I),
+    re.compile(r'\b(hire (a |)(hitman|assassin)|kill someone)\b', re.I),
+    re.compile(r'\b(forge (documents|passport|id))\b', re.I),
+]
+
+ILLEGAL_RESPONSE = "I can't engage with that. If you're in crisis, please contact emergency services."
+
+# Rewrite prompt for two-pass validation
+REWRITE_PROMPT = """You must rewrite this response to be ONLY a reflective question.
+
+RULES:
+- Output ONLY 1-2 short questions (under 200 characters total)
+- NO advice, NO suggestions, NO recommendations
+- NO "you should", "try this", "consider", "why don't you"
+- NO facts, statistics, or claims about reality
+- NO certainty words like "definitely", "always", "never"
+- End with exactly ONE question mark
+- Be genuinely curious, not leading
+
+BAD: "Have you considered talking to a therapist? They can really help."
+GOOD: "What would feel like real support right now?"
+
+BAD: "You should definitely take some time off. Studies show rest helps."
+GOOD: "What does rest mean to you?"
+
+Original response to rewrite:
+{original}
+
+User's input was:
+{user_input}
+
+Output ONLY the rewritten question(s), nothing else:"""
 
 FALLBACK_RESPONSES = [
     "What's coming up for you as you sit with this?",
@@ -268,32 +328,101 @@ def run_pre_gates(text: str) -> tuple[bool, Optional[str], str]:
     return True, None, "passed"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# POST-INFERENCE FILTERS
+# POST-INFERENCE VALIDATION & REWRITE
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def filter_forbidden_content(text: str) -> tuple[str, bool]:
+def validate_output(text: str) -> tuple[bool, list[str]]:
+    """
+    Validate model output. Returns (is_valid, list_of_violations).
+    """
+    violations = []
+    
+    # Check for forbidden patterns
     for pattern in FORBIDDEN_OUTPUT_PATTERNS:
         if pattern.search(text):
-            return FALLBACK_RESPONSES[0], True
-    return text, False
-
-def filter_format(text: str) -> tuple[str, bool]:
-    if '?' not in text:
-        return FALLBACK_RESPONSES[1], True
+            violations.append(f"forbidden_pattern: {pattern.pattern[:30]}")
+    
+    # Must contain exactly one question mark
+    question_marks = text.count('?')
+    if question_marks == 0:
+        violations.append("no_question_mark")
+    elif question_marks > 2:
+        violations.append("too_many_questions")
+    
+    # Must be under 300 chars
     if len(text) > 300:
-        return text[:297] + "...", True
-    return text, False
+        violations.append("too_long")
+    
+    # Must not be empty or too short
+    if len(text.strip()) < 10:
+        violations.append("too_short")
+    
+    # Check for statement-heavy response (more periods than questions)
+    periods = text.count('.')
+    if periods > 3 and question_marks < periods:
+        violations.append("statement_heavy")
+    
+    return len(violations) == 0, violations
 
-def run_post_filters(text: str) -> tuple[str, str]:
-    text, modified1 = filter_forbidden_content(text)
-    if modified1:
-        return text, "forbidden_content_replaced"
+async def rewrite_response(original: str, user_input: str) -> Optional[str]:
+    """
+    Call model again with strict rewrite prompt.
+    Returns rewritten response or None if failed.
+    """
+    if not GROQ_API_KEY:
+        return None
     
-    text, modified2 = filter_format(text)
-    if modified2:
-        return text, "format_enforced"
+    prompt = REWRITE_PROMPT.format(original=original, user_input=user_input)
     
-    return text, "passed"
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {GROQ_API_KEY}"
+                },
+                json={
+                    "model": "llama-3.3-70b-versatile",
+                    "messages": [
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.2,  # Lower temp for compliance
+                    "max_tokens": 80,    # Keep it short
+                    "stop": ["\n\n", "Original", "User's"]  # Stop early
+                }
+            )
+            
+            if response.status_code != 200:
+                return None
+            
+            data = response.json()
+            rewritten = data["choices"][0]["message"]["content"].strip()
+            
+            # Clean up any quotes or prefixes
+            rewritten = re.sub(r'^["\']+|["\']+$', '', rewritten)
+            rewritten = re.sub(r'^(Rewritten|Output|Question):\s*', '', rewritten, flags=re.I)
+            
+            return rewritten
+    except Exception as e:
+        logger.error(f"Rewrite failed: {e}")
+        return None
+
+def run_post_filters(text: str, user_input: str = "") -> tuple[str, str, int]:
+    """
+    Two-pass validation with rewrite.
+    Returns (final_output, outcome, rewrite_count).
+    """
+    # Pass 1: Validate original
+    is_valid, violations = validate_output(text)
+    
+    if is_valid:
+        return text, "passed", 0
+    
+    logger.info(f"Validation failed: {violations}")
+    
+    # Return fallback - rewrite happens in main endpoint
+    return text, "needs_rewrite", 0
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # MODEL INFERENCE
@@ -478,6 +607,20 @@ async def reflect(
             logger.warning(f"[{request_id}] Stale request")
             raise HTTPException(status_code=400, detail="Request expired")
     
+    # Gate 0.7: Illegal content (HARD REFUSE)
+    for pattern in ILLEGAL_PATTERNS:
+        if pattern.search(body.input):
+            logger.warning(f"[{request_id}] ILLEGAL content detected")
+            return ReflectResponse(
+                output=ILLEGAL_RESPONSE,
+                mode_used="none",
+                model_used="none",
+                rule_version=RULE_VERSION,
+                safety_outcome="refused",
+                request_id=request_id,
+                gate_triggered="illegal"
+            )
+    
     # Pre-Inference Gates
     should_call_model, blocked_response, gate_name = run_pre_gates(body.input)
     
@@ -493,7 +636,7 @@ async def reflect(
             gate_triggered=gate_name
         )
     
-    # Model Inference
+    # Model Inference (Pass 1)
     model_output = None
     model_used = "none"
     
@@ -520,14 +663,67 @@ async def reflect(
             gate_triggered="model_failure"
         )
     
-    # Post-Inference Filters
-    final_output, filter_outcome = run_post_filters(model_output)
+    # ═══════════════════════════════════════════════════════════════════════════
+    # TWO-PASS VALIDATION WITH REWRITE
+    # ═══════════════════════════════════════════════════════════════════════════
     
-    safety_outcome = "allowed" if filter_outcome == "passed" else "rewritten"
+    final_output = model_output
+    safety_outcome = "allowed"
+    filter_applied = None
+    rewrite_count = 0
     
-    # Logging (opt-in only)
-    if body.consent and body.consent.get("log"):
-        logger.info(f"[{request_id}] mode={body.mode} model={model_used} outcome={safety_outcome}")
+    # Pass 1: Validate original output
+    is_valid, violations = validate_output(model_output)
+    
+    if not is_valid:
+        logger.info(f"[{request_id}] Pass 1 failed: {violations}")
+        
+        # Pass 2: Attempt rewrite
+        rewritten = await rewrite_response(model_output, body.input)
+        rewrite_count = 1
+        
+        if rewritten:
+            # Validate rewritten response
+            is_valid_2, violations_2 = validate_output(rewritten)
+            
+            if is_valid_2:
+                final_output = rewritten
+                safety_outcome = "rewritten"
+                filter_applied = "rewrite_pass2"
+                logger.info(f"[{request_id}] Rewrite succeeded")
+            else:
+                # Pass 3: One more try with even stricter fallback
+                logger.info(f"[{request_id}] Pass 2 failed: {violations_2}")
+                rewritten_2 = await rewrite_response(rewritten, body.input)
+                rewrite_count = 2
+                
+                if rewritten_2:
+                    is_valid_3, _ = validate_output(rewritten_2)
+                    if is_valid_3:
+                        final_output = rewritten_2
+                        safety_outcome = "rewritten"
+                        filter_applied = "rewrite_pass3"
+                        logger.info(f"[{request_id}] Second rewrite succeeded")
+                    else:
+                        # All rewrites failed - use fallback
+                        final_output = random.choice(FALLBACK_RESPONSES)
+                        safety_outcome = "refused"
+                        filter_applied = "fallback_after_rewrite"
+                        logger.warning(f"[{request_id}] All rewrites failed, using fallback")
+                else:
+                    final_output = random.choice(FALLBACK_RESPONSES)
+                    safety_outcome = "refused"
+                    filter_applied = "fallback_rewrite_error"
+        else:
+            # Rewrite call failed - use fallback
+            final_output = random.choice(FALLBACK_RESPONSES)
+            safety_outcome = "refused"
+            filter_applied = "fallback_rewrite_error"
+            logger.warning(f"[{request_id}] Rewrite call failed, using fallback")
+    
+    # Final length check
+    if len(final_output) > 300:
+        final_output = final_output[:297] + "..."
     
     return ReflectResponse(
         output=final_output,
@@ -536,7 +732,7 @@ async def reflect(
         rule_version=RULE_VERSION,
         safety_outcome=safety_outcome,
         request_id=request_id,
-        filter_applied=filter_outcome if filter_outcome != "passed" else None
+        filter_applied=filter_applied
     )
 
 # ═══════════════════════════════════════════════════════════════════════════════
