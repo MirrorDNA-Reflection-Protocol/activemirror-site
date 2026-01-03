@@ -12,7 +12,7 @@
         "@mlc-ai/web-llm": "^0.2.80",
         "@studio-freight/lenis": "^1.0.42",
         "clsx": "^2.1.1",
-        "framer-motion": "^11.16.0",
+        "framer-motion": "^11.18.2",
         "lucide-react": "^0.469.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
