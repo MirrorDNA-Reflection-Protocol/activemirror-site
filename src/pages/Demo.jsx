@@ -340,46 +340,60 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
                         <Link to="/" className="p-2 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-colors">
                             <ArrowLeft size={18} />
                         </Link>
-                        {/* Intelligence Status - EXPANDED TRANSPARENCY */}
-                        <div className="flex items-center gap-2 text-xs font-mono">
-                            {/* Online indicator */}
-                            <div className={`${isOnline ? 'text-green-500' : 'text-red-400'}`}>
-                                {isOnline ? <Wifi size={12} /> : <WifiOff size={12} />}
+
+                        {/* ⟡ GLOWING MODE INDICATORS - Simple & Clear */}
+                        <div className="flex items-center gap-1 text-xs">
+                            {/* Cloud Icon - Glows Blue when active */}
+                            <div className={`relative p-2 rounded-lg transition-all duration-300 ${currentTier === 'cloud'
+                                    ? 'bg-blue-500/20 text-blue-400'
+                                    : 'bg-white/5 text-zinc-600'
+                                }`}>
+                                {currentTier === 'cloud' && (
+                                    <div className="absolute inset-0 bg-blue-500/30 rounded-lg blur-md animate-pulse"></div>
+                                )}
+                                <Cloud size={18} className="relative z-10" />
                             </div>
 
-                            {/* HYBRID STATUS DISPLAY */}
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-white/10">
-                                {/* Current mode */}
-                                <div className="flex items-center gap-1">
-                                    {tierIcons[currentTier]}
-                                    <span className={`font-medium ${currentTier === 'cloud' ? 'text-blue-400' :
-                                        currentTier === 'tier1' ? 'text-amber-400' : 'text-purple-400'
-                                        }`}>
-                                        {currentTier === 'cloud' ? '☁️ Cloud' :
-                                            currentTier === 'tier1' ? '📱 Local' : '🔒 Sovereign'}
-                                    </span>
-                                </div>
+                            {/* Divider with download progress */}
+                            <div className="relative w-8 h-0.5 bg-white/10 mx-1">
+                                {/* Download progress bar */}
+                                {(tier1Progress > 0 || tier2Progress > 0) && (
+                                    <div
+                                        className="absolute inset-y-0 left-0 bg-purple-500 transition-all duration-300"
+                                        style={{ width: `${Math.max(tier1Progress, tier2Progress)}%` }}
+                                    ></div>
+                                )}
+                            </div>
 
-                                {/* Separator */}
-                                <div className="w-px h-3 bg-white/20 mx-1"></div>
+                            {/* Local Icon - Glows Purple when active */}
+                            <div className={`relative p-2 rounded-lg transition-all duration-300 ${currentTier !== 'cloud'
+                                    ? isSovereign
+                                        ? 'bg-purple-500/30 text-purple-400'
+                                        : 'bg-amber-500/20 text-amber-400'
+                                    : tier2Progress === 100 || isSovereign
+                                        ? 'bg-purple-500/10 text-purple-400/60'
+                                        : 'bg-white/5 text-zinc-600'
+                                }`}>
+                                {(currentTier !== 'cloud' || isSovereign) && (
+                                    <div className={`absolute inset-0 rounded-lg blur-md animate-pulse ${isSovereign ? 'bg-purple-500/30' : 'bg-amber-500/20'
+                                        }`}></div>
+                                )}
+                                <Brain size={18} className="relative z-10" />
+                            </div>
 
-                                {/* Background status */}
-                                <div className="text-zinc-500">
-                                    {isSovereign ? (
-                                        <span className="text-purple-400">✓ Offline Ready</span>
-                                    ) : tier2Progress > 0 && tier2Progress < 100 ? (
-                                        <span>⬇ Caching {tier2Progress}%</span>
-                                    ) : tier1Progress > 0 && tier1Progress < 100 ? (
-                                        <span>⬇ Fallback {tier1Progress}%</span>
-                                    ) : (
-                                        <span>Hybrid Active</span>
-                                    )}
-                                </div>
+                            {/* Status Label */}
+                            <div className="ml-2 px-2 py-1 rounded bg-white/5 border border-white/10">
+                                <span className={`font-medium ${currentTier === 'cloud' ? 'text-blue-400' :
+                                        isSovereign ? 'text-purple-400' : 'text-amber-400'
+                                    }`}>
+                                    {currentTier === 'cloud' ? 'Cloud' :
+                                        isSovereign ? 'Sovereign' : 'Local'}
+                                </span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Info Button */}
+                    {/* Info & Menu */}
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setShowInfo(!showInfo)}
