@@ -12,7 +12,7 @@ export default function App() {
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/legal" element={<Legal />} />
-                <Route path="/demo" element={<Demo />} />
+                <Route path="/mirror" element={<Demo />} />
             </Routes>
         </BrowserRouter>
     );

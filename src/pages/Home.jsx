@@ -39,7 +39,7 @@ export default function Home() {
                     {/* ACTIONS STACK */}
                     <div className="flex flex-col gap-4 mb-12 max-w-md mx-auto w-full">
                         {/* 1. START REFLECTION (Primary) */}
-                        <Link to="/demo" className="group w-full py-4 rounded-xl bg-white text-black font-bold text-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_30px_rgba(255,255,255,0.25)]">
+                        <Link to="/mirror" className="group w-full py-4 rounded-xl bg-white text-black font-bold text-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_30px_rgba(255,255,255,0.25)]">
                             Start Reflection <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                         </Link>
 
