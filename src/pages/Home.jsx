@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Github, Book, History } from 'lucide-react';
+import { ArrowRight, Github, Book, Globe } from 'lucide-react';
 import SpotlightCard from '../components/SpotlightCard';
 import MirrorLogo from '../components/MirrorLogo';
 import Lenis from '@studio-freight/lenis';
@@ -61,10 +61,10 @@ export default function Home() {
                             v2.0 UNIVERSAL
                         </div>
 
-                        {/* THE LEGACY LINK (Restored) */}
-                        <a href="./legacy/index.html" className="flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer group">
-                            <History size={12} className="group-hover:-translate-x-0.5 transition-transform" />
-                            Archive [v1.0]
+                        {/* THE LEGACY LINK (Informational Site) */}
+                        <a href="./legacy/index.html" className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer group">
+                            <Globe size={12} className="group-hover:rotate-12 transition-transform" />
+                            Visit Full Website
                         </a>
                     </div>
                 </SpotlightCard>
