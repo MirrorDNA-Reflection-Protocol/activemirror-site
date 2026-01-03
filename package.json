@@ -1,12 +1,14 @@
 {
-    "name": "activemirror-root",
+    "name": "activemirror-site",
     "private": true,
-    "version": "1.0.0",
+    "version": "2.0.0",
+    "description": "Active Mirror — Sovereign AI that reflects, not directs",
     "type": "module",
     "scripts": {
         "dev": "vite",
         "build": "vite build && cp dist/index.html dist/404.html",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "proxy": "cd safety_proxy && python3 safety_proxy.py"
     },
     "dependencies": {
         "@mlc-ai/web-llm": "^0.2.80",
@@ -25,5 +27,11 @@
         "postcss": "^8.4.49",
         "tailwindcss": "^3.4.17",
         "vite": "^6.0.7"
-    }
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/MirrorDNA-Reflection-Protocol/activemirror-site"
+    },
+    "author": "N1 Intelligence (OPC) Pvt Ltd",
+    "license": "MIT"
 }

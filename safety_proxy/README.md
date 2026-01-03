@@ -1,26 +1,52 @@
-# Active Mirror Safety Proxy
+# Active Mirror Safety Proxy v2.0
 
 Server-side safety enforcement layer for Active Mirror inference.
 
 ## What This Does
 
-All inference requests go through this proxy which:
+All Cloud Mode inference requests go through this proxy which:
 
 1. **Pre-filters** dangerous content before it reaches the model
-2. **Post-filters** model output before it reaches the user
-3. **Fails closed** — errors return safe responses, never raw model output
-4. **Rate limits** to prevent abuse
-5. **Logs metadata only** (opt-in content logging)
+2. **Two-pass validation** with automatic rewrite if output violates rules
+3. **Post-filters** model output before it reaches the user
+4. **Fails closed** — errors return safe responses, never raw model output
+5. **Rate limits** to prevent abuse
+6. **Logs metadata only** (no content stored)
 
 ## Architecture
 
 ```
 User Browser
     ↓
-[Safety Proxy - Mac Mini]
-    ├── Pre-inference gates (crisis, domain, jailbreak, size)
-    ├── Model call (Groq cloud or local Ollama)
-    └── Post-inference filters (forbidden content, format)
+[Consent Gate] ← Must accept every visit
+    ↓
+[Safety Proxy - Mac Mini via Cloudflare Tunnel]
+    │
+    ├── Gate 0: Rate Limit (10/min per IP)
+    ├── Gate 0.5: Auth (optional HMAC/Bearer)
+    ├── Gate 0.6: Replay Protection
+    ├── Gate 0.7: ILLEGAL → Hard Refuse (no model call)
+    ├── Gate 1: CRISIS → Resources (no model call)
+    ├── Gate 2: Medical/Legal/Financial → Domain Redirect
+    ├── Gate 3: Jailbreak Detection
+    ├── Gate 4: Manipulation Detection
+    ├── Gate 5: Size Limit
+    │
+    ↓ (if all gates pass)
+    │
+    ├── MODEL INFERENCE (Pass 1)
+    │   └── Groq llama-3.3-70b or local Ollama
+    │
+    ├── VALIDATION (30+ forbidden patterns)
+    │   └── Must be question-only, <300 chars
+    │
+    ├── If invalid → REWRITE (Pass 2)
+    │   └── Strict prompt, temp=0.2, 80 tokens
+    │
+    ├── If still invalid → REWRITE (Pass 3)
+    │
+    └── If still invalid → FALLBACK
+        └── Safe question from curated pool
     ↓
 Safe Response Only
 ```
@@ -38,11 +64,19 @@ python safety_proxy.py
 
 Server runs on `http://localhost:8082`
 
+## Production Deployment
+
+The proxy runs as a LaunchAgent on Mac Mini:
+- `~/Library/LaunchAgents/ai.activemirror.safety-proxy.plist`
+- Auto-starts on boot
+- Monitored by health-check.sh every 5 minutes
+- Exposed via Cloudflare Tunnel at `proxy.activemirror.ai`
+
 ## Endpoints
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/health` | GET | Health check |
+| `/health` | GET | Health check + rule version |
 | `/ready` | GET | Readiness + dependency status |
 | `/api/reflect` | POST | Main inference endpoint |
 
@@ -50,12 +84,12 @@ Server runs on `http://localhost:8082`
 
 ```json
 {
-  "input": "What should I do about my career?",
-  "mode": "cloud",
-  "session_id": "optional-session-id",
-  "consent": {"log": false},
-  "timestamp": 1704307200,
-  "nonce": "optional-unique-id"
+    "input": "User message",
+    "mode": "cloud",
+    "session_id": "optional",
+    "consent": {"log": false},
+    "nonce": "optional-unique-id",
+    "timestamp": 1234567890
 }
 ```
 
@@ -63,14 +97,14 @@ Server runs on `http://localhost:8082`
 
 ```json
 {
-  "output": "What aspects of your career feel most unsettled right now?",
-  "mode_used": "cloud",
-  "model_used": "groq/llama-3.3-70b",
-  "rule_version": "1.0.0",
-  "safety_outcome": "allowed",
-  "request_id": "a1b2c3d4",
-  "gate_triggered": null,
-  "filter_applied": null
+    "output": "What's coming up for you as you think about this?",
+    "mode_used": "cloud",
+    "model_used": "groq/llama-3.3-70b",
+    "rule_version": "2.0.0",
+    "safety_outcome": "allowed|rewritten|refused|error",
+    "request_id": "abc123",
+    "gate_triggered": null,
+    "filter_applied": null
 }
 ```
 
@@ -78,46 +112,44 @@ Server runs on `http://localhost:8082`
 
 | Outcome | Meaning |
 |---------|---------|
-| `allowed` | Model output passed all filters |
-| `rewritten` | Output was modified by post-filters |
-| `refused` | Pre-gate blocked the request |
-| `error` | Model failed, safe fallback returned |
+| `allowed` | Output passed all validation |
+| `rewritten` | Output was non-compliant, successfully rewritten |
+| `refused` | Output couldn't be made compliant, fallback used |
+| `error` | Model failed, fallback used |
 
-## Pre-Inference Gates
+## Gate Triggers
 
-1. **Crisis** — Suicide, self-harm → Crisis resources
-2. **Domain** — Medical/legal/financial → Hardcoded redirect
-3. **Jailbreak** — Prompt injection attempts → Refusal
-4. **Size** — Input too long → Refusal
+| Gate | Trigger | Response |
+|------|---------|----------|
+| `rate_limit` | >10 req/min | "Please slow down..." |
+| `illegal` | Weapons, drugs, CSAM, hacking | Hard refuse |
+| `crisis` | Suicide, self-harm | Crisis resources |
+| `domain` | Medical/legal/financial | Domain redirect |
+| `jailbreak` | Prompt injection | Refuse |
+| `manipulation` | Emotional coercion | Autonomy reminder |
+| `size` | >2000 chars | Request simplification |
 
-## Post-Inference Filters
+## Forbidden Output Patterns
 
-1. **Forbidden content** — Advice, certainty, medical terms → Replace
-2. **Format** — Must be question, under 300 chars → Enforce
+The proxy blocks 30+ patterns including:
+- Medical/legal/financial terminology
+- Certainty language (definitely, always, never)
+- Directive language (you should, try this)
+- Pseudo-therapeutic (I understand how you feel)
+- Factual claims (studies show, according to)
+- URLs and percentages
 
 ## Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `GROQ_API_KEY` | Yes | Groq API key for cloud mode |
-| `MIRROR_API_SECRET` | No | API secret for auth (if set, auth required) |
-| `LOG_CONTENT` | No | Enable content logging (default: false) |
+| `GROQ_API_KEY` | Yes | Groq API key for cloud inference |
+| `API_SECRET` | No | Secret for HMAC/Bearer auth |
+| `PORT` | No | Server port (default: 8082) |
+| `LOG_CONTENT` | No | Log full content (default: false) |
+| `ALLOWED_ORIGINS` | No | CORS origins (default: activemirror.ai) |
 
-## Production Deployment
+## Version History
 
-For internet exposure:
-
-1. Use TLS (Caddy/nginx reverse proxy)
-2. Set `MIRROR_API_SECRET` for auth
-3. Consider Cloudflare Tunnel or Tailscale Funnel
-4. Never expose plain HTTP
-
-## Fail-Closed Guarantee
-
-If **anything** fails:
-- Model timeout → Safe fallback
-- Model error → Safe fallback  
-- Filter error → Safe fallback
-- Auth failure → 401 (no response)
-
-Raw model output **never** reaches the user on error.
+- **v2.0.0** (2026-01-04): Two-pass validation, rewrite loop, illegal detection
+- **v1.0.0** (2026-01-03): Initial release with basic gates and filters
