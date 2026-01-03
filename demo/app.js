@@ -1,73 +1,42 @@
-// Active Mirror — Undeniable Demo
-// Adaptive Hybrid Engine: Full power on desktop, ultra-light on mobile
+// Active Mirror — Sovereign AI Demo
+// Using Web Worker to prevent GPU context disposal
 
-import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
+import { CreateWebWorkerMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 
-// ═══════════════════════════════════════════════════════════════
-// THE STRATEGY: Device-Adaptive Model Selection
-// ═══════════════════════════════════════════════════════════════
+const MODELS = [
+    {
+        id: 'qwen',
+        name: 'Qwen 2.5 3B',
+        icon: '🌐',
+        size: '1.9GB',
+        desc: 'Best multilingual',
+        modelId: 'Qwen2.5-3B-Instruct-q4f16_1-MLC',
+        recommended: true
+    },
+    {
+        id: 'llama',
+        name: 'Llama 3.2 3B',
+        icon: '⟡',
+        size: '1.8GB',
+        desc: 'Best reasoning',
+        modelId: 'Llama-3.2-3B-Instruct-q4f16_1-MLC'
+    },
+    {
+        id: 'phi',
+        name: 'Phi-3 Mini',
+        icon: '◈',
+        size: '2.2GB',
+        desc: 'Complex tasks',
+        modelId: 'Phi-3-mini-4k-instruct-q4f16_1-MLC'
+    }
+];
 
-const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-const MODELS = {
-    desktop: [
-        {
-            id: 'qwen-3b',
-            name: 'Qwen 2.5 3B',
-            icon: '🌐',
-            size: '1.9GB',
-            desc: 'Best multilingual',
-            modelId: 'Qwen2.5-3B-Instruct-q4f16_1-MLC',
-            recommended: true
-        },
-        {
-            id: 'llama-3b',
-            name: 'Llama 3.2 3B',
-            icon: '⟡',
-            size: '1.8GB',
-            desc: 'Best reasoning',
-            modelId: 'Llama-3.2-3B-Instruct-q4f16_1-MLC'
-        },
-        {
-            id: 'phi',
-            name: 'Phi-3 Mini',
-            icon: '◈',
-            size: '2.2GB',
-            desc: 'Complex tasks',
-            modelId: 'Phi-3-mini-4k-instruct-q4f16_1-MLC'
-        }
-    ],
-    mobile: [
-        {
-            id: 'qwen-tiny',
-            name: 'Qwen 0.5B',
-            icon: '📱',
-            size: '500MB',
-            desc: 'Optimized for mobile',
-            modelId: 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC',
-            recommended: true
-        },
-        {
-            id: 'smollm',
-            name: 'SmolLM 135M',
-            icon: '⚡',
-            size: '135MB',
-            desc: 'Ultra-fast',
-            modelId: 'SmolLM-135M-Instruct-q0f16-MLC'
-        }
-    ]
-};
-
-const SYSTEM = `You are Active Mirror — sovereign AI running locally on this device.
-Be direct, clear, concise. You run locally, no data leaves this device.
-Keep responses short (1-2 paragraphs).`;
+const SYSTEM = `You are Active Mirror — sovereign AI running locally in this browser.
+Be direct, clear, concise. No data leaves this device.
+Keep responses 1-2 paragraphs unless asked for more.`;
 
 let engine = null;
 let messages = [];
-
-// ═══════════════════════════════════════════════════════════════
-// UI FUNCTIONS
-// ═══════════════════════════════════════════════════════════════
 
 function show(id) {
     document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
@@ -75,34 +44,15 @@ function show(id) {
     if (el) el.classList.remove('hidden');
 }
 
-function showToast(message) {
-    const toast = document.getElementById('toast');
-    if (toast) {
-        toast.textContent = message;
-        toast.classList.add('visible');
-        setTimeout(() => toast.classList.remove('visible'), 3000);
-    }
-}
-
 function renderModels() {
     const grid = document.getElementById('model-grid');
-    const hint = document.querySelector('.model-hint');
-    const modelList = isMobile ? MODELS.mobile : MODELS.desktop;
-
-    if (isMobile) {
-        hint.innerHTML = '📱 <strong>Mobile Mode Active</strong><br>Optimized models for your device';
-        showToast('⟡ Mobile Detected: Activating Lightweight Neural Core...');
-    } else {
-        hint.textContent = 'Click to download and start';
-    }
-
-    grid.innerHTML = modelList.map(m => `
+    grid.innerHTML = MODELS.map(m => `
         <button class="model-card" data-id="${m.id}">
             <div class="model-icon">${m.icon}</div>
             <div class="model-name">${m.name}</div>
             <div class="model-size">${m.size}</div>
             <div class="model-desc">${m.desc}</div>
-            ${m.recommended ? `<div class="model-badge">${isMobile ? 'Best for Mobile' : 'Recommended'}</div>` : ''}
+            ${m.recommended ? '<div class="model-badge">Recommended</div>' : ''}
         </button>
     `).join('');
 
@@ -111,13 +61,8 @@ function renderModels() {
     });
 }
 
-// ═══════════════════════════════════════════════════════════════
-// ENGINE LOADING
-// ═══════════════════════════════════════════════════════════════
-
 async function loadModel(id) {
-    const modelList = isMobile ? MODELS.mobile : MODELS.desktop;
-    const model = modelList.find(m => m.id === id);
+    const model = MODELS.find(m => m.id === id);
     if (!model) return;
 
     show('view-loading');
@@ -127,47 +72,41 @@ async function loadModel(id) {
     const ring = document.getElementById('progress-ring');
 
     try {
-        console.log('[ActiveMirror] Loading:', model.name, isMobile ? '(Mobile Mode)' : '(Desktop Mode)');
+        console.log('[ActiveMirror] Creating worker engine for:', model.name);
 
-        if (isMobile) {
-            status.textContent = 'Optimizing for Mobile...';
-        }
+        // Create worker - the key fix for disposal issue
+        const worker = new Worker(
+            new URL('./worker.js', import.meta.url),
+            { type: 'module' }
+        );
 
-        engine = await CreateMLCEngine(model.modelId, {
-            initProgressCallback: (report) => {
-                const p = Math.round(report.progress * 100);
-                if (pct) pct.textContent = p + '%';
-                if (status) status.textContent = report.text;
-                if (ring) ring.style.strokeDashoffset = 283 - (p / 100) * 283;
-            },
-            appConfig: {
-                useIndexedDBCache: true  // Critical for iOS memory safety
+        engine = await CreateWebWorkerMLCEngine(
+            worker,
+            model.modelId,
+            {
+                initProgressCallback: (report) => {
+                    const p = Math.round(report.progress * 100);
+                    if (pct) pct.textContent = p + '%';
+                    if (status) status.textContent = report.text;
+                    if (ring) ring.style.strokeDashoffset = 283 - (p / 100) * 283;
+                }
             }
-        });
+        );
 
         console.log('[ActiveMirror] Engine ready');
-
         messages = [];
         show('view-chat');
         document.getElementById('user-input').focus();
         addMessage('ai', "Ready. What's on your mind?");
 
     } catch (err) {
-        console.error('[ActiveMirror] Engine error:', err);
-
-        // If mobile fails, show helpful message
-        if (isMobile && err.message.includes('memory')) {
-            status.innerHTML = '⚠️ <strong>Low Memory</strong><br>Try closing other tabs and refreshing.';
-        } else {
+        console.error('[ActiveMirror] Error:', err);
+        if (status) {
             status.textContent = 'Error: ' + err.message;
+            status.style.color = '#ff4444';
         }
-        status.style.color = '#ff4444';
     }
 }
-
-// ═══════════════════════════════════════════════════════════════
-// CHAT FUNCTIONS
-// ═══════════════════════════════════════════════════════════════
 
 function addMessage(role, text) {
     const container = document.getElementById('chat-messages');
@@ -210,7 +149,7 @@ async function send() {
         const stream = await engine.chat.completions.create({
             messages: [{ role: 'system', content: SYSTEM }, ...messages],
             stream: true,
-            max_tokens: isMobile ? 256 : 500  // Shorter responses on mobile
+            max_tokens: 500
         });
 
         for await (const chunk of stream) {
@@ -231,40 +170,27 @@ async function send() {
     if (input) input.focus();
 }
 
-// ═══════════════════════════════════════════════════════════════
-// INITIALIZATION
-// ═══════════════════════════════════════════════════════════════
+// Initialize
+renderModels();
 
-function init() {
-    console.log('[ActiveMirror] Initializing...');
-    console.log('[ActiveMirror] Device:', isMobile ? 'Mobile' : 'Desktop');
+document.getElementById('user-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
 
-    renderModels();
+document.getElementById('user-input').addEventListener('input', e => {
+    document.getElementById('btn-send').disabled = !e.target.value.trim();
+});
 
-    const input = document.getElementById('user-input');
-    const sendBtn = document.getElementById('btn-send');
+document.getElementById('btn-send').addEventListener('click', send);
 
-    if (input) {
-        input.addEventListener('keydown', e => {
-            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
-        });
-        input.addEventListener('input', e => {
-            if (sendBtn) sendBtn.disabled = !e.target.value.trim();
-        });
-    }
+document.querySelectorAll('.suggestion-chip').forEach(chip => {
+    chip.onclick = () => {
+        const input = document.getElementById('user-input');
+        if (input) {
+            input.value = chip.dataset.prompt;
+            document.getElementById('btn-send').disabled = false;
+        }
+    };
+});
 
-    if (sendBtn) sendBtn.addEventListener('click', send);
-
-    document.querySelectorAll('.suggestion-chip').forEach(chip => {
-        chip.onclick = () => {
-            if (input) {
-                input.value = chip.dataset.prompt;
-                if (sendBtn) sendBtn.disabled = false;
-            }
-        };
-    });
-
-    console.log('[ActiveMirror] Ready');
-}
-
-init();
+console.log('[ActiveMirror] Initialized with Web Worker support');
