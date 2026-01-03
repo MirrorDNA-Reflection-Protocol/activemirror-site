@@ -403,7 +403,7 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
             {/* Reflection Prompt */}
             <AnimatePresence>
                 {!hasReflectedToday && !intent && initComplete && (
-                    <ReflectionPrompt onSubmit={handleIntentSubmit} />
+                    <ReflectionPrompt onSubmit={handleIntentSubmit} ready={initComplete} />
                 )}
             </AnimatePresence>
 
