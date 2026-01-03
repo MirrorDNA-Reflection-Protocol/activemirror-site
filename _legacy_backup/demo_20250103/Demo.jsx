@@ -3,7 +3,6 @@ import { CreateWebWorkerMLCEngine } from "@mlc-ai/web-llm";
 import { ArrowLeft, Send, Zap, Trash2, Cpu } from 'lucide-react';
 import MirrorLogo from '../components/MirrorLogo';
 import { Link } from 'react-router-dom';
-import Worker from '../worker?worker';
 
 // --------------------------------------------------------------------------
 // CONFIGURATION
@@ -45,8 +44,16 @@ export default function Demo() {
         async function init() {
             setProgress(`Initializing ${MODEL.split('-')[0]} ${isMobile ? '(Mobile)' : '(Core)'}...`);
             try {
-                // Create Worker using Vite's worker import
-                const worker = new Worker();
+                // Create Inline Worker via Blob to avoid GitHub Pages path issues
+                // Using explicit version matching @0.2.80 to ensure compatibility
+                const workerScript = `
+            import { WebWorkerMLCEngineHandler } from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.80/+esm";
+            const handler = new WebWorkerMLCEngineHandler();
+            self.onmessage = (msg) => { handler.onmessage(msg); };
+        `;
+                const blob = new Blob([workerScript], { type: 'application/javascript' });
+                const workerUrl = URL.createObjectURL(blob);
+                const worker = new Worker(workerUrl, { type: 'module' });
 
                 const eng = await CreateWebWorkerMLCEngine(worker, MODEL, {
                     initProgressCallback: (report) => setProgress(report.text)
@@ -54,8 +61,7 @@ export default function Demo() {
                 setEngine(eng);
                 setProgress("");
             } catch (e) {
-                console.error(e);
-                setProgress(`Error: ${e.message || String(e)}`);
+                setProgress(`Error: ${e.message}`);
             }
         }
         init();
@@ -141,7 +147,7 @@ export default function Demo() {
             }
 
         } catch (err) {
-            setMessages(prev => [...prev, { role: "assistant", content: `[ERROR]: ${err.message || String(err)}` }]);
+            setMessages(prev => [...prev, { role: "assistant", content: `[ERROR]: ${err.message}` }]);
         } finally {
             setIsLoading(false);
         }
