@@ -54,8 +54,8 @@ export default function Home() {
                             <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-white text-sm font-medium">
                                 <Github size={16} /> Protocol
                             </a>
-                            <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/" className="py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-white text-sm font-medium">
-                                <Book size={16} /> Manifesto
+                            <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/story/" className="py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-white text-sm font-medium">
+                                <Book size={16} /> The Story
                             </a>
                         </div>
                     </div>
