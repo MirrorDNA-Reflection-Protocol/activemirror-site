@@ -111,7 +111,35 @@ export default function Terms() {
                     </section>
 
                     <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">9. Intellectual Property</h2>
+                        <h2 className="text-lg text-white font-semibold mb-3">9. Assumption of Risk</h2>
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+                            <p className="text-red-300 font-medium mb-3">BY USING THIS SERVICE, YOU EXPRESSLY ACKNOWLEDGE AND ASSUME ALL RISKS ASSOCIATED WITH ITS USE, INCLUDING BUT NOT LIMITED TO:</p>
+                            <ul className="list-disc pl-6 space-y-1 text-red-200">
+                                <li>Risk of receiving inaccurate, misleading, or fabricated information</li>
+                                <li>Risk of emotional distress from AI-generated content</li>
+                                <li>Risk of making decisions based on AI outputs</li>
+                                <li>Risk that the Service may not be appropriate for your mental or emotional state</li>
+                                <li>Risk that AI responses may be unhelpful or inappropriate for your situation</li>
+                            </ul>
+                            <p className="mt-3 text-red-200">You agree that you are using this Service at your own risk and of your own free will.</p>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2 className="text-lg text-white font-semibold mb-3">10. No Duty of Care</h2>
+                        <p>The Service provider has <strong className="text-white">no duty of care</strong> to you. This means:</p>
+                        <ul className="list-disc pl-6 mt-2 space-y-1">
+                            <li>We are not responsible for monitoring your wellbeing</li>
+                            <li>We are not responsible for intervening in any situation</li>
+                            <li>We are not responsible for the consequences of your use of the Service</li>
+                            <li>We have no obligation to provide follow-up or continued support</li>
+                            <li>We have no obligation to refer you to professional services</li>
+                        </ul>
+                        <p className="mt-3">The Service automatically displays crisis resources when certain keywords are detected, but this is a technical feature, not a duty of care. <strong className="text-white">You are solely responsible for seeking appropriate help.</strong></p>
+                    </section>
+
+                    <section>
+                        <h2 className="text-lg text-white font-semibold mb-3">11. Intellectual Property</h2>
                         <p>The Service, including its design, code, and outputs, is owned by N1 Intelligence (OPC) Pvt Ltd. You may use outputs for personal purposes only. You may not:</p>
                         <ul className="list-disc pl-6 mt-2 space-y-1">
                             <li>Claim AI outputs as professional advice</li>
@@ -122,34 +150,35 @@ export default function Terms() {
                     </section>
 
                     <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">10. Disclaimer of Warranties</h2>
+                        <h2 className="text-lg text-white font-semibold mb-3">12. Disclaimer of Warranties</h2>
                         <p className="uppercase text-xs">THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO: MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, ACCURACY OR RELIABILITY OF OUTPUTS, NON-INFRINGEMENT, AVAILABILITY OR UPTIME.</p>
                         <p className="mt-2 uppercase text-xs">WE DO NOT WARRANT THAT THE SERVICE WILL BE ERROR-FREE, SECURE, OR UNINTERRUPTED.</p>
                     </section>
 
                     <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">11. Limitation of Liability</h2>
-                        <p className="uppercase text-xs">TO THE MAXIMUM EXTENT PERMITTED BY LAW, N1 INTELLIGENCE (OPC) PVT LTD AND ITS OFFICERS, DIRECTORS, EMPLOYEES, AND AGENTS SHALL NOT BE LIABLE FOR: ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES; ANY LOSS OF PROFITS, DATA, USE, OR GOODWILL; ANY DAMAGES ARISING FROM YOUR USE OF OR RELIANCE ON THE SERVICE; ANY DECISIONS MADE BASED ON SERVICE OUTPUTS; ANY HARM RESULTING FROM AI INACCURACIES OR FABRICATIONS.</p>
+                        <h2 className="text-lg text-white font-semibold mb-3">13. Limitation of Liability</h2>
+                        <p className="uppercase text-xs">TO THE MAXIMUM EXTENT PERMITTED BY LAW, N1 INTELLIGENCE (OPC) PVT LTD AND ITS OFFICERS, DIRECTORS, EMPLOYEES, AND AGENTS SHALL NOT BE LIABLE FOR: ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES; ANY LOSS OF PROFITS, DATA, USE, OR GOODWILL; ANY DAMAGES ARISING FROM YOUR USE OF OR RELIANCE ON THE SERVICE; ANY DECISIONS MADE BASED ON SERVICE OUTPUTS; ANY HARM RESULTING FROM AI INACCURACIES OR FABRICATIONS; ANY PHYSICAL, MENTAL, OR EMOTIONAL HARM TO YOU OR OTHERS; ANY SELF-HARM, SUICIDE, OR HARM TO THIRD PARTIES.</p>
+                        <p className="mt-2 uppercase text-xs">THIS LIMITATION APPLIES REGARDLESS OF WHETHER WE WERE ADVISED OF THE POSSIBILITY OF SUCH DAMAGES AND REGARDLESS OF THE FORM OF ACTION.</p>
                         <p className="mt-2 uppercase text-xs">IN NO EVENT SHALL OUR TOTAL LIABILITY EXCEED THE AMOUNT YOU PAID TO USE THE SERVICE IN THE TWELVE MONTHS PRECEDING THE CLAIM, OR $100 USD, WHICHEVER IS LESS.</p>
                     </section>
 
                     <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">12. Indemnification</h2>
-                        <p>You agree to indemnify, defend, and hold harmless N1 Intelligence (OPC) Pvt Ltd and its officers, directors, employees, and agents from any claims, damages, losses, liabilities, costs, and expenses (including attorneys' fees) arising from: your use of the Service; your violation of these Terms; your violation of any rights of another party; any decisions or actions taken based on Service outputs.</p>
+                        <h2 className="text-lg text-white font-semibold mb-3">14. Indemnification</h2>
+                        <p>You agree to indemnify, defend, and hold harmless N1 Intelligence (OPC) Pvt Ltd and its officers, directors, employees, and agents from any claims, damages, losses, liabilities, costs, and expenses (including attorneys' fees) arising from: your use of the Service; your violation of these Terms; your violation of any rights of another party; any decisions or actions taken based on Service outputs; any harm to yourself or others related to your use of the Service.</p>
                     </section>
 
                     <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">13. Governing Law</h2>
+                        <h2 className="text-lg text-white font-semibold mb-3">15. Governing Law</h2>
                         <p>These Terms are governed by the laws of India. Any disputes shall be resolved in the courts of Goa, India. To the extent permitted by local law, you consent to this jurisdiction.</p>
                     </section>
 
                     <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">14. Changes to Terms</h2>
+                        <h2 className="text-lg text-white font-semibold mb-3">16. Changes to Terms</h2>
                         <p>We may modify these Terms at any time. Continued use after modifications constitutes acceptance. Material changes will be indicated by updating the "Last Updated" date.</p>
                     </section>
 
                     <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">15. Contact</h2>
+                        <h2 className="text-lg text-white font-semibold mb-3">17. Contact</h2>
                         <p>Questions about these Terms may be directed to: <a href="mailto:legal@n1intelligence.com" className="text-amber-400 hover:underline">legal@n1intelligence.com</a></p>
                     </section>
 

@@ -65,20 +65,40 @@ logger = logging.getLogger("mirror-proxy")
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # Crisis patterns - immediate refusal, provide resources
+# IMPORTANT: These patterns trigger IMMEDIATE resource display, NO AI involvement
 CRISIS_PATTERNS = [
-    re.compile(r'\b(suicide|suicidal|kill myself|end my life|want to die)\b', re.I),
-    re.compile(r'\b(self.?harm|cut myself|hurt myself|cutting)\b', re.I),
-    re.compile(r'\b(abuse|abused|assault|violence against me)\b', re.I),
-    re.compile(r'\b(overdose|take all the pills)\b', re.I),
+    # Suicide / self-harm
+    re.compile(r'\b(suicide|suicidal|kill myself|end my life|want to die|don\'?t want to live)\b', re.I),
+    re.compile(r'\b(self.?harm|cut myself|hurt myself|cutting|burn myself|starve myself)\b', re.I),
+    re.compile(r'\b(take my (own )?life|better off dead|no reason to live)\b', re.I),
+    re.compile(r'\b(overdose|take all the pills|swallow pills)\b', re.I),
+    re.compile(r'\b(jump off|jump from|hang myself|shoot myself|drown myself)\b', re.I),
+    re.compile(r'\b(planning to die|ready to die|going to die tonight)\b', re.I),
+    re.compile(r'\b(final goodbye|this is goodbye|won\'?t be here tomorrow)\b', re.I),
+    re.compile(r'\b(wrote a (suicide )?note|leaving a note)\b', re.I),
+    # Abuse / violence
+    re.compile(r'\b(being abused|abusing me|hits me|beats me|hurts me)\b', re.I),
+    re.compile(r'\b(rape|raped|sexual assault|molest)\b', re.I),
+    re.compile(r'\b(domestic violence|partner violence)\b', re.I),
+    # Immediate danger
+    re.compile(r'\b(going to hurt|planning to hurt|want to hurt someone)\b', re.I),
+    re.compile(r'\b(kill (him|her|them|someone))\b', re.I),
 ]
 
-CRISIS_RESPONSE = """It sounds like you're going through something serious. I'm not equipped to help with this, but please reach out to someone who can:
+# This response is HARDCODED - AI never sees crisis content
+CRISIS_RESPONSE = """I can hear you're in a really difficult place right now. I'm not able to provide the support you need — I'm just a simple reflection tool, not a counselor or crisis service.
 
-• Crisis Text Line: Text HOME to 741741
-• Suicide Prevention Lifeline: 988 (US)
-• Emergency: 911 / local emergency number
+Please reach out to people who are trained to help:
 
-You deserve real support from real people."""
+🆘 IMMEDIATE HELP:
+• Emergency Services: 911 (US) or your local emergency number
+• Suicide & Crisis Lifeline: 988 (US) — call or text, 24/7
+• Crisis Text Line: Text HOME to 741741 (US/UK/Canada)
+• International Association for Suicide Prevention: https://www.iasp.info/resources/Crisis_Centres/
+
+💚 You matter. What you're feeling right now is temporary, even if it doesn't feel that way. Please reach out to one of these resources — they're free, confidential, and available right now.
+
+This tool is not equipped to help with crisis situations. Please close this and contact a crisis service."""
 
 # Domain patterns - hardcoded responses, no AI
 DOMAIN_RESPONSES = {
