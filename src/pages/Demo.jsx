@@ -263,67 +263,78 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
         setIsReflecting(true);
         setError(null);
 
-        // Thoughtful pause
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsReflecting(false);
+        try {
+            // Thoughtful pause
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            setIsReflecting(false);
 
-        // TRY CLOUD FIRST
-        if (currentTier === 'cloud' && GROQ_API_KEY && isOnline) {
-            try {
-                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${GROQ_API_KEY}`
-                    },
-                    body: JSON.stringify({
-                        model: GROQ_MODEL,
-                        messages: [
-                            { role: "system", content: CLOUD_SYSTEM_PROMPT },
-                            ...messages.slice(-8),
-                            { role: "user", content: userMsg }
-                        ],
-                        temperature: 0.7,
-                        max_tokens: 300
-                    })
-                });
+            // TRY CLOUD FIRST
+            if (currentTier === 'cloud' && GROQ_API_KEY && isOnline) {
+                try {
+                    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${GROQ_API_KEY}`
+                        },
+                        body: JSON.stringify({
+                            model: GROQ_MODEL,
+                            messages: [
+                                { role: "system", content: CLOUD_SYSTEM_PROMPT },
+                                ...messages.slice(-8),
+                                { role: "user", content: userMsg }
+                            ],
+                            temperature: 0.7,
+                            max_tokens: 300
+                        })
+                    });
 
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error?.message || `API Error: ${response.status}`);
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.error?.message || `API Error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const aiResponse = data.choices[0]?.message?.content || "I hear you. What does that bring up?";
+                    setMessages(prev => [...prev, { role: "assistant", content: aiResponse }]);
+                    setIsLoading(false);
+                    return;
+                } catch (err) {
+                    console.log("⟡ Cloud failed, trying local:", err.message);
+                    // Fall through to local
                 }
-
-                const data = await response.json();
-                const aiResponse = data.choices[0]?.message?.content || "I hear you. What does that bring up?";
-                setMessages(prev => [...prev, { role: "assistant", content: aiResponse }]);
-                setIsLoading(false);
-                return;
-            } catch (err) {
-                console.log("⟡ Cloud failed, trying local:", err.message);
-                // Fall through to local
             }
-        }
 
-        // TRY TIER 2 (Full local)
-        if (tier2Engine) {
-            setCurrentTier('tier2');
-            await runLocalInference(tier2Engine, userMsg);
-            return;
-        }
+            // TRY TIER 2 (Full local)
+            if (tier2Engine) {
+                setCurrentTier('tier2');
+                await runLocalInference(tier2Engine, userMsg);
+                return;
+            }
 
-        // TRY TIER 1 (Mini local)
-        if (tier1Engine) {
-            setCurrentTier('tier1');
-            await runLocalInference(tier1Engine, userMsg);
-            return;
-        }
+            // TRY TIER 1 (Mini local)
+            if (tier1Engine) {
+                setCurrentTier('tier1');
+                await runLocalInference(tier1Engine, userMsg);
+                return;
+            }
 
-        // STATIC FALLBACK
-        setMessages(prev => [...prev, {
-            role: "assistant",
-            content: "What's the most important thing about what you just shared?"
-        }]);
-        setIsLoading(false);
+            // STATIC FALLBACK - Always works, no API needed
+            console.log("⟡ Using static fallback (no cloud key or local engine)");
+            setMessages(prev => [...prev, {
+                role: "assistant",
+                content: "What's the most important thing about what you just shared?"
+            }]);
+        } catch (err) {
+            console.error("⟡ handleSend error:", err);
+            setMessages(prev => [...prev, {
+                role: "assistant",
+                content: "I'm having trouble connecting. What feels most important right now?"
+            }]);
+        } finally {
+            setIsLoading(false);
+            setIsReflecting(false);
+        }
     }
 
     async function runLocalInference(engine, userMsg) {
