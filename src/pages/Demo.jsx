@@ -1,8 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CreateWebWorkerMLCEngine } from "@mlc-ai/web-llm";
-import { ArrowLeft, Send, Sparkles, Fingerprint, Activity, Cpu } from 'lucide-react';
+import { ArrowLeft, Send, Sparkles, Fingerprint, Activity, Cpu, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+
+// Reflection & Vault Integration
+import { useVault } from '../hooks/useVault';
+import ReflectionPrompt from '../components/ReflectionPrompt';
+import ReflectionHistory from '../components/ReflectionHistory';
+import SessionCloseControls from '../components/SessionCloseControls';
 
 // ⟡ UI COMPONENT: BLUR REVEAL TEXT
 const BlurText = ({ text, isUser }) => {
@@ -36,11 +42,15 @@ export default function Demo() {
     const [engine, setEngine] = useState(null);
     const bottomRef = useRef(null);
 
+    // Vault & Session State
+    const { reflections, stats, saveReflection, hasReflectedToday } = useVault();
+    const [intent, setIntent] = useState(null); // Current session intent
+    const [isHistoryOpen, setHistoryOpen] = useState(false);
+
     // ⟡ 1. THE SOUL (V1.5 DEFINITION) 
     const SYSTEM_PROMPT = "You are Active Mirror. Your role is to surface assumptions, reflect trade-offs, and ask clarifying questions. Do not give advice. Hold space for complexity. You are a mirror, not a driver.";
 
     // ⟡ 2. FEW-SHOT TRAINING DATA (Hidden Context) 
-    // We feed this to the model so it mimics the "Sarah" conversation style from the PDF. 
     const FEW_SHOT_HISTORY = [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: "I'm considering leaving my VP role to join a startup." },
@@ -85,14 +95,12 @@ export default function Demo() {
         setIsLoading(true);
 
         try {
-            // Combine: Few-Shot (Hidden) + Real History
-            // Note: We only send the last 10 messages to save context window on 1B model
             const contextWindow = [...FEW_SHOT_HISTORY, ...messages.slice(-6), { role: "user", content: userMsg }];
 
             const chunks = await engine.chat.completions.create({
                 messages: contextWindow,
                 stream: true,
-                temperature: 0.6 // Lower temp for more precision
+                temperature: 0.6
             });
             let fullResponse = "";
             setMessages(prev => [...prev, { role: "assistant", content: "" }]);
@@ -113,8 +121,39 @@ export default function Demo() {
         }
     };
 
+    // Handler: Close Session
+    const handleOutcome = (outcome) => {
+        const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
+        saveReflection(
+            intent || "Free Reflection",
+            messages,
+            outcome,
+            {
+                model: isMobile ? "Qwen2.5-0.5B" : "Llama-3.2-1B",
+                online: false,
+                id: "local-session"
+            }
+        );
+        // Visual feedback could go here
+        setHistoryOpen(true); // Open history to show it saved
+    };
+
     return (
         <div className="min-h-screen bg-black text-white selection:bg-green-500/30 flex items-center justify-center p-4 md:p-8 relative overflow-hidden">
+
+            {/* 1. DAILY INTENT PROMPT (If not reflected today) */}
+            {!hasReflectedToday && !intent && (
+                <ReflectionPrompt onSetIntent={setIntent} />
+            )}
+
+            {/* 2. HISTORY SIDEBAR */}
+            <ReflectionHistory
+                isOpen={isHistoryOpen}
+                onClose={() => setHistoryOpen(false)}
+                history={reflections}
+                stats={stats}
+            />
+
             {/* Background Layers */}
             <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900/20 via-black to-black z-0"></div>
             <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none z-0"></div>
@@ -129,18 +168,27 @@ export default function Demo() {
 
                 {/* Header */}
                 <div className="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-white/[0.02]">
-                    <Link to="/" className="text-zinc-500 hover:text-white transition-colors flex items-center gap-2 text-sm font-medium"><ArrowLeft size={16} /> Exit</Link>
-                    <div className="flex items-center gap-3">
-                        {/* Heartbeat Animation */}
-                        <div className="relative">
-                            <div className={`absolute inset-0 bg-green-500 rounded-full blur-sm ${isLoading ? 'animate-ping' : 'opacity-0'}`}></div>
-                            <Activity size={14} className={isLoading ? "text-green-400" : "text-zinc-600"} />
+                    <div className="flex items-center gap-4">
+                        <Link to="/" className="text-zinc-500 hover:text-white transition-colors flex items-center gap-2 text-sm font-medium"><ArrowLeft size={16} /> Exit</Link>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <div className={`absolute inset-0 bg-green-500 rounded-full blur-sm ${isLoading ? 'animate-ping' : 'opacity-0'}`}></div>
+                                <Activity size={14} className={isLoading ? "text-green-400" : "text-zinc-600"} />
+                            </div>
+                            <span className="text-xs font-mono tracking-widest text-zinc-500 uppercase hidden md:block">
+                                {progress ? "SYSTEM BOOT" : "ACTIVE MIRROR V1.5"}
+                            </span>
                         </div>
-                        <span className="text-xs font-mono tracking-widest text-zinc-500 uppercase">
-                            {progress ? "SYSTEM BOOT" : "ACTIVE MIRROR V1.5"}
-                        </span>
+                        {/* History Toggle */}
+                        <button onClick={() => setHistoryOpen(true)} className="p-2 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-colors">
+                            <Menu size={18} />
+                        </button>
                     </div>
                 </div>
+
                 {/* Chat Area */}
                 <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 scrollbar-hide">
                     {progress && (
@@ -154,13 +202,16 @@ export default function Demo() {
                         <div className="h-full flex flex-col items-center justify-center text-zinc-700 gap-6 opacity-60">
                             <Fingerprint size={48} strokeWidth={1} />
                             <p className="text-sm font-mono tracking-widest uppercase text-green-500/50">Identity Kernel: ACTIVE</p>
+                            {intent && (
+                                <p className="text-sm text-zinc-400 mt-2 px-8 text-center">Intent: "{intent}"</p>
+                            )}
                         </div>
                     )}
+
                     {messages.map((msg, i) => (
                         <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                             <div className={`max-w-[85%] px-6 py-4 rounded-2xl backdrop-blur-md shadow-sm ${msg.role === 'user' ? 'bg-white text-black rounded-tr-sm' : 'bg-white/5 border border-white/5 text-zinc-200 rounded-tl-sm'
                                 }`}>
-                                {/* Use BlurText for AI responses to create "Thought Formation" effect */}
                                 {msg.role === 'assistant' && i === messages.length - 1 ? (
                                     <BlurText text={msg.content} isUser={false} />
                                 ) : (
@@ -169,8 +220,17 @@ export default function Demo() {
                             </div>
                         </div>
                     ))}
+
+                    {/* Session Controls (Visible when active) */}
+                    {!progress && messages.length > 1 && !isLoading && !hasReflectedToday && (
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                            <SessionCloseControls onOutcome={handleOutcome} />
+                        </div>
+                    )}
+
                     <div ref={bottomRef} />
                 </div>
+
                 {/* Input */}
                 <div className="p-8 bg-black/20 border-t border-white/5 backdrop-blur-xl">
                     <div className="relative flex items-center">
