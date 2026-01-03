@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Active Mirror — Demo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⟡</text></svg>">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #000; color: #fff; 
+            min-height: 100vh; display: flex; flex-direction: column;
+        }
+        .view { display: none; flex: 1; flex-direction: column; }
+        .view.active { display: flex; }
+        
+        /* Welcome */
+        .welcome { justify-content: center; align-items: center; padding: 2rem; text-align: center; }
+        .glyph { font-size: 4rem; margin-bottom: 1rem; display: block; }
+        h1 { font-size: 1.8rem; font-weight: 300; margin-bottom: 0.5rem; }
+        .tagline { color: #888; margin-bottom: 2rem; }
+        .model-grid { display: flex; flex-direction: column; gap: 1rem; max-width: 400px; width: 100%; }
+        .model-card { 
+            background: #111; border: 1px solid #333; border-radius: 12px;
+            padding: 1.2rem; cursor: pointer; text-align: left; transition: all 0.2s;
+        }
+        .model-card:hover { border-color: #666; background: #1a1a1a; }
+        .model-card.recommended { border-color: #4a9eff; }
+        .model-name { font-weight: 600; margin-bottom: 0.3rem; }
+        .model-meta { font-size: 0.85rem; color: #888; }
+        .model-badge { 
+            display: inline-block; background: #4a9eff22; color: #4a9eff; 
+            font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; margin-top: 0.5rem;
+        }
+        .privacy { margin-top: 2rem; font-size: 0.8rem; color: #666; }
+        
+        /* Loading */
+        .loading { justify-content: center; align-items: center; }
+        .loading-text { font-size: 1.2rem; margin-bottom: 1rem; }
+        .progress { width: 200px; height: 4px; background: #333; border-radius: 2px; overflow: hidden; }
+        .progress-bar { height: 100%; background: #4a9eff; width: 0%; transition: width 0.3s; }
+        .loading-status { margin-top: 1rem; font-size: 0.85rem; color: #888; text-align: center; max-width: 300px; }
+        
+        /* Chat */
+        .chat { }
+        .chat-header { 
+            padding: 1rem; border-bottom: 1px solid #222; 
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .chat-header .left { display: flex; align-items: center; gap: 0.5rem; }
+        .chat-header .glyph { font-size: 1.2rem; margin: 0; }
+        .badge { font-size: 0.7rem; background: #1a1a1a; padding: 0.3rem 0.6rem; border-radius: 4px; }
+        .badge.cloud { color: #4a9eff; }
+        .badge.local { color: #22c55e; }
+        
+        .messages { flex: 1; overflow-y: auto; padding: 1rem; }
+        .msg { margin-bottom: 1rem; max-width: 85%; }
+        .msg.user { margin-left: auto; background: #1a1a1a; padding: 0.8rem 1rem; border-radius: 12px; }
+        .msg.ai { color: #ddd; line-height: 1.6; }
+        .msg.ai .thinking { animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
+        .input-area { padding: 1rem; border-top: 1px solid #222; }
+        .input-row { display: flex; gap: 0.5rem; }
+        input[type="text"] { 
+            flex: 1; background: #111; border: 1px solid #333; border-radius: 8px;
+            padding: 0.8rem 1rem; color: #fff; font-size: 1rem;
+        }
+        input:focus { outline: none; border-color: #4a9eff; }
+        button.send { 
+            background: #4a9eff; border: none; border-radius: 8px; 
+            padding: 0 1.2rem; cursor: pointer; color: #fff; font-weight: 600;
+        }
+        button.send:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .error { background: #ff444422; border: 1px solid #ff4444; padding: 1rem; border-radius: 8px; margin: 1rem; }
+    </style>
+</head>
+<body>
+    <!-- Welcome -->
+    <div id="welcome" class="view active welcome">
+        <span class="glyph">⟡</span>
+        <h1>Active Mirror</h1>
+        <p class="tagline">Sovereign AI reflection</p>
+        <div class="model-grid" id="models"></div>
+        <p class="privacy">🔒 Your data stays on your device</p>
+    </div>
+    
+    <!-- Loading -->
+    <div id="loading" class="view loading">
+        <div class="loading-text">Loading AI...</div>
+        <div class="progress"><div class="progress-bar" id="progress"></div></div>
+        <div class="loading-status" id="status">Preparing...</div>
+    </div>
+    
+    <!-- Chat -->
+    <div id="chat" class="view chat">
+        <div class="chat-header">
+            <div class="left"><span class="glyph">⟡</span> Active Mirror</div>
+            <span class="badge" id="mode-badge">Local</span>
+        </div>
+        <div class="messages" id="messages"></div>
+        <div class="input-area">
+            <div class="input-row">
+                <input type="text" id="input" placeholder="What's on your mind?" autocomplete="off">
+                <button class="send" id="send" disabled>Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+    import { CreateWebWorkerMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
+    
+    // Config
+    const GROQ_KEY = "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";
+    const GROQ_MODEL = "llama-3.3-70b-versatile";
+    const LOCAL_MODEL = "Qwen2.5-1.5B-Instruct-q4f16_1-MLC";
+    
+    const SYSTEM = `You are Active Mirror — a reflective AI. Help users think clearly.
+Ask clarifying questions. Surface assumptions. Be concise and warm.`;
+    
+    // State
+    let engine = null;
+    let mode = 'cloud'; // 'cloud' or 'local'
+    let messages = [];
+    const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
+    
+    // Elements
+    const $welcome = document.getElementById('welcome');
+    const $loading = document.getElementById('loading');
+    const $chat = document.getElementById('chat');
+    const $models = document.getElementById('models');
+    const $progress = document.getElementById('progress');
+    const $status = document.getElementById('status');
+    const $messages = document.getElementById('messages');
+    const $input = document.getElementById('input');
+    const $send = document.getElementById('send');
+    const $badge = document.getElementById('mode-badge');
+    
+    function show(view) {
+        [$welcome, $loading, $chat].forEach(v => v.classList.remove('active'));
+        view.classList.add('active');
+    }
+    
+    function addMsg(role, text) {
+        const div = document.createElement('div');
+        div.className = 'msg ' + role;
+        div.innerHTML = text;
+        $messages.appendChild(div);
+        $messages.scrollTop = $messages.scrollHeight;
+        return div;
+    }
+    
+    // Cloud inference
+    async function cloudInfer(userMsg) {
+        messages.push({ role: 'user', content: userMsg });
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_KEY}` },
+            body: JSON.stringify({
+                model: GROQ_MODEL,
+                messages: [{ role: 'system', content: SYSTEM }, ...messages.slice(-10)],
+                temperature: 0.7, max_tokens: 300
+            })
+        });
+        if (!res.ok) throw new Error('API error: ' + res.status);
+        const data = await res.json();
+        const reply = data.choices[0]?.message?.content || "I hear you. Tell me more.";
+        messages.push({ role: 'assistant', content: reply });
+        return reply;
+    }
+    
+    // Local inference
+    async function localInfer(userMsg) {
+        messages.push({ role: 'user', content: userMsg });
+        const stream = await engine.chat.completions.create({
+            messages: [{ role: 'system', content: SYSTEM }, ...messages.slice(-10)],
+            stream: true, max_tokens: 300
+        });
+        let full = '';
+        const div = addMsg('ai', '<span class="thinking">⟡</span>');
+        for await (const chunk of stream) {
+            full += chunk.choices[0]?.delta?.content || '';
+            div.innerHTML = full.replace(/\n/g, '<br>');
+            $messages.scrollTop = $messages.scrollHeight;
+        }
+        messages.push({ role: 'assistant', content: full });
+        return null; // Already rendered
+    }
+    
+    // Send message
+    async function send() {
+        const text = $input.value.trim();
+        if (!text) return;
+        
+        $input.value = '';
+        $send.disabled = true;
+        addMsg('user', text);
+        
+        try {
+            if (mode === 'cloud') {
+                const thinkDiv = addMsg('ai', '<span class="thinking">⟡</span>');
+                const reply = await cloudInfer(text);
+                thinkDiv.innerHTML = reply.replace(/\n/g, '<br>');
+            } else {
+                await localInfer(text);
+            }
+        } catch (err) {
+            addMsg('ai', '<span style="color:#ff6b6b">Error: ' + err.message + '</span>');
+        }
+        
+        $send.disabled = false;
+        $input.focus();
+    }
+    
+    // Load local model
+    async function loadLocal() {
+        show($loading);
+        try {
+            const worker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' });
+            engine = await CreateWebWorkerMLCEngine(worker, LOCAL_MODEL, {
+                initProgressCallback: (r) => {
+                    $progress.style.width = Math.round(r.progress * 100) + '%';
+                    $status.textContent = r.text || 'Loading...';
+                }
+            });
+            mode = 'local';
+            $badge.textContent = '🔒 Local';
+            $badge.className = 'badge local';
+            show($chat);
+            addMsg('ai', "Ready. What's on your mind?");
+        } catch (err) {
+            $status.textContent = 'Error: ' + err.message;
+            $status.style.color = '#ff6b6b';
+        }
+    }
+    
+    // Start cloud mode
+    function startCloud() {
+        mode = 'cloud';
+        $badge.textContent = '☁️ Cloud';
+        $badge.className = 'badge cloud';
+        show($chat);
+        addMsg('ai', "Ready. What's on your mind?");
+    }
+    
+    // Render model cards
+    function renderModels() {
+        const cards = [];
+        
+        if (isMobile) {
+            cards.push(`
+                <div class="model-card recommended" onclick="window.startCloud()">
+                    <div class="model-name">☁️ Cloud Mode</div>
+                    <div class="model-meta">Instant start • Llama 3.3 70B</div>
+                    <div class="model-badge">Recommended for Mobile</div>
+                </div>
+            `);
+        } else {
+            cards.push(`
+                <div class="model-card recommended" onclick="window.loadLocal()">
+                    <div class="model-name">🔒 Sovereign Mode</div>
+                    <div class="model-meta">~800MB download • Qwen 2.5 1.5B</div>
+                    <div class="model-badge">Runs 100% locally</div>
+                </div>
+            `);
+            cards.push(`
+                <div class="model-card" onclick="window.startCloud()">
+                    <div class="model-name">☁️ Cloud Mode</div>
+                    <div class="model-meta">Instant start • Llama 3.3 70B</div>
+                </div>
+            `);
+        }
+        
+        $models.innerHTML = cards.join('');
+    }
+    
+    // Event listeners
+    $input.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+    $input.addEventListener('input', () => { $send.disabled = !$input.value.trim(); });
+    $send.addEventListener('click', send);
+    
+    // Expose to window for onclick
+    window.loadLocal = loadLocal;
+    window.startCloud = startCloud;
+    
+    // Init
+    renderModels();
+    </script>
+</body>
+</html>
