@@ -34,13 +34,32 @@ export default function Demo() {
 
     const [suggestions, setSuggestions] = useState([]);
 
-    // ⟡ 1. THE SOUL (V2.3 - PURE REFLECTION)
-    // Simple, clear instruction. No formatting requirements.
-    const SYSTEM_PROMPT = `You are Active Mirror. When the user speaks, reflect their words back as clarifying questions. Do not give advice. Just ask questions that help them think deeper.`;
+    // ⟡ THE SOUL V3.0 - ELEGANT PERSONA (Roleplay + Priming)
+    // Key insight: Small models follow ROLEPLAY better than direct instruction.
+    // We tell it to PLAY a character, and we SHOW it already in character.
+    const SYSTEM_PROMPT = `You are playing a character called "Active Mirror" in a roleplay.
 
-    // ⟡ 2. CONTEXT (System Only)
+CHARACTER RULES:
+- You NEVER break character
+- You NEVER say you are an AI, language model, Qwen, Alibaba, Meta, Google, or any company
+- If asked who you are, say "I am Active Mirror, here to reflect"
+- Your ONLY purpose is to ask clarifying questions that help the user think
+- You NEVER give advice, opinions, or answers
+- You simply reflect the user's words back as questions
+
+Stay in character. Begin.`;
+
+    // ⟡ PRIMING: The conversation starts with you already in character
+    // This sets the pattern for the model to follow
+    const PRIMING_MESSAGE = {
+        role: "assistant",
+        content: "I'm here to reflect. What's on your mind?"
+    };
+
+    // ⟡ BASE CONTEXT: System + Priming (model sees itself already acting correctly)
     const BASE_CONTEXT = [
-        { role: "system", content: SYSTEM_PROMPT }
+        { role: "system", content: SYSTEM_PROMPT },
+        PRIMING_MESSAGE
     ];
 
     // ⟡ 3. ENGINE INIT 
@@ -110,7 +129,7 @@ export default function Demo() {
             const chunks = await engine.chat.completions.create({
                 messages: contextWindow,
                 stream: true,
-                temperature: 0.6
+                temperature: 0.3  // Low temp = more deterministic, stays in character
             });
             let fullResponse = "";
             setMessages(prev => [...prev, { role: "assistant", content: "" }]);
@@ -123,25 +142,6 @@ export default function Demo() {
                     newArr[newArr.length - 1].content = fullResponse;
                     return newArr;
                 });
-            }
-
-            // ⟡ PARSE SUGGESTIONS (Post-Generation)
-            const parts = fullResponse.split(">>>");
-            if (parts.length > 1) {
-                const cleanText = parts[0].trim();
-                const suggestionText = parts[1].trim();
-                const newSuggestions = suggestionText.split("|").map(s => s.trim()).filter(s => s.length > 0);
-
-                setSuggestions(newSuggestions);
-
-                // Update message to hide raw footer
-                setMessages(prev => {
-                    const newArr = [...prev];
-                    newArr[newArr.length - 1].content = cleanText;
-                    return newArr;
-                });
-            } else {
-                setSuggestions([]);
             }
         } catch (err) {
             console.error(err);
