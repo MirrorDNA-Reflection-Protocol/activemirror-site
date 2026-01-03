@@ -541,13 +541,14 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
                                 <Brain size={18} className="relative z-10" />
                             </div>
 
-                            {/* Status Label */}
+                            {/* Status Label - Shows what's AVAILABLE, not just what's being used */}
                             <div className="ml-2 px-2 py-1 rounded bg-white/5 border border-white/10">
-                                <span className={`font-medium ${currentTier === 'cloud' ? 'text-blue-400' :
-                                    isSovereign ? 'text-purple-400' : 'text-amber-400'
+                                <span className={`font-medium ${isSovereign ? 'text-purple-400' :
+                                        tier1Engine ? 'text-amber-400' : 'text-blue-400'
                                     }`}>
-                                    {currentTier === 'cloud' ? 'Cloud' :
-                                        isSovereign ? 'Sovereign' : 'Local'}
+                                    {isSovereign ? '🔒 Sovereign' :
+                                        tier1Engine ? '📱 Local Ready' :
+                                            tier1Progress > 0 ? `⬇ ${tier1Progress}%` : '☁️ Cloud'}
                                 </span>
                             </div>
                         </div>
