@@ -1,34 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CreateMLCEngine } from "@mlc-ai/web-llm";
-import { ArrowLeft, Send, Cpu, Activity, Zap, Terminal } from 'lucide-react';
+import { ArrowLeft, Send, Zap } from 'lucide-react';
 import MirrorLogo from '../components/MirrorLogo';
+import { Link } from 'react-router-dom';
 
-const MODELS = {
-    mobile: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC", // Fast, lightweight
-    desktop: "Llama-3-8B-Instruct-q4f32_1-MLC" // Powerful
-};
+// Hardcoded Llama 3.2 1B for speed
+const MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
 
 export default function Demo() {
     const [input, setInput] = useState("");
-    const [messages, setMessages] = useState([{ role: "assistant", content: "⟡ Active MirrorOS Online. Systems Nominal. Ready for input." }]);
+    const [messages, setMessages] = useState([{ role: "assistant", content: "⟡ Intelligence Reflected. Ready." }]);
     const [isLoading, setIsLoading] = useState(false);
     const [engine, setEngine] = useState(null);
     const [progress, setProgress] = useState("");
-    const [stats, setStats] = useState({ tps: 0, ram: "0GB" });
+    const [stats, setStats] = useState({ tps: 0 });
     const bottomRef = useRef(null);
 
-    // 1. Initialize Engine (The Brain)
+    // 1. Initialize Engine
     useEffect(() => {
         async function init() {
-            const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
-            const model = isMobile ? MODELS.mobile : MODELS.desktop;
-
-            setProgress(`Initializing ${model}...`);
-            const eng = await CreateMLCEngine(model, {
-                initProgressCallback: (report) => setProgress(report.text)
-            });
-            setEngine(eng);
-            setProgress("");
+            setProgress(`Initializing ${MODEL}...`);
+            try {
+                const eng = await CreateMLCEngine(MODEL, {
+                    initProgressCallback: (report) => setProgress(report.text)
+                });
+                setEngine(eng);
+                setProgress("");
+            } catch (e) {
+                setProgress(`Error: ${e.message}`);
+            }
         }
         init();
     }, []);
@@ -58,16 +58,14 @@ export default function Demo() {
                 const delta = chunk.choices[0]?.delta?.content || "";
                 fullResponse += delta;
                 tokens++;
-                // Update UI with stream
                 setMessages(prev => {
                     const newArr = [...prev];
                     newArr[newArr.length - 1].content = fullResponse;
                     return newArr;
                 });
-                // Fake stats update
                 if (tokens % 5 === 0) {
                     const elapsed = (performance.now() - startTime) / 1000;
-                    setStats({ tps: Math.round(tokens / elapsed), ram: "1.2GB" });
+                    setStats({ tps: Math.round(tokens / elapsed) });
                 }
             }
         } catch (err) {
@@ -78,43 +76,39 @@ export default function Demo() {
     };
 
     return (
-        /* MAIN GRID */
-        <main className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4 p-4 relative min-h-screen bg-black text-white font-sans selection:bg-green-500/30">
+        <main className="relative min-h-screen bg-black text-white font-sans selection:bg-green-500/30 flex flex-col overflow-hidden">
             {/* BACKGROUND NOISE */}
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] pointer-events-none"></div>
 
-            {/* LEFT TELEMETRY (Hidden on Mobile) */}
-            <div className="hidden md:flex flex-col gap-4">
-                <div className="flex-1 rounded-2xl border border-white/10 bg-zinc-900/30 p-4 backdrop-blur-sm">
-                    <h3 className="text-xs text-zinc-500 mb-4 flex items-center gap-2"><Zap size={12} /> PERFORMANCE</h3>
-                    <div className="text-4xl font-bold mb-1">{stats.tps}</div>
-                    <div className="text-xs text-green-400 mb-6">TOKENS / SEC</div>
-                    <div className="h-px bg-white/5 mb-6"></div>
-                    <div className="text-sm text-zinc-400 mb-2">MEMORY FOOTPRINT</div>
-                    <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
-                        <div className="bg-green-500 h-full w-[40%] animate-pulse"></div>
-                    </div>
-                    <div className="text-right text-xs mt-1 text-zinc-500">{stats.ram} / 16GB</div>
+            {/* HEADER */}
+            <header className="fixed top-0 inset-x-0 p-4 z-50 flex items-center justify-between pointer-events-none">
+                <Link to="/" className="p-2 rounded-full bg-white/5 backdrop-blur border border-white/10 pointer-events-auto hover:bg-white/10 transition-colors">
+                    <ArrowLeft size={16} />
+                </Link>
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-black/40 backdrop-blur border border-white/10 text-[10px] font-mono text-zinc-400">
+                    <Zap size={10} className={stats.tps > 0 ? "text-green-500" : "text-zinc-600"} />
+                    {stats.tps > 0 ? `${stats.tps} T/s` : "IDLE"}
                 </div>
-            </div>
+            </header>
 
-            {/* CENTER CHAT (The Stream) */}
-            <div className="col-span-1 md:col-span-2 rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl flex flex-col relative overflow-hidden h-[90vh] md:h-auto">
+            {/* CENTER GLASS PANEL */}
+            <div className="flex-1 max-w-2xl w-full mx-auto relative flex flex-col pt-20 pb-4 px-4 h-full">
+
                 {/* LOADING OVERLAY */}
                 {progress && (
-                    <div className="absolute inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-8 text-center">
-                        <MirrorLogo className="w-12 h-12 mb-6 animate-spin-slow" />
-                        <div className="text-green-500 text-sm animate-pulse">{progress}</div>
-                        <p className="text-zinc-600 text-xs mt-2">Downloading weights to browser cache...</p>
+                    <div className="absolute inset-x-4 top-20 z-50 p-6 rounded-2xl border border-white/10 bg-zinc-900/80 backdrop-blur-xl text-center shadow-2xl">
+                        <MirrorLogo className="w-8 h-8 mx-auto mb-4 animate-spin-slow text-green-500" />
+                        <div className="text-sm font-medium animate-pulse">{progress}</div>
                     </div>
                 )}
+
                 {/* MESSAGES */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="flex-1 overflow-y-auto space-y-6 pb-4 no-scrollbar">
                     {messages.map((msg, i) => (
                         <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[80%] p-4 rounded-xl text-sm leading-relaxed ${msg.role === 'user'
-                                    ? 'bg-white text-black'
-                                    : 'bg-zinc-900 border border-white/10 text-zinc-300'
+                            <div className={`max-w-[85%] p-4 rounded-2xl text-[15px] leading-relaxed backdrop-blur-sm ${msg.role === 'user'
+                                    ? 'bg-white text-black shadow-lg font-medium'
+                                    : 'bg-white/5 border border-white/10 text-zinc-200'
                                 }`}>
                                 {msg.content}
                             </div>
@@ -122,35 +116,29 @@ export default function Demo() {
                     ))}
                     <div ref={bottomRef} />
                 </div>
+
                 {/* INPUT */}
-                <div className="p-4 border-t border-white/10 bg-zinc-900/50">
-                    <div className="flex gap-2">
+                <div className="mt-auto">
+                    <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden shadow-2xl focus-within:border-white/20 transition-colors">
                         <input
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                            placeholder="Input command..."
+                            placeholder="Initialize instruction..."
                             disabled={isLoading || !!progress}
-                            className="flex-1 bg-transparent border-none outline-none text-white placeholder-zinc-600 font-sans"
+                            className="w-full bg-transparent p-4 pr-12 outline-none text-white placeholder-zinc-600 text-base"
                             autoFocus
                         />
-                        <button onClick={handleSend} disabled={isLoading || !!progress} className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 disabled:opacity-50">
-                            <Send size={18} />
+                        <button
+                            onClick={handleSend}
+                            disabled={isLoading || !!progress}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/10 text-white rounded-xl hover:bg-white/20 disabled:opacity-0 transition-all"
+                        >
+                            <Send size={16} />
                         </button>
                     </div>
-                </div>
-            </div>
-
-            {/* RIGHT LOGS (Hidden on Mobile) */}
-            <div className="hidden md:flex flex-col gap-4">
-                <div className="flex-1 rounded-2xl border border-white/10 bg-zinc-900/30 p-4 backdrop-blur-sm font-mono text-[10px] text-zinc-600 overflow-hidden">
-                    <h3 className="text-xs text-zinc-500 mb-4 flex items-center gap-2"><Terminal size={12} /> SYSTEM_LOGS</h3>
-                    <div className="space-y-1 opacity-70">
-                        <p>&gt; init_sequence_start</p>
-                        <p>&gt; neural_engine: DETECTED</p>
-                        <p>&gt; memory_safe_mode: ACTIVE</p>
-                        {progress ? <p className="text-yellow-500">&gt; downloading_weights...</p> : <p className="text-green-500">&gt; model_ready</p>}
-                        {messages.length > 1 && <p>&gt; inference_stream_active</p>}
+                    <div className="text-center mt-3 text-[10px] text-zinc-600 font-mono">
+                        RUNNING LOCAL • {MODEL}
                     </div>
                 </div>
             </div>
