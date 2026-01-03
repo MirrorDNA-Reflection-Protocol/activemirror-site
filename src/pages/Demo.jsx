@@ -60,8 +60,8 @@ export default function Demo() {
     // ⟡ 3. ENGINE INIT 
     useEffect(() => {
         async function init() {
-            const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
-            const modelId = isMobile ? "Qwen2.5-0.5B-Instruct-q4f16_1-MLC" : "Llama-3.2-1B-Instruct-q4f16_1-MLC";
+            // ⟡ UNIFIED SOUL: Use Llama-3.2-1B for all devices (Mobile Capable + High Fidelity)
+            const modelId = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
 
             const workerScript = `
         import { WebWorkerMLCEngineHandler } from "https://esm.run/@mlc-ai/web-llm";
@@ -139,13 +139,12 @@ export default function Demo() {
 
     // Handler: Close Session
     const handleOutcome = (outcome) => {
-        const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
         saveReflection(
             intent || "Free Reflection",
             messages,
             outcome,
             {
-                model: isMobile ? "Qwen2.5-0.5B" : "Llama-3.2-1B",
+                model: "Llama-3.2-1B",
                 online: false,
                 id: "local-session"
             }
