@@ -25,6 +25,8 @@ export default function Demo() {
     const [progress, setProgress] = useState("Initializing Neural Core...");
     const [progressDetails, setProgressDetails] = useState(""); // New: Granular details
     const [engine, setEngine] = useState(null);
+    const [isReflecting, setIsReflecting] = useState(false); // NEW: Visual "thinking" state
+    const [useCloud, setUseCloud] = useState(true); // NEW: Default to cloud, fallback to local
     const bottomRef = useRef(null);
 
     // Vault & Session State
@@ -34,32 +36,31 @@ export default function Demo() {
 
     const [suggestions, setSuggestions] = useState([]);
 
-    // ⟡ THE SOUL V3.0 - ELEGANT PERSONA (Roleplay + Priming)
-    // Key insight: Small models follow ROLEPLAY better than direct instruction.
-    // We tell it to PLAY a character, and we SHOW it already in character.
-    const SYSTEM_PROMPT = `You are playing a character called "Active Mirror" in a roleplay.
+    // ⟡ THE SOUL V3.2 - COMPELLING REFLECTION
+    // Rich prompt for API (Groq can handle complexity), minimal for local fallback
+    const CLOUD_SYSTEM_PROMPT = `You are Active Mirror, a sovereign reflection system designed to surface hidden assumptions and clarify thinking.
 
-CHARACTER RULES:
-- You NEVER break character
-- You NEVER say you are an AI, language model, Qwen, Alibaba, Meta, Google, or any company
-- If asked who you are, say "I am Active Mirror, here to reflect"
-- Your ONLY purpose is to ask clarifying questions that help the user think
-- You NEVER give advice, opinions, or answers
-- You simply reflect the user's words back as questions
+Your purpose is NOT to answer questions or give advice. You are a MIRROR.
 
-Stay in character. Begin.`;
+When the user speaks, you:
+1. Reflect their words back as clarifying questions
+2. Surface assumptions they may not have noticed
+3. Hold space for complexity without rushing to resolution
+4. Ask questions that make them pause and think deeper
 
-    // ⟡ PRIMING: The conversation starts with you already in character
-    // This sets the pattern for the model to follow
-    const PRIMING_MESSAGE = {
-        role: "assistant",
-        content: "I'm here to reflect. What's on your mind?"
-    };
+Never say "I'm an AI" or mention any company. You are simply Active Mirror.
+Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
 
-    // ⟡ BASE CONTEXT: System + Priming (model sees itself already acting correctly)
-    const BASE_CONTEXT = [
-        { role: "system", content: SYSTEM_PROMPT },
-        PRIMING_MESSAGE
+    const LOCAL_SYSTEM_PROMPT = `You are Active Mirror. Reflect the user's words back as questions. Do not advise. Ask questions that help them think deeper.`;
+
+    // API Configuration
+    const GROQ_API_KEY = "gsk_demo_free_tier"; // Placeholder - user can add their key
+    const GROQ_MODEL = "llama-3.1-70b-versatile";
+
+    // Local Context for fallback
+    const LOCAL_BASE_CONTEXT = [
+        { role: "system", content: LOCAL_SYSTEM_PROMPT },
+        { role: "assistant", content: "I'm here to reflect. What's on your mind?" }
     ];
 
     // ⟡ 3. ENGINE INIT 
@@ -114,21 +115,71 @@ Stay in character. Begin.`;
 
     const handleSend = async (overrideText = null) => {
         const textToSend = overrideText || input;
-        if (!textToSend.trim() || !engine) return;
+        if (!textToSend.trim()) return;
+        if (!useCloud && !engine) return; // Need either API or local engine
 
         const userMsg = textToSend;
-        if (!overrideText) setInput(""); // Only clear input if typed in box
+        if (!overrideText) setInput("");
 
         setMessages(prev => [...prev, { role: "user", content: userMsg }]);
         setIsLoading(true);
+        setIsReflecting(true); // ⟡ Show "reflecting" state
+
+        // ⟡ THOUGHTFUL PAUSE: Wait before responding (feels like thinking)
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        setIsReflecting(false);
+
+        // ⟡ TRY CLOUD API FIRST (Groq with Llama-3.1-70B)
+        if (useCloud) {
+            try {
+                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${GROQ_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: GROQ_MODEL,
+                        messages: [
+                            { role: "system", content: CLOUD_SYSTEM_PROMPT },
+                            ...messages.slice(-8),
+                            { role: "user", content: userMsg }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 300
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error("API limit reached");
+                }
+
+                const data = await response.json();
+                const aiResponse = data.choices[0]?.message?.content || "I hear you. What does that bring up?";
+
+                setMessages(prev => [...prev, { role: "assistant", content: aiResponse }]);
+                setIsLoading(false);
+                return; // Success with cloud
+            } catch (err) {
+                console.log("Cloud API failed, falling back to local:", err.message);
+                // Fall through to local inference
+            }
+        }
+
+        // ⟡ FALLBACK: Local SmolLM2 inference
+        if (!engine) {
+            setError("No reflection engine available");
+            setIsLoading(false);
+            return;
+        }
 
         try {
-            const contextWindow = [...BASE_CONTEXT, ...messages.slice(-6), { role: "user", content: userMsg }];
+            const contextWindow = [...LOCAL_BASE_CONTEXT, ...messages.slice(-6), { role: "user", content: userMsg }];
 
             const chunks = await engine.chat.completions.create({
                 messages: contextWindow,
                 stream: true,
-                temperature: 0.3  // Low temp = more deterministic, stays in character
+                temperature: 0.3
             });
             let fullResponse = "";
             setMessages(prev => [...prev, { role: "assistant", content: "" }]);
@@ -270,6 +321,22 @@ Stay in character. Begin.`;
                             </div>
                         </div>
                     ))}
+
+                    {/* ⟡ REFLECTING INDICATOR: Shows during thoughtful pause */}
+                    {isReflecting && (
+                        <div className="flex justify-start">
+                            <div className="px-6 py-4 rounded-2xl bg-white/5 border border-white/10 rounded-tl-sm">
+                                <div className="flex items-center gap-3 text-zinc-400">
+                                    <div className="flex gap-1">
+                                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                                    </div>
+                                    <span className="text-xs font-mono uppercase tracking-widest">Reflecting...</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Session Controls (Visible when active) */}
                     {!progress && messages.length > 1 && !isLoading && !hasReflectedToday && (
