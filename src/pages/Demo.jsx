@@ -18,7 +18,7 @@ const BlurText = ({ text, isUser }) => {
             initial="hidden"
             animate="visible"
             variants={{ visible: { transition: { staggerChildren: 0.01 } } }}
-            className={`text-[15px] leading-7 ${isUser ? 'text-black' : 'text-zinc-200'}`}
+            className={`text-[15px] leading-7 ${isUser ? 'text-black font-medium' : 'text-zinc-50 font-normal shadow-black/50 drop-shadow-sm'}`}
         >
             {words.map((word, i) => (
                 <motion.span
@@ -79,7 +79,12 @@ export default function Demo() {
                 });
                 setEngine(eng);
             } catch (e) {
-                setProgress("WebGPU Error. Please use Chrome/Edge/Safari.");
+                const isIOS = /iPhone|iPad/i.test(navigator.userAgent);
+                if (isIOS) {
+                    setProgress("Error: WebGPU requires iOS 18+. Or enable 'WebGPU' in Settings > Safari > Advanced > Experimental.");
+                } else {
+                    setProgress("WebGPU Error. Please use Chrome/Edge/Safari (Desktop).");
+                }
             }
         }
         init();
@@ -210,12 +215,12 @@ export default function Demo() {
 
                     {messages.map((msg, i) => (
                         <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[85%] px-6 py-4 rounded-2xl backdrop-blur-md shadow-sm ${msg.role === 'user' ? 'bg-white text-black rounded-tr-sm' : 'bg-white/5 border border-white/5 text-zinc-200 rounded-tl-sm'
+                            <div className={`max-w-[85%] px-6 py-4 rounded-2xl backdrop-blur-md shadow-sm ${msg.role === 'user' ? 'bg-white text-black rounded-tr-sm' : 'bg-white/10 border border-white/20 text-white rounded-tl-sm'
                                 }`}>
                                 {msg.role === 'assistant' && i === messages.length - 1 ? (
                                     <BlurText text={msg.content} isUser={false} />
                                 ) : (
-                                    <div className="text-[15px] leading-7">{msg.content}</div>
+                                    <div className="text-[15px] leading-7 text-zinc-50 font-normal drop-shadow-sm">{msg.content}</div>
                                 )}
                             </div>
                         </div>
@@ -240,7 +245,7 @@ export default function Demo() {
                             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                             placeholder={progress ? "Loading Neural Weights..." : "Reflect on this..."}
                             disabled={!!progress || isLoading}
-                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-6 pr-14 text-white placeholder-zinc-600 focus:outline-none focus:border-white/20 transition-all"
+                            className="w-full bg-white/10 border border-white/20 rounded-2xl py-4 pl-6 pr-14 text-white placeholder-zinc-400 focus:outline-none focus:border-white/40 transition-all font-medium"
                             autoFocus
                         />
                         <button onClick={handleSend} disabled={!!progress || isLoading || !input.trim()} className="absolute right-3 p-2 bg-white text-black rounded-xl hover:bg-zinc-200 transition-all disabled:opacity-0"><Send size={18} /></button>
