@@ -82,12 +82,15 @@ export default function Demo() {
                 setEngine(eng);
                 setProgress(""); // Clear progress only after engine is ready
             } catch (e) {
+                // ⟡ UNIFIED FALLBACK: Don't block iOS. Allow engine to attempt WASM or show error.
+                console.error("Engine Init Error:", e);
                 const isIOS = /iPhone|iPad/i.test(navigator.userAgent);
                 if (isIOS) {
-                    setProgress("Error: WebGPU requires iOS 18+. Or enable 'WebGPU' in Settings > Safari > Advanced > Experimental.");
+                    setProgress("Neural Engine Limit. Try enabling 'WebGPU' in Safari or switching to Desktop.");
                 } else {
-                    setProgress("WebGPU Error. Please use Chrome/Edge/Safari (Desktop).");
+                    setProgress("Neural Engine Start Failed. Please check console.");
                 }
+                setError(e.message || "Initialization Failed");
             }
         }
         init();
