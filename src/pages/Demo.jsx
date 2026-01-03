@@ -53,8 +53,8 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
 
     const LOCAL_SYSTEM_PROMPT = `You are Active Mirror. Reflect the user's words back as questions. Do not advise. Ask questions that help them think deeper.`;
 
-    // API Configuration
-    const GROQ_API_KEY = "gsk_demo_free_tier"; // Placeholder - user can add their key
+    // API Configuration - reads from environment variable
+    const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY || "";
     const GROQ_MODEL = "llama-3.1-70b-versatile";
 
     // Local Context for fallback
