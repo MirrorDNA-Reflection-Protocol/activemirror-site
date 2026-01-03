@@ -822,26 +822,32 @@ You are a mirror, not an oracle. Questions only.`;
             modeLabel.textContent = 'Sovereign';
             welcomeEl.classList.add('hidden');
             loadingEl.classList.add('active');
-            loadingStatus.textContent = 'Checking WebGPU support...';
+            loadingStatus.textContent = 'Step 1: Checking WebGPU...';
 
             try {
                 // Check WebGPU first
                 if (!navigator.gpu) {
-                    throw new Error('WebGPU not supported. Try Chrome or Edge.');
+                    throw new Error('WebGPU not supported. Try Chrome 113+ or Edge.');
                 }
+                loadingStatus.textContent = 'Step 2: Getting GPU adapter...';
                 
                 const adapter = await navigator.gpu.requestAdapter();
                 if (!adapter) {
-                    throw new Error('No WebGPU adapter found. Your GPU may not be supported.');
+                    throw new Error('No WebGPU adapter. GPU may not be supported.');
+                }
+                loadingStatus.textContent = 'Step 3: Loading WebLLM...';
+                
+                let CreateWebWorkerMLCEngine;
+                try {
+                    const module = await import('https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.73/+esm');
+                    CreateWebWorkerMLCEngine = module.CreateWebWorkerMLCEngine;
+                } catch (e) {
+                    throw new Error('Failed to load WebLLM: ' + e.message);
                 }
                 
-                loadingStatus.textContent = 'Loading WebLLM library...';
-                
-                const { CreateWebWorkerMLCEngine } = await import('https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.73/+esm');
-                
-                loadingStatus.textContent = 'Creating AI worker...';
+                loadingStatus.textContent = 'Step 4: Creating worker...';
 
-                // Create worker from separate file instead of blob (more compatible)
+                // Create worker
                 const workerCode = `
                     import { WebWorkerMLCEngineHandler } from 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.73/+esm';
                     const handler = new WebWorkerMLCEngineHandler();
@@ -849,31 +855,39 @@ You are a mirror, not an oracle. Questions only.`;
                 `;
                 const blob = new Blob([workerCode], { type: 'text/javascript' });
                 const workerUrl = URL.createObjectURL(blob);
-                const worker = new Worker(workerUrl, { type: 'module' });
+                let worker;
+                try {
+                    worker = new Worker(workerUrl, { type: 'module' });
+                } catch (e) {
+                    throw new Error('Worker creation failed: ' + e.message);
+                }
 
-                loadingStatus.textContent = 'Starting model download...';
+                loadingStatus.textContent = 'Step 5: Downloading model (~900MB)...';
 
-                engine = await CreateWebWorkerMLCEngine(
-                    worker,
-                    MODEL_ID,
-                    {
-                        initProgressCallback: (progress) => {
-                            const pct = Math.round(progress.progress * 100);
-                            progressPercent.textContent = pct + '%';
-                            progressCircle.style.strokeDashoffset = 440 - (440 * progress.progress);
-                            loadingStatus.textContent = progress.text || 'Downloading model...';
+                try {
+                    engine = await CreateWebWorkerMLCEngine(
+                        worker,
+                        MODEL_ID,
+                        {
+                            initProgressCallback: (progress) => {
+                                const pct = Math.round(progress.progress * 100);
+                                progressPercent.textContent = pct + '%';
+                                progressCircle.style.strokeDashoffset = 440 - (440 * progress.progress);
+                                loadingStatus.textContent = progress.text || `Downloading... ${pct}%`;
 
-                            // Color shift
-                            if (pct < 50) {
-                                progressCircle.style.stroke = '#3b82f6';
-                            } else if (pct < 90) {
-                                progressCircle.style.stroke = '#8b5cf6';
-                            } else {
-                                progressCircle.style.stroke = '#10b981';
+                                if (pct < 50) {
+                                    progressCircle.style.stroke = '#3b82f6';
+                                } else if (pct < 90) {
+                                    progressCircle.style.stroke = '#8b5cf6';
+                                } else {
+                                    progressCircle.style.stroke = '#10b981';
+                                }
                             }
                         }
-                    }
-                );
+                    );
+                } catch (e) {
+                    throw new Error('Model load failed: ' + e.message);
+                }
 
                 URL.revokeObjectURL(workerUrl);
                 loadingEl.classList.remove('active');
