@@ -23,9 +23,7 @@ export default function Home() {
 
                     {/* LOGO */}
                     <div className="mb-8 flex justify-center">
-                        <div className="p-4 rounded-full bg-white/5 border border-white/10 shadow-[0_0_20px_rgba(255,255,255,0.05)]">
-                            <MirrorLogo className="w-10 h-10" />
-                        </div>
+                        <MirrorLogo className="w-20 h-20 text-white" />
                     </div>
 
                     {/* POSITIVE COPY (Universal & Elegant) */}
