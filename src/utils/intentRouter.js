@@ -132,3 +132,54 @@ export function isPureUtility(input) {
     // Pure utility: score 0 AND no personal/choice signals
     return score === 0 && signals.personal === 0 && signals.choice === 0;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// UTILITY HARD SHORTCUT (v0.2 Polish)
+// ═══════════════════════════════════════════════════════════════
+
+// Pattern matches: "2*2", "2+2", "what is 5*10", "calculate 100/4"
+const MATH_PATTERN = /^(?:what\s+is\s+|calculate\s+|compute\s+)?(\d+(?:\.\d+)?)\s*([+\-*/x×÷])\s*(\d+(?:\.\d+)?)\s*\??$/i;
+
+/**
+ * Try to compute utility locally without model call
+ * Returns { handled: true, result: "4" } or { handled: false }
+ */
+export function tryUtilityShortcut(input) {
+    const trimmed = input.trim();
+
+    // Try math
+    const match = trimmed.match(MATH_PATTERN);
+    if (match) {
+        const a = parseFloat(match[1]);
+        const op = match[2].toLowerCase();
+        const b = parseFloat(match[3]);
+
+        let result;
+        switch (op) {
+            case '+': result = a + b; break;
+            case '-': result = a - b; break;
+            case '*':
+            case 'x':
+            case '×': result = a * b; break;
+            case '/':
+            case '÷': result = b !== 0 ? a / b : 'undefined (division by zero)'; break;
+            default: return { handled: false };
+        }
+
+        // Format result nicely
+        const formatted = typeof result === 'number' ?
+            (Number.isInteger(result) ? result.toString() : result.toFixed(2)) :
+            result;
+
+        return {
+            handled: true,
+            result: formatted,
+            schema: {
+                direct: { type: 'answer', content: formatted },
+                mirror: null
+            }
+        };
+    }
+
+    return { handled: false };
+}

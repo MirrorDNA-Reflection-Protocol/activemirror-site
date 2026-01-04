@@ -110,6 +110,33 @@ def compute_intent(text: str) -> int:
     return 0
 
 # ═══════════════════════════════════════════════════════════════
+# UTILITY HARD SHORTCUT (v0.2 Polish)
+# ═══════════════════════════════════════════════════════════════
+
+MATH_PATTERN = re.compile(r'^(?:what\s+is\s+|calculate\s+|compute\s+)?(\d+(?:\.\d+)?)\s*([+\-*/x×÷])\s*(\d+(?:\.\d+)?)\s*\??$', re.I)
+
+def try_utility_shortcut(text: str):
+    m = MATH_PATTERN.match(text.strip())
+    if m:
+        a, op, b = float(m.group(1)), m.group(2).lower(), float(m.group(3))
+        if op in ['+']:
+            result = a + b
+        elif op in ['-']:
+            result = a - b
+        elif op in ['*', 'x', '×']:
+            result = a * b
+        elif op in ['/', '÷']:
+            result = a / b if b != 0 else 'undefined'
+        else:
+            return None
+        formatted = str(int(result)) if isinstance(result, float) and result.is_integer() else str(result)
+        return {
+            "direct": {"type": "answer", "content": formatted},
+            "mirror": None
+        }
+    return None
+
+# ═══════════════════════════════════════════════════════════════
 # LANE MIXER
 # ═══════════════════════════════════════════════════════════════
 
@@ -129,38 +156,32 @@ def get_max_questions(dial: float, intent_score: int) -> int:
     return 1
 
 # ═══════════════════════════════════════════════════════════════
-# TEMPLATES
+# TEMPLATES (v0.2 Polish - no filler)
 # ═══════════════════════════════════════════════════════════════
 
 DIRECT_TEMPLATES = {
-    "answer": ["{content}", "Here's the quick answer: {content}"],
-    "explain": ["{content}", "In short: {content}"],
-    "summarize": ["{content}", "To summarize: {content}"],
+    "answer": ["{content}"],
+    "explain": ["{content}"],
+    "summarize": ["{content}"],
     "compare": ["{content}"],
-    "clarify": ["{content}", "Let me clarify: {content}"],
+    "clarify": ["{content}"],
 }
 
-TRANSITIONS = ["That said, here's what I notice:", "Looking deeper:", "Worth considering:"]
-ASSUMPTION_TEMPLATES = ["You might be assuming {0}. And {1}.", "This rests on {0} — and {1}."]
-QUESTION_TEMPLATES = ["⟡ {question}", "The real question: {question}"]
+ASSUMPTION_TEMPLATES = ["You may be assuming {0}, and {1}.", "This rests on {0} — and {1}."]
+QUESTION_TEMPLATES = ["⟡ {question}", "{question}"]
 
 def render_two_lane(schema: dict, lane_mix: dict, intent_score: int, max_questions: int) -> str:
     parts = []
     show_direct = lane_mix["direct"] > 0.1
     show_mirror = lane_mix["mirror"] > 0.1
     
-    # Direct
+    # Direct (no filler openers)
     if show_direct and schema.get("direct", {}).get("content"):
-        d_type = schema["direct"].get("type", "answer")
-        templates = DIRECT_TEMPLATES.get(d_type, DIRECT_TEMPLATES["answer"])
-        parts.append(random.choice(templates).format(content=schema["direct"]["content"]))
+        parts.append(schema["direct"]["content"])
     
-    # Mirror
+    # Mirror (no transitions, clean)
     if show_mirror and schema.get("mirror"):
         mirror = schema["mirror"]
-        
-        if show_direct and parts:
-            parts.append(random.choice(TRANSITIONS))
         
         if mirror.get("assumptions"):
             a = mirror["assumptions"]
@@ -312,6 +333,19 @@ async def reflect(request: Request, body: ReflectRequest):
     intent = compute_intent(body.input)
     lane_mix = compute_lane_mix(intent, body.dial)
     max_q = get_max_questions(body.dial, intent)
+    
+    # UTILITY SHORTCUT: compute locally, no model call
+    shortcut = try_utility_shortcut(body.input)
+    if shortcut:
+        return ReflectResponse(
+            output=shortcut["direct"]["content"],
+            schema_raw=shortcut,
+            intent_score=0,
+            lane_mix={"direct": 1.0, "mirror": 0.0},
+            rule_version=RULE_VERSION,
+            outcome="allowed",
+            request_id=rid
+        )
     
     raw = await call_substrate(body.input)
     

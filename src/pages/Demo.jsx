@@ -293,9 +293,17 @@ export default function Demo() {
                     return;
                 }
 
-                // v5.0: Route intent with dial
+                // v5.1: Route intent with dial
                 const intentConfig = routeIntent(userMsg, dial);
                 console.log(`⟡ Intent: ${intentConfig.intentLabel}, Mix: ${Math.round(intentConfig.laneMix.direct * 100)}% Direct`);
+
+                // UTILITY SHORTCUT: computed locally, no model call
+                if (intentConfig.shortcut?.handled) {
+                    setLastSchema(intentConfig.shortcut.schema);
+                    setMessages(prev => [...prev, { role: "assistant", content: intentConfig.shortcut.result }]);
+                    setIsLoading(false);
+                    return;
+                }
 
                 try {
                     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {

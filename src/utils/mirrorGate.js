@@ -1,11 +1,11 @@
 /**
- * MirrorGate v5.0 — Two-Lane Conversation System
- * Gate → Intent Router → Process → Lane Mix → Render
+ * MirrorGate v5.1 — Two-Lane + Polish
+ * Gate → Intent Router → Utility Shortcut → Process → Lane Mix → Render
  */
 
 import { validateSchema, parseModelOutput, FALLBACK_SCHEMA, getUtilityFallback } from './reflectionSchema';
 import { renderTwoLane, renderUtility, renderFallback } from './reflectionTemplates';
-import { computeIntent, isPureUtility, getIntentLabel } from './intentRouter';
+import { computeIntent, isPureUtility, getIntentLabel, tryUtilityShortcut } from './intentRouter';
 import { computeLaneConfig } from './laneMixer';
 
 // ═══════════════════════════════════════════════════════════════
@@ -51,13 +51,32 @@ export function gateInput(input) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// INTENT ROUTING
+// INTENT ROUTING (with Utility Shortcut)
 // ═══════════════════════════════════════════════════════════════
 
 /**
  * Gate 0.8: Compute intent and lane configuration
+ * Returns shortcut result if math can be computed locally
  */
 export function routeIntent(input, dial = 0.5) {
+    // TRY UTILITY SHORTCUT FIRST (no model call)
+    const shortcut = tryUtilityShortcut(input);
+    if (shortcut.handled) {
+        console.log('⟡ Utility shortcut: computed locally');
+        return {
+            intentScore: 0,
+            intentLabel: 'utility',
+            signals: { utility: 10, info: 0, choice: 0, personal: 0 },
+            shortcut: shortcut,  // Pass result through
+            laneMix: { direct: 1, mirror: 0 },
+            maxQuestions: 0,
+            showDirect: true,
+            showMirror: false,
+            directFirst: true
+        };
+    }
+
+    // Normal routing
     const { score, signals } = computeIntent(input);
     const laneConfig = computeLaneConfig(score, dial);
 

@@ -1,80 +1,76 @@
 /**
- * Reflection Template Library v2.0 — Two-Lane Conversation System
- * Deterministic rendering of Direct + Mirror lanes
+ * Reflection Template Library v2.1 — Two-Lane + Polish
+ * Deterministic rendering with meta-language strip
  */
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 // ═══════════════════════════════════════════════════════════════
-// DIRECT LANE TEMPLATES
+// META-LANGUAGE STRIP LIST (v0.2 Polish)
+// ═══════════════════════════════════════════════════════════════
+
+const META_STRIP_PATTERNS = [
+    /\b(I am a logic engine)[^.]*\./gi,
+    /\b(I am designed to)[^.]*\./gi,
+    /\b(my role is)[^.]*\./gi,
+    /\b(as an AI|as an assistant)[^.]*\./gi,
+    /\b(the system|the model|the prompt)[^.]*\./gi,
+    /\b(I can't access|I cannot access)[^.]*\./gi,
+    /^(Here's the quick answer:|Let me clarify:|I'd like to understand this better\.)\s*/i,
+    /^(Here's a quick explanation:|Here's a comparison:)\s*/i,
+    /^(To summarize:|In short:|The key points:)\s*/i,
+    /^(That said, here's what I notice:)\s*/i,
+    /^(Worth considering:)\s*/i,
+];
+
+/**
+ * Strip meta-language and filler from rendered output
+ */
+function stripMetaLanguage(text) {
+    let clean = text;
+    for (const pattern of META_STRIP_PATTERNS) {
+        clean = clean.replace(pattern, '');
+    }
+    // Clean up any double spaces or leading/trailing whitespace
+    return clean.replace(/\n{3,}/g, '\n\n').replace(/^\s+|\s+$/g, '').replace(/  +/g, ' ');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DIRECT LANE TEMPLATES (Cleaned - no filler openers)
 // ═══════════════════════════════════════════════════════════════
 
 const DIRECT_TEMPLATES = {
-    answer: [
-        "{content}",
-        "Here's the quick answer: {content}",
-        "{content}"
-    ],
-    explain: [
-        "{content}",
-        "Here's a quick explanation: {content}",
-        "In short: {content}"
-    ],
-    summarize: [
-        "{content}",
-        "To summarize: {content}",
-        "The key points: {content}"
-    ],
-    compare: [
-        "{content}",
-        "Here's a comparison: {content}",
-        "{content}"
-    ],
-    clarify: [
-        "{content}",
-        "Let me clarify: {content}",
-        "{content}"
-    ]
+    answer: ["{content}"],
+    explain: ["{content}"],
+    summarize: ["{content}"],
+    compare: ["{content}"],
+    clarify: ["{content}"]
 };
 
 // ═══════════════════════════════════════════════════════════════
-// MIRROR LANE TEMPLATES (by mode)
+// MIRROR LANE TEMPLATES (Cleaned - no meta-language)
 // ═══════════════════════════════════════════════════════════════
 
 const MIRROR_TRANSITIONS = {
-    choice: [
-        "That said, here's what I notice:",
-        "Looking deeper:",
-        "Worth considering:"
-    ],
-    personal: [
-        "I'm also noticing:",
-        "What I'm sensing:",
-        "Beneath the surface:"
-    ],
-    info: [
-        "One thing to consider:",
-        "Worth thinking about:",
-        "A thought:"
-    ]
+    choice: ["", ""],  // No transition filler
+    personal: ["", ""],
+    info: ["", ""]
 };
 
 const ASSUMPTION_TEMPLATES = [
-    "You might be assuming {0}. And {1}.",
-    "This seems to rest on {0} — and maybe {1}.",
-    "Baked in: {0}. Also, {1}."
+    "You may be assuming {0}, and {1}.",
+    "This rests on {0} — and {1}.",
+    "Underlying this: {0}. And {1}."
 ];
 
 const TRADEOFF_TEMPLATES = [
-    "The trade-off: {0}. {1}",
     "On one hand, {0}. On the other, {1}.",
     "{0}. But also: {1}."
 ];
 
 const QUESTION_TEMPLATES = [
     "⟡ {question}",
-    "The real question: {question}",
-    "What this comes down to: {question}"
+    "{question}"
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -92,10 +88,6 @@ export function renderTwoLane(schema, laneConfig) {
 
     const { showDirect, showMirror, directFirst, maxQuestions } = laneConfig;
 
-    // Determine mode for template selection
-    const mode = laneConfig.intentScore >= 3 ? 'personal' :
-        laneConfig.intentScore >= 2 ? 'choice' : 'info';
-
     // Render Direct lane
     if (showDirect && schema.direct?.content) {
         const type = schema.direct.type || 'answer';
@@ -105,18 +97,12 @@ export function renderTwoLane(schema, laneConfig) {
         if (directFirst) {
             parts.push(directText);
         } else {
-            // Will add at end
             parts._directText = directText;
         }
     }
 
     // Render Mirror lane
     if (showMirror && schema.mirror) {
-        // Transition (if we have direct content)
-        if (showDirect && directFirst && schema.direct?.content) {
-            parts.push(pick(MIRROR_TRANSITIONS[mode] || MIRROR_TRANSITIONS.info));
-        }
-
         // Assumptions
         if (schema.mirror.assumptions?.length > 0) {
             let assumptionText = pick(ASSUMPTION_TEMPLATES);
@@ -149,7 +135,9 @@ export function renderTwoLane(schema, laneConfig) {
         delete parts._directText;
     }
 
-    return parts.join('\n\n');
+    // Apply meta-language strip
+    const output = parts.join('\n\n');
+    return stripMetaLanguage(output);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -157,10 +145,10 @@ export function renderTwoLane(schema, laneConfig) {
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Render utility-only response (no mirror)
+ * Render utility-only response (no mirror, no filler)
  */
 export function renderUtility(content) {
-    return content;
+    return stripMetaLanguage(content);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -168,12 +156,11 @@ export function renderUtility(content) {
 // ═══════════════════════════════════════════════════════════════
 
 export function renderFallback() {
-    return `I couldn't structure that clearly.\n\n⟡ What specific decision are you trying to make?`;
+    return `⟡ What specific decision are you trying to make?`;
 }
 
 // Keep v1 function for backward compat
 export function renderReflection(schema) {
-    // Convert v1 schema to v2 and render
     const v2Schema = {
         direct: { type: 'clarify', content: '' },
         mirror: {
@@ -193,3 +180,6 @@ export function renderReflection(schema) {
 
     return renderTwoLane(v2Schema, laneConfig);
 }
+
+// Export strip function for use in proxy
+export { stripMetaLanguage };
