@@ -65,6 +65,9 @@ export default function Demo() {
     // Two-Lane Dial: 0 = More Direct, 1 = More Mirror, 0.5 = Balanced
     const [dial, setDial] = useState(0.5);
 
+    // WebGPU support detection (v0.2 Polish)
+    const [hasWebGPU, setHasWebGPU] = useState(true);
+
     // ─────────────────────────────────────────────────────────────────────────
     // CONFIGURATION
     // ─────────────────────────────────────────────────────────────────────────
@@ -100,6 +103,13 @@ export default function Demo() {
             const caps = await detectCapabilities();
             setCapabilities(caps);
             console.log("⟡ Capabilities:", caps);
+
+            // Check WebGPU support (v0.2 Polish)
+            const webGPUSupported = !!navigator.gpu;
+            setHasWebGPU(webGPUSupported);
+            if (!webGPUSupported) {
+                console.log("⟡ WebGPU not available — local models disabled, cloud mode enabled");
+            }
 
             // Check download conditions
             const conditions = await checkDownloadConditions();
@@ -672,6 +682,14 @@ export default function Demo() {
                     )}
                 </AnimatePresence>
 
+                {/* WebGPU Fallback Banner (v0.2 Polish) */}
+                {!hasWebGPU && initComplete && (
+                    <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 flex items-center justify-center gap-2 text-xs text-amber-300">
+                        <span>⚠️</span>
+                        <span>Local AI requires WebGPU. Using cloud mode — your data is still private.</span>
+                    </div>
+                )}
+
                 {/* Chat Area */}
                 <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 scrollbar-hide">
                     {/* Initial Loading */}
@@ -696,8 +714,8 @@ export default function Demo() {
                     {/* Messages */}
                     {messages.map((msg, i) => (
                         <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[85%] px-6 py-4 rounded-2xl backdrop-blur-md shadow-sm ${msg.role === 'user' ? 'bg-white rounded-tr-sm' : 'bg-white/10 border border-white/20 rounded-tl-sm'}`}>
-                                <div className={`text-[15px] leading-7 whitespace-pre-wrap ${msg.role === 'user' ? 'text-black font-medium' : 'text-zinc-50 font-normal'}`}>
+                            <div className={`max-w-[85%] px-6 py-4 rounded-2xl backdrop-blur-md shadow-sm ${msg.role === 'user' ? 'bg-white rounded-tr-sm' : 'bg-white/15 border border-white/25 rounded-tl-sm'}`}>
+                                <div className={`text-[16px] leading-7 whitespace-pre-wrap ${msg.role === 'user' ? 'text-black font-medium' : 'text-white font-normal'}`}>
                                     {msg.content}
                                 </div>
                             </div>
