@@ -27,8 +27,8 @@ export default function Home() {
                     </div>
 
                     {/* HEADLINE */}
-                    <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-6 bg-gradient-to-b from-white via-white to-zinc-500 bg-clip-text text-transparent">
-                        Intelligence,<br />Reflected.
+                    <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight md:tracking-tighter mb-6 bg-gradient-to-b from-white via-white to-zinc-500 bg-clip-text text-transparent">
+                        Intelligence<br />Reflected.
                     </h1>
 
                     <p className="text-lg text-zinc-400 leading-relaxed mb-10 font-light max-w-lg mx-auto">
