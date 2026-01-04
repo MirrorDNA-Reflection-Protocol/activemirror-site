@@ -61,7 +61,7 @@ export default function Demo() {
     // CONFIGURATION
     // ─────────────────────────────────────────────────────────────────────────
     const [groqKey, setGroqKey] = useState(import.meta.env.VITE_GROQ_API_KEY || "");
-    const GROQ_MODEL = "openai/gpt-oss-20b";
+    const GROQ_MODEL = "llama-3.3-70b-versatile";
 
     const CLOUD_SYSTEM_PROMPT = `You are Active Mirror, a reflection engine. You help people think through decisions by structuring their thinking — NOT by giving advice.
 

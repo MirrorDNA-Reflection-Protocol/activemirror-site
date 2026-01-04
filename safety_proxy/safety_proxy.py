@@ -40,8 +40,8 @@ RATE_LIMIT_WINDOW = 60
 API_SECRET = os.getenv("MIRROR_API_SECRET", "")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
-# NEW MODEL — gpt-oss-20b (faster, better at schema, same free tier)
-GROQ_MODEL = "openai/gpt-oss-20b"
+# Model — llama-3.3-70b-versatile (proven schema compliance, gpt-oss-20b doesn't follow structure)
+GROQ_MODEL = "llama-3.3-70b-versatile"
 
 ALLOWED_ORIGINS = [
     "https://activemirror.ai",
