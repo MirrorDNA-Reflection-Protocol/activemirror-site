@@ -13,20 +13,20 @@ export default function Home() {
     }, []);
 
     return (
-        <div className="relative min-h-screen font-sans text-white overflow-hidden selection:bg-green-500/30">
+        <div className="relative min-h-screen font-sans text-white overflow-hidden selection:bg-purple-500/30">
             {/* AMBIENT LAYERS */}
-            <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900/20 via-black to-black z-0"></div>
+            <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-900/10 via-black to-black z-0"></div>
             <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none z-0"></div>
 
             {/* TOP NAVIGATION BAR */}
-            <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
+            <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-purple-500/10">
                 <div className="flex justify-center gap-x-6 gap-y-2 py-3 px-4 text-xs text-zinc-400">
-                    <a href="/blog/" className="hover:text-white transition-colors">Blog</a>
-                    <a href="/mobile/" className="hover:text-white transition-colors">Mobile</a>
-                    <a href="/architecture/" className="hover:text-white transition-colors">Architecture</a>
-                    <a href="/research/" className="hover:text-white transition-colors">Research</a>
-                    <a href="/open-source/" className="hover:text-white transition-colors">Open Source</a>
-                    <a href="/enterprise/" className="hover:text-white transition-colors">Enterprise</a>
+                    <a href="/blog/" className="hover:text-purple-400 transition-colors">Blog</a>
+                    <a href="/mobile/" className="hover:text-purple-400 transition-colors">Mobile</a>
+                    <a href="/architecture/" className="hover:text-purple-400 transition-colors">Architecture</a>
+                    <a href="/research/" className="hover:text-purple-400 transition-colors">Research</a>
+                    <a href="/open-source/" className="hover:text-purple-400 transition-colors">Open Source</a>
+                    <a href="/enterprise/" className="hover:text-purple-400 transition-colors">Enterprise</a>
                 </div>
             </nav>
 
@@ -51,22 +51,22 @@ export default function Home() {
                     {/* ACTIONS STACK */}
                     <div className="flex flex-col gap-4 mb-12 max-w-md mx-auto w-full">
                         {/* 1. START REFLECTION (Primary) - Use <a> for full page nav to static file */}
-                        <a href="/mirror/" className="group w-full py-4 rounded-xl bg-white text-black font-bold text-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_30px_rgba(255,255,255,0.25)]">
+                        <a href="/mirror/" className="group w-full py-4 rounded-xl bg-gradient-to-r from-purple-500 to-violet-500 text-white font-bold text-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-[0_0_25px_rgba(168,85,247,0.3)] hover:shadow-[0_0_35px_rgba(168,85,247,0.4)]">
                             Start Reflection <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                         </a>
 
                         {/* 2. VISIT SITE (Secondary, Glowing) */}
-                        <a href="./legacy/index.html" className="w-full py-4 rounded-xl border border-white/10 bg-white/5 text-white font-medium hover:bg-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-3 shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_25px_rgba(255,255,255,0.1)] group">
-                            <Globe size={18} className="group-hover:rotate-12 transition-transform text-zinc-400 group-hover:text-white" />
+                        <a href="./legacy/index.html" className="w-full py-4 rounded-xl border border-purple-500/20 bg-white/5 text-white font-medium hover:bg-purple-500/10 hover:border-purple-500/30 transition-all flex items-center justify-center gap-3 shadow-[0_0_15px_rgba(168,85,247,0.05)] hover:shadow-[0_0_25px_rgba(168,85,247,0.15)] group">
+                            <Globe size={18} className="group-hover:rotate-12 transition-transform text-zinc-400 group-hover:text-purple-400" />
                             Visit Site
                         </a>
 
                         {/* 3. SOCIALS (Tertiary) */}
                         <div className="grid grid-cols-2 gap-4 mt-2">
-                            <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-white text-sm font-medium">
+                            <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="py-3 rounded-xl border border-purple-500/10 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500/20 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-purple-400 text-sm font-medium">
                                 <Github size={16} /> Protocol
                             </a>
-                            <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/story/" className="py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-white text-sm font-medium">
+                            <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/story/" className="py-3 rounded-xl border border-purple-500/10 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500/20 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-purple-400 text-sm font-medium">
                                 <Book size={16} /> The Story
                             </a>
                         </div>
@@ -75,10 +75,10 @@ export default function Home() {
 
 
                     {/* FOOTER: LEGALS ONLY */}
-                    <div className="pt-6 border-t border-white/5 flex justify-center items-center text-[10px] md:text-xs font-mono text-zinc-600 uppercase tracking-widest w-full mt-6">
+                    <div className="pt-6 border-t border-purple-500/10 flex justify-center items-center text-[10px] md:text-xs font-mono text-zinc-600 uppercase tracking-widest w-full mt-6">
                         <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-center">
-                            <Link to="/terms" className="hover:text-zinc-400 transition-colors">Terms of Service</Link>
-                            <Link to="/privacy" className="hover:text-zinc-400 transition-colors">Privacy Policy</Link>
+                            <Link to="/terms" className="hover:text-purple-400 transition-colors">Terms of Service</Link>
+                            <Link to="/privacy" className="hover:text-purple-400 transition-colors">Privacy Policy</Link>
                         </div>
                     </div>
                 </SpotlightCard>
