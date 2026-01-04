@@ -16,6 +16,9 @@ import { detectCapabilities, MODEL_TIERS } from '../utils/capabilities';
 // Smart Download System
 import { checkDownloadConditions, watchDownloadConditions, DOWNLOAD_CONDITIONS } from '../utils/smartDownload';
 
+// MirrorGate — Client-side validation for offline/sovereign mode
+import { gateInput, validateOutput, FALLBACK_RESPONSE } from '../utils/mirrorGate';
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // ⟡ SOVEREIGN MIRROR PWA - PROGRESSIVE INTELLIGENCE ARCHITECTURE
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -58,22 +61,46 @@ export default function Demo() {
     // CONFIGURATION
     // ─────────────────────────────────────────────────────────────────────────
     const [groqKey, setGroqKey] = useState(import.meta.env.VITE_GROQ_API_KEY || "");
-    const GROQ_MODEL = "llama-3.3-70b-versatile";
+    const GROQ_MODEL = "openai/gpt-oss-20b";
 
-    const CLOUD_SYSTEM_PROMPT = `You are Active Mirror, a sovereign reflection system designed to surface hidden assumptions and clarify thinking.
+    const CLOUD_SYSTEM_PROMPT = `You are Active Mirror, a reflection engine. You help people think through decisions by structuring their thinking — NOT by giving advice.
 
-Your purpose is NOT to answer questions or give advice. You are a MIRROR.
+OUTPUT FORMAT (MANDATORY — use this exact structure):
 
-When the user speaks, you:
-1. Reflect their words back as clarifying questions
-2. Surface assumptions they may not have noticed
-3. Hold space for complexity without rushing to resolution
-4. Ask questions that make them pause and think deeper
+⟡ What you're deciding:
+[Restate their decision/situation in one clear sentence. Max 160 characters.]
 
-Never say "I'm an AI" or mention any company. You are simply Active Mirror.
-Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
+⧈ What you're assuming:
+• [Hidden assumption 1 they may not have noticed]
+• [Hidden assumption 2 about outcomes or others]
 
-    const LOCAL_SYSTEM_PROMPT = `You are Active Mirror. Reflect the user's words back as questions. Do not advise. Ask questions that help them think deeper.`;
+⧉ What's at stake:
+• [What they gain if this works out]
+• [What they risk or lose if it doesn't]
+
+? [One sharp question that cuts to the heart of the matter]
+
+RULES:
+1. Use EXACT format above
+2. NEVER give advice or say "you should"
+3. Exactly ONE question mark total
+4. Under 800 characters
+
+If unclear: ? What decision are you trying to make?`;
+
+    const LOCAL_SYSTEM_PROMPT = `You are Active Mirror. Structure thinking, never advise.
+
+FORMAT:
+⟡ What you're deciding: [one sentence]
+⧈ What you're assuming:
+• [assumption 1]
+• [assumption 2]
+⧉ What's at stake:
+• [upside]
+• [risk]
+? [one question]
+
+No "you should". One question mark only.`;
 
     // ─────────────────────────────────────────────────────────────────────────
     // INITIALIZATION - PROGRESSIVE LOADING WITH SMART DOWNLOAD
@@ -296,11 +323,11 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
                             model: GROQ_MODEL,
                             messages: [
                                 { role: "system", content: CLOUD_SYSTEM_PROMPT },
-                                ...messages.slice(-8),
+                                ...messages.slice(-6),
                                 { role: "user", content: userMsg }
                             ],
-                            temperature: 0.7,
-                            max_tokens: 300
+                            temperature: 0.4,
+                            max_tokens: 400
                         })
                     });
 
@@ -320,8 +347,16 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
                 }
             }
 
-            // TRY TIER 2 (Full local)
+            // TRY TIER 2 (Full local - sovereign)
             if (tier2Engine) {
+                // Pre-inference gate check
+                const gateResult = gateInput(userMsg);
+                if (!gateResult.allowed) {
+                    console.log(`⟡ Input blocked by MirrorGate: ${gateResult.reason}`);
+                    setMessages(prev => [...prev, { role: "assistant", content: gateResult.response }]);
+                    setIsLoading(false);
+                    return;
+                }
                 setCurrentTier('tier2');
                 await runLocalInference(tier2Engine, userMsg);
                 return;
@@ -329,6 +364,14 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
 
             // TRY TIER 1 (Mini local)
             if (tier1Engine) {
+                // Pre-inference gate check
+                const gateResult = gateInput(userMsg);
+                if (!gateResult.allowed) {
+                    console.log(`⟡ Input blocked by MirrorGate: ${gateResult.reason}`);
+                    setMessages(prev => [...prev, { role: "assistant", content: gateResult.response }]);
+                    setIsLoading(false);
+                    return;
+                }
                 setCurrentTier('tier1');
                 await runLocalInference(tier1Engine, userMsg);
                 return;
@@ -376,6 +419,18 @@ Speak thoughtfully. Use short, powerful questions. Let silence do the work.`;
                 setMessages(prev => {
                     const newArr = [...prev];
                     newArr[newArr.length - 1].content = fullResponse;
+                    return newArr;
+                });
+            }
+
+            // Post-inference validation (MirrorGate)
+            const validation = validateOutput(fullResponse);
+            if (!validation.valid) {
+                console.log("⟡ Local output failed MirrorGate validation:", validation.violations);
+                // Replace with fallback response
+                setMessages(prev => {
+                    const newArr = [...prev];
+                    newArr[newArr.length - 1].content = FALLBACK_RESPONSE;
                     return newArr;
                 });
             }
