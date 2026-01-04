@@ -18,7 +18,19 @@ export default function Home() {
             <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900/20 via-black to-black z-0"></div>
             <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none z-0"></div>
 
-            <main className="relative z-10 w-full min-h-screen flex items-center justify-center p-6">
+            {/* TOP NAVIGATION BAR */}
+            <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
+                <div className="flex justify-center gap-x-6 gap-y-2 py-3 px-4 text-xs text-zinc-400">
+                    <a href="/blog/" className="hover:text-white transition-colors">Blog</a>
+                    <a href="/mobile/" className="hover:text-white transition-colors">Mobile</a>
+                    <a href="/architecture/" className="hover:text-white transition-colors">Architecture</a>
+                    <a href="/research/" className="hover:text-white transition-colors">Research</a>
+                    <a href="/open-source/" className="hover:text-white transition-colors">Open Source</a>
+                    <a href="/enterprise/" className="hover:text-white transition-colors">Enterprise</a>
+                </div>
+            </nav>
+
+            <main className="relative z-10 w-full min-h-screen flex items-center justify-center p-6 pt-16">
                 <SpotlightCard className="w-full max-w-2xl text-center p-12 md:p-16 border-white/5 bg-black/40 backdrop-blur-3xl shadow-2xl">
 
                     {/* LOGO HERO */}
@@ -60,15 +72,7 @@ export default function Home() {
                         </div>
                     </div>
 
-                    {/* PORTAL NAVIGATION */}
-                    <div className="pt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-zinc-500">
-                        <a href="/blog/" className="hover:text-white transition-colors">Blog</a>
-                        <a href="/mobile/" className="hover:text-white transition-colors">Mobile</a>
-                        <a href="/architecture/" className="hover:text-white transition-colors">Architecture</a>
-                        <a href="/research/" className="hover:text-white transition-colors">Research</a>
-                        <a href="/open-source/" className="hover:text-white transition-colors">Open Source</a>
-                        <a href="/enterprise/" className="hover:text-white transition-colors">Enterprise</a>
-                    </div>
+
 
                     {/* FOOTER: LEGALS ONLY */}
                     <div className="pt-6 border-t border-white/5 flex justify-center items-center text-[10px] md:text-xs font-mono text-zinc-600 uppercase tracking-widest w-full mt-6">
