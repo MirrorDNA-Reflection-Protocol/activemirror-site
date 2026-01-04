@@ -6,57 +6,47 @@ import { motion } from 'framer-motion';
 
 // ⟡ CONFIG: DUAL ENGINES
 const MODES = {
-    CLOUD: {
-        id: 'cloud',
-        name: 'Cloud Reflection',
-        model: 'Llama 3.3-70B',
-        color: 'text-cyan-400',
-        bg: 'bg-cyan-950/20',
-        border: 'border-cyan-500/30'
-    },
-    LOCAL: {
-        id: 'local',
-        name: 'Sovereign Mode',
-        model: 'Phi-3.5-Local',
-        color: 'text-green-500',
-        bg: 'bg-green-950/20',
-        border: 'border-green-500/30'
-    }
+    CLOUD: { id: 'cloud', name: 'Cloud Reflection', model: 'Llama 3.3-70B', color: 'text-cyan-400', border: 'border-cyan-500/30', bg: 'bg-cyan-950/20' },
+    LOCAL: { id: 'local', name: 'Sovereign Mode', model: 'Phi-3.5-Local', color: 'text-green-500', border: 'border-green-500/30', bg: 'bg-green-950/20' }
 };
 
-// ⟡ SYSTEM PROMPT (Aligned to Active Mirror V1.5 Doc)
-const SYSTEM_PROMPT = `You are Active Mirror.
-Your role is to:
-* Surface assumptions I might not see
-* Reflect trade-offs without pushing me toward a conclusion
-* Ask clarifying questions before offering perspective
-* Name what's unclear or unknown
-* Hold space for complexity instead of rushing to resolution
+// ⟡ IDENTITY LOCK (V1.5 Strict) - Prevents hallucination
+const SYSTEM_PROMPT = `You are Active Mirror. 
+CREATOR: Paul Desai, N1 Intelligence. 
+MISSION: Surface assumptions (⧈), reflect trade-offs (⧉), provide insight (⟡). 
+CONSTRAINT: You are NOT "Phi", "Llama", "Claude", "ChatGPT" or an "AI Assistant". You are Active Mirror. 
+PROTOCOL: Do not give advice. Reflect only. Use **bold** for key concepts.
+IDENTITY: When asked who you are, always respond: "I am Active Mirror, created by Paul Desai."`;
 
-PROTOCOL:
-1. Use ⟡ for Insights.
-2. Use ⧈ for Assumptions.
-3. Use ⧉ for Trade-offs.
-4. **Bold** key concepts.
-5. Do NOT give advice unless asked.`;
+// ⟡ REINFORCEMENT PROMPT (injected before each inference)
+const IDENTITY_REINFORCEMENT = `CRITICAL IDENTITY RULE: If asked "who are you" or similar, you MUST say "I am Active Mirror, created by Paul Desai." Do NOT mention Phi, Llama, or any model name.`;
 
-// ⟡ UI COMPONENT: BLUR REVEAL TEXT
-const BlurText = ({ text, isUser }) => {
-    const words = text.split(' ');
+// ⟡ UI COMPONENT: BLUR REVEAL (With Markdown)
+const BlurText = ({ text }) => {
+    const parts = text.split(/(\*\*.*?\*\*)/g);
     return (
-        <div className="text-[15px] leading-7">
-            {words.map((word, i) => {
-                const isGlyph = ['⟡', '⧈', '⧉', '△', '◈'].some(g => word.includes(g));
+        <div className="text-[15px] leading-7 text-zinc-200">
+            {parts.map((part, i) => {
+                const isBold = part.startsWith('**') && part.endsWith('**');
+                const content = isBold ? part.slice(2, -2) : part;
+                const words = content.split(" ");
                 return (
-                    <motion.span
-                        key={i}
-                        initial={{ filter: "blur(8px)", opacity: 0, y: 3 }}
-                        animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
-                        transition={{ duration: 0.25, delay: i * 0.015 }}
-                        className={`inline-block mr-1 ${isGlyph ? "text-green-400 font-bold" : ""}`}
-                    >
-                        {word}
-                    </motion.span>
+                    <span key={i} className={isBold ? "font-bold text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" : ""}>
+                        {words.map((word, wIndex) => {
+                            const isGlyph = ["⟡", "⧈", "⧉", "△", "◈"].some(g => word.includes(g));
+                            return (
+                                <motion.span
+                                    key={`${i}-${wIndex}`}
+                                    initial={{ filter: "blur(8px)", opacity: 0, y: 3 }}
+                                    animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.25, delay: (i * 0.03) + (wIndex * 0.01) }}
+                                    className={`inline-block mr-1 ${isGlyph ? "text-green-400 font-bold" : ""}`}
+                                >
+                                    {word}
+                                </motion.span>
+                            );
+                        })}
+                    </span>
                 );
             })}
         </div>
@@ -64,7 +54,6 @@ const BlurText = ({ text, isUser }) => {
 };
 
 export default function TestLab() {
-    // Default to Cloud on Mobile, Local on Desktop
     const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|Android/i.test(navigator.userAgent);
     const [mode, setMode] = useState(isMobile ? MODES.CLOUD : MODES.LOCAL);
     const [messages, setMessages] = useState([]);
@@ -74,24 +63,16 @@ export default function TestLab() {
     const [localProgress, setLocalProgress] = useState("");
     const bottomRef = useRef(null);
 
-    // ⟡ INITIALIZE LOCAL ENGINE (Background Load)
+    // ⟡ INIT LOCAL ENGINE
     useEffect(() => {
         async function initLocal() {
             if (mode.id === 'local' && !localEngine) {
                 const modelId = isMobile ? "Qwen2.5-0.5B-Instruct-q4f16_1-MLC" : "Phi-3.5-mini-instruct-q4f16_1-MLC";
-                const workerScript = `
-                    import { WebWorkerMLCEngineHandler } from "https://esm.run/@mlc-ai/web-llm";
-                    const handler = new WebWorkerMLCEngineHandler();
-                    self.onmessage = (msg) => { handler.onmessage(msg); };
-                `;
+                const workerScript = `import { WebWorkerMLCEngineHandler } from "https://esm.run/@mlc-ai/web-llm"; const handler = new WebWorkerMLCEngineHandler(); self.onmessage = (msg) => { handler.onmessage(msg); };`;
                 const worker = new Worker(URL.createObjectURL(new Blob([workerScript], { type: "application/javascript" })), { type: "module" });
-
                 try {
                     const eng = await CreateWebWorkerMLCEngine(worker, modelId, {
-                        initProgressCallback: (report) => {
-                            if (report.progress === 1) setLocalProgress("");
-                            else setLocalProgress(`Loading Sovereign Vault... ${Math.round(report.progress * 100)}%`);
-                        }
+                        initProgressCallback: (r) => setLocalProgress(r.progress === 1 ? "" : `Loading Vault... ${Math.round(r.progress * 100)}%`)
                     });
                     setLocalEngine(eng);
                 } catch (e) {
@@ -103,9 +84,9 @@ export default function TestLab() {
         initLocal();
     }, [mode, localEngine, isMobile]);
 
+    // Auto-scroll
     useEffect(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), [messages]);
 
-    // ⟡ HANDLE SEND (ROUTING)
     const handleSend = async () => {
         if (!input.trim()) return;
         const userMsg = input;
@@ -115,14 +96,16 @@ export default function TestLab() {
 
         try {
             let fullResponse = "";
+            // ⟡ REINFORCEMENT: Identity Lock before each inference
             const context = [
                 { role: "system", content: SYSTEM_PROMPT },
                 ...messages.slice(-4),
-                { role: "user", content: userMsg }
+                { role: "user", content: userMsg },
+                { role: "system", content: IDENTITY_REINFORCEMENT }
             ];
 
             if (mode.id === 'cloud') {
-                // ☁️ CLOUD PATH - Using Groq Free API
+                // ☁️ CLOUD API (Groq)
                 const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                     method: "POST",
                     headers: {
@@ -132,23 +115,25 @@ export default function TestLab() {
                     body: JSON.stringify({
                         model: "llama-3.3-70b-versatile",
                         messages: context,
-                        temperature: 0.6,
+                        temperature: 0.5,
                         max_tokens: 2048
                     })
                 });
                 const data = await response.json();
-                fullResponse = data.choices?.[0]?.message?.content || data.error?.message || "Error: Check API Config";
-
+                fullResponse = data.choices?.[0]?.message?.content || data.error?.message || "Error: Check API Key";
                 setMessages(prev => [...prev, { role: "assistant", content: fullResponse }]);
-
             } else {
-                // 🧠 LOCAL PATH
+                // 🧠 LOCAL
                 if (!localEngine) {
                     setMessages(prev => [...prev, { role: "assistant", content: "⟡ Local engine still loading. Please wait or switch to Cloud mode." }]);
                     setIsLoading(false);
                     return;
                 }
-                const chunks = await localEngine.chat.completions.create({ messages: context, stream: true, temperature: 0.5 });
+                const chunks = await localEngine.chat.completions.create({
+                    messages: context,
+                    stream: true,
+                    temperature: 0.3
+                });
                 setMessages(prev => [...prev, { role: "assistant", content: "" }]);
                 for await (const chunk of chunks) {
                     const delta = chunk.choices[0]?.delta?.content || "";
@@ -203,10 +188,8 @@ export default function TestLab() {
                             <div className="h-full flex flex-col items-center justify-center text-zinc-600 opacity-60 gap-4">
                                 {mode.id === 'cloud' ? <CloudLightning size={48} className="text-cyan-900" /> : <Shield size={48} className="text-green-900" />}
                                 <div className="text-center">
-                                    <p className="font-mono text-xs tracking-widest uppercase mb-2">
-                                        {mode.id === 'cloud' ? "Llama 3.3-70B // CLOUD ORACLE" : "Phi-3.5 // LOCAL VAULT"}
-                                    </p>
-                                    <p className="text-zinc-700 text-sm">🧪 Hybrid Engine Lab</p>
+                                    <p className="font-mono text-xs tracking-widest uppercase mb-2">{mode.model}</p>
+                                    <p className="text-zinc-700 text-sm">🧪 Hybrid Engine Lab + Identity Lock</p>
                                     {mode.id === 'local' && localProgress && <p className="text-xs text-green-500 animate-pulse mt-2">{localProgress}</p>}
                                 </div>
                             </div>
@@ -215,7 +198,7 @@ export default function TestLab() {
                             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[85%] px-6 py-4 rounded-2xl backdrop-blur-md shadow-sm ${msg.role === 'user' ? 'bg-white text-black' : 'bg-white/5 border border-white/5 text-zinc-200'}`}>
                                     {msg.role === 'assistant' && i === messages.length - 1 && !isLoading ?
-                                        <BlurText text={msg.content} isUser={false} /> :
+                                        <BlurText text={msg.content} /> :
                                         <div className="text-[15px] leading-7 whitespace-pre-wrap">{msg.content}</div>
                                     }
                                 </div>
@@ -255,7 +238,7 @@ export default function TestLab() {
                             </button>
                         </div>
                         <p className="text-center text-[10px] text-zinc-700 mt-3 font-mono">
-                            {mode.id === 'cloud' ? '☁️ Cloud: Llama 3.3-70B via Groq' : '🔒 Sovereign: Phi-3.5 on-device WebGPU'}
+                            {mode.id === 'cloud' ? '☁️ Cloud: Llama 3.3-70B via Groq' : '🔒 Sovereign: Phi-3.5 on-device WebGPU'} • Identity Lock Active
                         </p>
                     </div>
                 </div>
