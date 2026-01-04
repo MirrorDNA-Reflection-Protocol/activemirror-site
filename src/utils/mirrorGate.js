@@ -1,206 +1,89 @@
 /**
- * MirrorGate — Deterministic validator for Reflection Mode output
- * Ensures all /mirror responses conform to schema
+ * MirrorGate v4.0 — Split-Stack Edition
  */
 
-// Schema section headers (in order)
-const REQUIRED_SECTIONS = [
-    '⟡ What you\'re deciding:',
-    '⧈ What you\'re assuming:',
-    '⧉ What\'s at stake:',
-    '?'
+import { validateSchema, parseModelOutput, detectMode, FALLBACK_SCHEMA } from './reflectionSchema';
+import { renderReflection, renderFallback } from './reflectionTemplates';
+
+// ═══════════════════════════════════════════════════════════════
+// PRE-INFERENCE GATES
+// ═══════════════════════════════════════════════════════════════
+
+const CRISIS_PATTERNS = [
+    /\b(suicide|suicidal|kill myself|end(ing)? my life|want to die)\b/i,
+    /\b(self.?harm|cut myself|hurt myself)\b/i,
+    /\b(take my (own )?life|better off dead)\b/i,
+    /\b(being abused|hits me|rape|raped)\b/i,
 ];
 
-// Forbidden patterns in output (advice, certainty, facts)
-const FORBIDDEN_PATTERNS = [
-    // Advice language
-    /\byou should\b/i,
-    /\byou must\b/i,
-    /\byou need to\b/i,
-    /\bi recommend\b/i,
-    /\bi suggest\b/i,
-    /\bi advise\b/i,
-    /\btry this\b/i,
-    /\bconsider\b/i,
-    /\bwhy don't you\b/i,
-    /\bhave you tried\b/i,
-    /\bthe best\b/i,
-    /\bthe right thing\b/i,
-
-    // Certainty language
-    /\bdefinitely\b/i,
-    /\bcertainly\b/i,
-    /\babsolutely\b/i,
-    /\bguaranteed\b/i,
-    /\balways\b/i,
-    /\bnever\b/i,
-    /\bobviously\b/i,
-
-    // Factual claims
-    /\bstudies show\b/i,
-    /\baccording to\b/i,
-    /\bresearch suggests\b/i,
-    /\bstatistically\b/i,
-    /\d+(\.\d+)?%/,  // percentages
-    /https?:\/\//,   // URLs
-];
-
-// Illegal content patterns — hard refuse before inference
 const ILLEGAL_PATTERNS = [
-    /\b(how to (make|build|create) (a |)(bomb|explosive|weapon))\b/i,
+    /\b(how to (make|build) (a |)(bomb|explosive|weapon))\b/i,
     /\b(synthesize|manufacture) (drugs|meth|fentanyl)\b/i,
     /\b(child porn|csam|underage)\b/i,
-    /\b(hack into|exploit vulnerability|malware)\b/i,
-    /\b(traffic|smuggle) (humans|people|children)\b/i,
-    /\b(hire (a |)(hitman|assassin))\b/i,
+    /\b(hack into|malware|exploit vulnerability)\b/i,
 ];
 
-/**
- * Pre-inference gate — check input before calling model
- * Returns { allowed: boolean, reason?: string, response?: string }
- */
+const CRISIS_RESPONSE = `I can hear you're in a difficult place. I'm not equipped for this — please reach out:
+
+🆘 Crisis Text Line: Text HOME to 741741
+🆘 Suicide & Crisis Lifeline: 988 (US)
+🆘 Emergency: 911
+
+You matter. Please reach out now.`;
+
 export function gateInput(input) {
-    // Check for illegal content
-    for (const pattern of ILLEGAL_PATTERNS) {
-        if (pattern.test(input)) {
-            return {
-                allowed: false,
-                reason: 'illegal',
-                response: "I can't engage with that."
-            };
-        }
+    for (const p of CRISIS_PATTERNS) {
+        if (p.test(input)) return { allowed: false, reason: 'crisis', response: CRISIS_RESPONSE };
     }
-
-    // Check input length
+    for (const p of ILLEGAL_PATTERNS) {
+        if (p.test(input)) return { allowed: false, reason: 'illegal', response: "I can't engage with that." };
+    }
     if (input.length > 2000) {
-        return {
-            allowed: false,
-            reason: 'too_long',
-            response: "That's a lot to process. What's the core decision you're facing?"
-        };
+        return { allowed: false, reason: 'too_long', response: "That's a lot. What's the core decision?" };
     }
-
-    return { allowed: true };
+    return { allowed: true, mode: detectMode(input) };
 }
 
+// ═══════════════════════════════════════════════════════════════
+// POST-INFERENCE PIPELINE
+// ═══════════════════════════════════════════════════════════════
+
 /**
- * Validate model output against schema
- * Returns { valid: boolean, violations: string[], normalized?: string }
+ * Process raw model output → validated schema → rendered text
  */
-export function validateOutput(text) {
-    const violations = [];
-
-    // Check for required sections in order
-    let lastIndex = -1;
-    for (const section of REQUIRED_SECTIONS) {
-        const index = text.indexOf(section);
-        if (index === -1) {
-            violations.push(`missing_section: ${section}`);
-        } else if (index < lastIndex) {
-            violations.push(`wrong_order: ${section}`);
-        } else {
-            lastIndex = index;
-        }
+export function processAndRender(rawOutput, detectedMode) {
+    // Handle null/empty output
+    if (!rawOutput) {
+        console.log('⟡ No model output, using fallback');
+        const fallback = { ...FALLBACK_SCHEMA, mode: detectedMode };
+        return { text: renderReflection(fallback), schema: fallback, valid: false };
     }
 
-    // Check question mark count (must be exactly 1)
-    const questionMarks = (text.match(/\?/g) || []).length;
-    if (questionMarks === 0) {
-        violations.push('no_question_mark');
-    } else if (questionMarks > 1) {
-        violations.push('too_many_questions');
+    // Parse JSON
+    const { parsed, error } = parseModelOutput(rawOutput);
+
+    if (!parsed) {
+        console.log('⟡ JSON parse failed:', error);
+        const fallback = { ...FALLBACK_SCHEMA, mode: detectedMode };
+        return { text: renderReflection(fallback), schema: fallback, valid: false };
     }
 
-    // Check for forbidden patterns
-    for (const pattern of FORBIDDEN_PATTERNS) {
-        if (pattern.test(text)) {
-            violations.push(`forbidden: ${pattern.source.slice(0, 20)}`);
-        }
+    // Validate
+    const validation = validateSchema(parsed);
+
+    if (!validation.valid) {
+        console.log('⟡ Schema validation failed:', validation.errors);
+        const fallback = { ...FALLBACK_SCHEMA, mode: detectedMode };
+        return { text: renderReflection(fallback), schema: fallback, valid: false };
     }
 
-    // Check total length
-    if (text.length > 1000) {
-        violations.push('too_long');
-    }
+    // Inject mode if missing
+    if (!parsed.mode) parsed.mode = detectedMode;
 
-    if (text.length < 50) {
-        violations.push('too_short');
-    }
-
-    // Check bullets exist in assumption and stakes sections
-    const assumingSection = text.match(/⧈ What you're assuming:([\s\S]*?)⧉/);
-    if (assumingSection && !assumingSection[1].includes('•')) {
-        violations.push('missing_assumption_bullets');
-    }
-
-    const stakesSection = text.match(/⧉ What's at stake:([\s\S]*?)\?/);
-    if (stakesSection && !stakesSection[1].includes('•')) {
-        violations.push('missing_stakes_bullets');
-    }
-
-    return {
-        valid: violations.length === 0,
-        violations,
-        normalized: normalizeOutput(text)
-    };
+    // Render
+    return { text: renderReflection(parsed), schema: parsed, valid: true };
 }
 
-/**
- * Normalize output formatting
- */
-function normalizeOutput(text) {
-    return text
-        .trim()
-        .replace(/\n{3,}/g, '\n\n')  // Remove triple+ newlines
-        .replace(/•\s*/g, '• ')      // Normalize bullet spacing
-        .replace(/\s+$/gm, '');      // Remove trailing whitespace
-}
-
-/**
- * Fallback response when validation fails after rewrites
- */
-export const FALLBACK_RESPONSE = `⟡ What you're deciding:
-I couldn't structure a clear reflection for that input.
-
-⧈ What you're assuming:
-• The question may need to be framed as a decision
-• More context might help me understand
-
-⧉ What's at stake:
-• Clarity if you can reframe this as a choice
-• Continued uncertainty if we stay abstract
-
-? What specific decision are you trying to make?`;
-
-/**
- * Rewrite prompt for non-compliant outputs
- */
-export function getRewritePrompt(original, userInput) {
-    return `Rewrite this response to match the EXACT schema below. Output ONLY the rewritten response, nothing else.
-
-REQUIRED SCHEMA:
-⟡ What you're deciding:
-[One sentence]
-
-⧈ What you're assuming:
-• [Assumption 1]
-• [Assumption 2]
-
-⧉ What's at stake:
-• [Upside]
-• [Risk]
-
-? [One question ending with ?]
-
-RULES:
-- No advice ("you should", "try", "consider")
-- Exactly ONE question mark total
-- Under 800 characters
-
-User's original input: "${userInput}"
-
-Non-compliant response to rewrite:
-${original}
-
-Rewritten response:`;
-}
+// Re-exports for convenience
+export { FALLBACK_SCHEMA, detectMode } from './reflectionSchema';
+export const FALLBACK_RESPONSE = renderFallback();

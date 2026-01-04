@@ -16,8 +16,9 @@ import { detectCapabilities, MODEL_TIERS } from '../utils/capabilities';
 // Smart Download System
 import { checkDownloadConditions, watchDownloadConditions, DOWNLOAD_CONDITIONS } from '../utils/smartDownload';
 
-// MirrorGate — Client-side validation for offline/sovereign mode
-import { gateInput, validateOutput, FALLBACK_RESPONSE } from '../utils/mirrorGate';
+// MirrorGate v4.0 — Split-Stack Architecture
+import { gateInput, processAndRender } from '../utils/mirrorGate';
+import { SUBSTRATE_PROMPT_CLOUD, SUBSTRATE_PROMPT_LOCAL } from '../utils/substratePrompt';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ⟡ SOVEREIGN MIRROR PWA - PROGRESSIVE INTELLIGENCE ARCHITECTURE
@@ -57,50 +58,18 @@ export default function Demo() {
     const [downloadPaused, setDownloadPaused] = useState(false);
     const [userDeclinedDownload, setUserDeclinedDownload] = useState(false);
 
+    // MirrorGate v4.0 — Schema tracking for transparency
+    const [lastSchema, setLastSchema] = useState(null);
+    const [showThinking, setShowThinking] = useState(false);
+
     // ─────────────────────────────────────────────────────────────────────────
     // CONFIGURATION
     // ─────────────────────────────────────────────────────────────────────────
     const [groqKey, setGroqKey] = useState(import.meta.env.VITE_GROQ_API_KEY || "");
     const GROQ_MODEL = "llama-3.3-70b-versatile";
 
-    const CLOUD_SYSTEM_PROMPT = `You are Active Mirror, a reflection engine. You help people think through decisions by structuring their thinking — NOT by giving advice.
-
-OUTPUT FORMAT (MANDATORY — use this exact structure):
-
-⟡ What you're deciding:
-[Restate their decision/situation in one clear sentence. Max 160 characters.]
-
-⧈ What you're assuming:
-• [Hidden assumption 1 they may not have noticed]
-• [Hidden assumption 2 about outcomes or others]
-
-⧉ What's at stake:
-• [What they gain if this works out]
-• [What they risk or lose if it doesn't]
-
-? [One sharp question that cuts to the heart of the matter]
-
-RULES:
-1. Use EXACT format above
-2. NEVER give advice or say "you should"
-3. Exactly ONE question mark total
-4. Under 800 characters
-
-If unclear: ? What decision are you trying to make?`;
-
-    const LOCAL_SYSTEM_PROMPT = `You are Active Mirror. Structure thinking, never advise.
-
-FORMAT:
-⟡ What you're deciding: [one sentence]
-⧈ What you're assuming:
-• [assumption 1]
-• [assumption 2]
-⧉ What's at stake:
-• [upside]
-• [risk]
-? [one question]
-
-No "you should". One question mark only.`;
+    // v4.0 — Substrate prompts (JSON only, no persona)
+    // Cloud and Local prompts now imported from substratePrompt.js
 
     // ─────────────────────────────────────────────────────────────────────────
     // INITIALIZATION - PROGRESSIVE LOADING WITH SMART DOWNLOAD
@@ -312,6 +281,16 @@ No "you should". One question mark only.`;
 
             // TRY CLOUD FIRST
             if (currentTier === 'cloud' && groqKey && isOnline) {
+                // Pre-inference gate check
+                const gateResult = gateInput(userMsg);
+                if (!gateResult.allowed) {
+                    console.log(`⟡ Input blocked by MirrorGate: ${gateResult.reason}`);
+                    setMessages(prev => [...prev, { role: "assistant", content: gateResult.response }]);
+                    setIsLoading(false);
+                    return;
+                }
+                const detectedMode = gateResult.mode;
+
                 try {
                     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                         method: "POST",
@@ -322,12 +301,11 @@ No "you should". One question mark only.`;
                         body: JSON.stringify({
                             model: GROQ_MODEL,
                             messages: [
-                                { role: "system", content: CLOUD_SYSTEM_PROMPT },
-                                ...messages.slice(-6),
+                                { role: "system", content: SUBSTRATE_PROMPT_CLOUD },
                                 { role: "user", content: userMsg }
                             ],
-                            temperature: 0.4,
-                            max_tokens: 400
+                            temperature: 0.3,
+                            max_tokens: 500
                         })
                     });
 
@@ -337,8 +315,12 @@ No "you should". One question mark only.`;
                     }
 
                     const data = await response.json();
-                    const aiResponse = data.choices[0]?.message?.content || "I hear you. What does that bring up?";
-                    setMessages(prev => [...prev, { role: "assistant", content: aiResponse }]);
+                    const rawOutput = data.choices[0]?.message?.content || "";
+
+                    // v4.0: Process through MirrorGate (validate + render)
+                    const { text, schema, valid } = processAndRender(rawOutput, detectedMode);
+                    setLastSchema(schema);
+                    setMessages(prev => [...prev, { role: "assistant", content: text }]);
                     setIsLoading(false);
                     return;
                 } catch (err) {
@@ -358,7 +340,7 @@ No "you should". One question mark only.`;
                     return;
                 }
                 setCurrentTier('tier2');
-                await runLocalInference(tier2Engine, userMsg);
+                await runLocalInference(tier2Engine, userMsg, gateResult.mode);
                 return;
             }
 
@@ -373,16 +355,15 @@ No "you should". One question mark only.`;
                     return;
                 }
                 setCurrentTier('tier1');
-                await runLocalInference(tier1Engine, userMsg);
+                await runLocalInference(tier1Engine, userMsg, gateResult.mode);
                 return;
             }
 
             // STATIC FALLBACK - Always works, no API needed
             console.log("⟡ Using static fallback (no cloud key or local engine)");
-            setMessages(prev => [...prev, {
-                role: "assistant",
-                content: "What's the most important thing about what you just shared?"
-            }]);
+            const { text, schema } = processAndRender(null, 'unclear');
+            setLastSchema(schema);
+            setMessages(prev => [...prev, { role: "assistant", content: text }]);
         } catch (err) {
             console.error("⟡ handleSend error:", err);
             setMessages(prev => [...prev, {
@@ -395,48 +376,30 @@ No "you should". One question mark only.`;
         }
     }
 
-    async function runLocalInference(engine, userMsg) {
+    async function runLocalInference(engine, userMsg, detectedMode) {
         try {
-            const contextWindow = [
-                { role: "system", content: LOCAL_SYSTEM_PROMPT },
-                { role: "assistant", content: "I'm here to reflect. What's on your mind?" },
-                ...messages.slice(-6),
-                { role: "user", content: userMsg }
-            ];
-
-            const chunks = await engine.chat.completions.create({
-                messages: contextWindow,
-                stream: true,
+            // v4.0: Use substrate prompt (JSON only)
+            const response = await engine.chat.completions.create({
+                messages: [
+                    { role: "system", content: SUBSTRATE_PROMPT_LOCAL },
+                    { role: "user", content: userMsg }
+                ],
+                stream: false,
                 temperature: 0.3
             });
 
-            let fullResponse = "";
-            setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+            const rawOutput = response.choices[0]?.message?.content || "";
 
-            for await (const chunk of chunks) {
-                const delta = chunk.choices[0]?.delta?.content || "";
-                fullResponse += delta;
-                setMessages(prev => {
-                    const newArr = [...prev];
-                    newArr[newArr.length - 1].content = fullResponse;
-                    return newArr;
-                });
-            }
+            // v4.0: Process through MirrorGate
+            const { text, schema } = processAndRender(rawOutput, detectedMode);
+            setLastSchema(schema);
+            setMessages(prev => [...prev, { role: "assistant", content: text }]);
 
-            // Post-inference validation (MirrorGate)
-            const validation = validateOutput(fullResponse);
-            if (!validation.valid) {
-                console.log("⟡ Local output failed MirrorGate validation:", validation.violations);
-                // Replace with fallback response
-                setMessages(prev => {
-                    const newArr = [...prev];
-                    newArr[newArr.length - 1].content = FALLBACK_RESPONSE;
-                    return newArr;
-                });
-            }
         } catch (err) {
             console.error("⟡ Local inference error:", err);
-            setError("Reflection interrupted. Please try again.");
+            const { text, schema } = processAndRender(null, detectedMode || 'unclear');
+            setLastSchema(schema);
+            setMessages(prev => [...prev, { role: "assistant", content: text }]);
         } finally {
             setIsLoading(false);
         }
@@ -744,6 +707,29 @@ No "you should". One question mark only.`;
                     {initComplete && messages.length > 1 && !isLoading && !hasReflectedToday && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000">
                             <SessionCloseControls onOutcome={handleOutcome} />
+                        </div>
+                    )}
+
+                    {/* Show Thinking Toggle - v4.0 Transparency Feature */}
+                    {lastSchema && messages.length > 0 && (
+                        <div className="flex flex-col items-center gap-2 mt-4">
+                            <button
+                                onClick={() => setShowThinking(!showThinking)}
+                                className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors px-3 py-1 rounded-full bg-white/5 hover:bg-white/10"
+                            >
+                                {showThinking ? "Hide thinking ↑" : "Show thinking ↓"}
+                            </button>
+
+                            {showThinking && (
+                                <div className="w-full max-w-xl p-4 bg-zinc-900/70 rounded-lg border border-zinc-700/50 backdrop-blur-sm">
+                                    <div className="text-xs text-zinc-500 mb-2 font-mono">
+                                        ⟡ Raw Schema (what the model produced)
+                                    </div>
+                                    <pre className="text-xs text-zinc-400 overflow-x-auto whitespace-pre-wrap">
+                                        {JSON.stringify(lastSchema, null, 2)}
+                                    </pre>
+                                </div>
+                            )}
                         </div>
                     )}
 
