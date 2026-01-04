@@ -31,7 +31,7 @@ export default function Home() {
             </nav>
 
             <main className="relative z-10 w-full min-h-screen flex items-center justify-center p-6 pt-16">
-                <SpotlightCard className="w-full max-w-2xl text-center p-12 md:p-16 border-white/5 bg-black/40 backdrop-blur-3xl shadow-2xl">
+                <SpotlightCard className="w-full max-w-2xl text-center p-12 md:p-16 border border-purple-500/20 bg-black/40 backdrop-blur-3xl shadow-2xl shadow-purple-500/10 ring-1 ring-purple-500/10">
 
                     {/* LOGO HERO */}
                     <div className="mb-8 flex justify-center">
