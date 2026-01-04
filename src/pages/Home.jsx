@@ -24,7 +24,7 @@ export default function Home() {
                     <a href="/blog/" className="hover:text-purple-400 transition-colors">Blog</a>
                     <a href="/mobile/" className="hover:text-purple-400 transition-colors">Mobile</a>
                     <a href="/architecture/" className="hover:text-purple-400 transition-colors">Architecture</a>
-                    <a href="/research/" className="hover:text-purple-400 transition-colors">Research</a>
+                    <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/ecosystem/" className="text-purple-400 font-medium hover:text-purple-300 transition-colors" target="_blank">✦ Ecosystem</a>
                     <a href="/open-source/" className="hover:text-purple-400 transition-colors">Open Source</a>
                     <a href="/enterprise/" className="hover:text-purple-400 transition-colors">Enterprise</a>
                 </div>
@@ -61,7 +61,14 @@ export default function Home() {
                             Visit Site
                         </a>
 
-                        {/* 3. SOCIALS (Tertiary) */}
+                        {/* 3. ECOSYSTEM (Eye-catching) */}
+                        <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/ecosystem/" target="_blank" className="w-full py-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 font-medium hover:bg-cyan-500/10 hover:border-cyan-500/30 transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(34,211,238,0.1)] hover:shadow-[0_0_30px_rgba(34,211,238,0.2)] group">
+                            <span className="text-lg">✦</span>
+                            Explore 64-Repo Ecosystem
+                            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                        </a>
+
+                        {/* 4. SOCIALS (Tertiary) */}
                         <div className="grid grid-cols-2 gap-4 mt-2">
                             <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="py-3 rounded-xl border border-purple-500/10 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500/20 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-purple-400 text-sm font-medium">
                                 <Github size={16} /> Protocol
