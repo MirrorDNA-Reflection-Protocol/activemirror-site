@@ -24,7 +24,7 @@ export default function Home() {
                     <a href="/blog/" className="hover:text-purple-400 transition-colors">Blog</a>
                     <a href="/mobile/" className="hover:text-purple-400 transition-colors">Mobile</a>
                     <a href="/architecture/" className="hover:text-purple-400 transition-colors">Architecture</a>
-                    <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/ecosystem/" className="text-purple-400 font-medium hover:text-purple-300 transition-colors" target="_blank">✦ Ecosystem</a>
+                    <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/ecosystem/" className="hover:text-purple-400 transition-colors" target="_blank">Ecosystem</a>
                     <a href="/open-source/" className="hover:text-purple-400 transition-colors">Open Source</a>
                     <a href="/enterprise/" className="hover:text-purple-400 transition-colors">Enterprise</a>
                 </div>
