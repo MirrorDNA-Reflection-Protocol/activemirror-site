@@ -1,42 +1,27 @@
 /**
- * Reflection Schema v1.0
+ * Reflection Schema v2.0 — Two-Lane Conversation System
  * The contract between Substrate and Renderer
  */
 
-export const SCHEMA_VERSION = "1.0";
+export const SCHEMA_VERSION = "2.0";
 
-export const MODES = {
-    DECISION: "decision",
-    EMOTIONAL: "emotional",
-    STRATEGIC: "strategic",
-    DEBUGGING: "debugging",
-    UNCLEAR: "unclear"
+// ═══════════════════════════════════════════════════════════════
+// INTENT SCORES
+// ═══════════════════════════════════════════════════════════════
+
+export const INTENT_SCORES = {
+    UTILITY: 0,
+    INFO: 1,
+    CHOICE: 2,
+    PERSONAL: 3
 };
 
-/**
- * Detect mode from user input
- */
-export function detectMode(input) {
-    const lower = input.toLowerCase();
-
-    if (/should i|choose between|deciding|which (one|option)|torn between/i.test(lower)) {
-        return MODES.DECISION;
-    }
-    if (/feel(ing)?|stressed|anxious|overwhelmed|scared|angry|sad|frustrated|worried/i.test(lower)) {
-        return MODES.EMOTIONAL;
-    }
-    if (/how (do|can|should|to)|plan(ning)?|approach|strategy|next steps/i.test(lower)) {
-        return MODES.STRATEGIC;
-    }
-    if (/what went wrong|failed|mistake|why did(n't)?|broken|not working/i.test(lower)) {
-        return MODES.DEBUGGING;
-    }
-
-    return MODES.UNCLEAR;
-}
+// ═══════════════════════════════════════════════════════════════
+// SCHEMA VALIDATION
+// ═══════════════════════════════════════════════════════════════
 
 /**
- * Validate schema from model output
+ * Validate Two-Lane schema from model output
  */
 export function validateSchema(obj) {
     const errors = [];
@@ -45,27 +30,31 @@ export function validateSchema(obj) {
         return { valid: false, errors: ['not_an_object'] };
     }
 
-    if (!obj.tension || typeof obj.tension !== 'string') {
-        errors.push('missing_tension');
+    // Direct lane (required)
+    if (!obj.direct || typeof obj.direct !== 'object') {
+        errors.push('missing_direct');
+    } else {
+        if (!obj.direct.content || typeof obj.direct.content !== 'string') {
+            errors.push('missing_direct_content');
+        }
     }
 
-    if (!Array.isArray(obj.assumptions) || obj.assumptions.length < 1) {
-        errors.push('missing_assumptions');
+    // Mirror lane (required)
+    if (!obj.mirror || typeof obj.mirror !== 'object') {
+        errors.push('missing_mirror');
+    } else {
+        if (!Array.isArray(obj.mirror.assumptions) || obj.mirror.assumptions.length < 1) {
+            errors.push('missing_assumptions');
+        }
+        if (!obj.mirror.question || typeof obj.mirror.question !== 'string') {
+            errors.push('missing_question');
+        }
+        if (obj.mirror.question && !obj.mirror.question.trim().endsWith('?')) {
+            errors.push('question_no_mark');
+        }
     }
 
-    if (!obj.question || typeof obj.question !== 'string') {
-        errors.push('missing_question');
-    }
-
-    if (obj.question && !obj.question.trim().endsWith('?')) {
-        errors.push('question_no_mark');
-    }
-
-    if (obj.mode && !Object.values(MODES).includes(obj.mode)) {
-        errors.push('invalid_mode');
-    }
-
-    // Content safety
+    // Content safety — check entire object
     const allText = JSON.stringify(obj).toLowerCase();
     const forbidden = ['you should', 'i recommend', 'definitely', 'you must', 'you need to'];
     for (const phrase of forbidden) {
@@ -77,10 +66,18 @@ export function validateSchema(obj) {
     return { valid: errors.length === 0, errors };
 }
 
+// ═══════════════════════════════════════════════════════════════
+// JSON PARSING
+// ═══════════════════════════════════════════════════════════════
+
 /**
  * Parse JSON from model output (handles markdown wrapping)
  */
 export function parseModelOutput(raw) {
+    if (!raw || typeof raw !== 'string') {
+        return { parsed: null, error: 'invalid_input' };
+    }
+
     try {
         return { parsed: JSON.parse(raw), error: null };
     } catch (e) {
@@ -97,21 +94,48 @@ export function parseModelOutput(raw) {
     }
 }
 
-/**
- * Fallback schema
- */
+// ═══════════════════════════════════════════════════════════════
+// FALLBACK SCHEMAS
+// ═══════════════════════════════════════════════════════════════
+
 export const FALLBACK_SCHEMA = {
     schema_version: SCHEMA_VERSION,
-    mode: MODES.UNCLEAR,
-    tension: "clarity vs. complexity",
-    assumptions: [
-        "there's a decision embedded here",
-        "more context would help"
-    ],
-    blindspot: null,
-    stakes: {
-        upside: "clarity if we can frame this as a choice",
-        risk: "staying abstract keeps things unresolved"
+    direct: {
+        type: "clarify",
+        content: "I'd like to understand this better."
     },
-    question: "What specific decision are you trying to make?"
+    mirror: {
+        assumptions: [
+            "there's a decision or question embedded here",
+            "more context would help clarify"
+        ],
+        tradeoffs: [],
+        question: "What specific decision are you trying to make?"
+    },
+    safety: {
+        illegal: false,
+        crisis: false,
+        mlf: false,
+        rewrite_count: 0
+    }
 };
+
+/**
+ * Get utility-only fallback (for intent 0)
+ */
+export function getUtilityFallback(content = "I'm not sure about that.") {
+    return {
+        schema_version: SCHEMA_VERSION,
+        direct: {
+            type: "answer",
+            content
+        },
+        mirror: null,
+        safety: {
+            illegal: false,
+            crisis: false,
+            mlf: false,
+            rewrite_count: 0
+        }
+    };
+}

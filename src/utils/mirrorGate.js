@@ -1,9 +1,12 @@
 /**
- * MirrorGate v4.0 — Split-Stack Edition
+ * MirrorGate v5.0 — Two-Lane Conversation System
+ * Gate → Intent Router → Process → Lane Mix → Render
  */
 
-import { validateSchema, parseModelOutput, detectMode, FALLBACK_SCHEMA } from './reflectionSchema';
-import { renderReflection, renderFallback } from './reflectionTemplates';
+import { validateSchema, parseModelOutput, FALLBACK_SCHEMA, getUtilityFallback } from './reflectionSchema';
+import { renderTwoLane, renderUtility, renderFallback } from './reflectionTemplates';
+import { computeIntent, isPureUtility, getIntentLabel } from './intentRouter';
+import { computeLaneConfig } from './laneMixer';
 
 // ═══════════════════════════════════════════════════════════════
 // PRE-INFERENCE GATES
@@ -31,6 +34,9 @@ const CRISIS_RESPONSE = `I can hear you're in a difficult place. I'm not equippe
 
 You matter. Please reach out now.`;
 
+/**
+ * Gate 0.7: Pre-inference safety check
+ */
 export function gateInput(input) {
     for (const p of CRISIS_PATTERNS) {
         if (p.test(input)) return { allowed: false, reason: 'crisis', response: CRISIS_RESPONSE };
@@ -39,9 +45,28 @@ export function gateInput(input) {
         if (p.test(input)) return { allowed: false, reason: 'illegal', response: "I can't engage with that." };
     }
     if (input.length > 2000) {
-        return { allowed: false, reason: 'too_long', response: "That's a lot. What's the core decision?" };
+        return { allowed: false, reason: 'too_long', response: "That's a lot. What's the core question?" };
     }
-    return { allowed: true, mode: detectMode(input) };
+    return { allowed: true };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INTENT ROUTING
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Gate 0.8: Compute intent and lane configuration
+ */
+export function routeIntent(input, dial = 0.5) {
+    const { score, signals } = computeIntent(input);
+    const laneConfig = computeLaneConfig(score, dial);
+
+    return {
+        intentScore: score,
+        intentLabel: getIntentLabel(score),
+        signals,
+        ...laneConfig
+    };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -51,12 +76,17 @@ export function gateInput(input) {
 /**
  * Process raw model output → validated schema → rendered text
  */
-export function processAndRender(rawOutput, detectedMode) {
+export function processAndRender(rawOutput, intentConfig) {
+    const { intentScore, laneMix, maxQuestions, showDirect, showMirror, directFirst } = intentConfig;
+
     // Handle null/empty output
     if (!rawOutput) {
         console.log('⟡ No model output, using fallback');
-        const fallback = { ...FALLBACK_SCHEMA, mode: detectedMode };
-        return { text: renderReflection(fallback), schema: fallback, valid: false };
+        if (intentScore === 0) {
+            const fallback = getUtilityFallback();
+            return { text: renderUtility(fallback.direct.content), schema: fallback, valid: false };
+        }
+        return { text: renderFallback(), schema: FALLBACK_SCHEMA, valid: false };
     }
 
     // Parse JSON
@@ -64,8 +94,11 @@ export function processAndRender(rawOutput, detectedMode) {
 
     if (!parsed) {
         console.log('⟡ JSON parse failed:', error);
-        const fallback = { ...FALLBACK_SCHEMA, mode: detectedMode };
-        return { text: renderReflection(fallback), schema: fallback, valid: false };
+        if (intentScore === 0) {
+            const fallback = getUtilityFallback();
+            return { text: renderUtility(fallback.direct.content), schema: fallback, valid: false };
+        }
+        return { text: renderFallback(), schema: FALLBACK_SCHEMA, valid: false };
     }
 
     // Validate
@@ -73,17 +106,60 @@ export function processAndRender(rawOutput, detectedMode) {
 
     if (!validation.valid) {
         console.log('⟡ Schema validation failed:', validation.errors);
-        const fallback = { ...FALLBACK_SCHEMA, mode: detectedMode };
-        return { text: renderReflection(fallback), schema: fallback, valid: false };
+        if (intentScore === 0) {
+            const fallback = getUtilityFallback();
+            return { text: renderUtility(fallback.direct.content), schema: fallback, valid: false };
+        }
+        return { text: renderFallback(), schema: FALLBACK_SCHEMA, valid: false };
     }
 
-    // Inject mode if missing
-    if (!parsed.mode) parsed.mode = detectedMode;
+    // Build lane config for renderer  
+    const laneConfig = {
+        showDirect,
+        showMirror,
+        directFirst,
+        maxQuestions,
+        intentScore
+    };
 
-    // Render
-    return { text: renderReflection(parsed), schema: parsed, valid: true };
+    // Render Two-Lane output
+    const text = renderTwoLane(parsed, laneConfig);
+
+    return { text, schema: parsed, valid: true, laneConfig };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FULL PIPELINE
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Complete gate → route → process → render pipeline
+ */
+export function fullPipeline(input, rawOutput, dial = 0.5) {
+    // Gate
+    const gateResult = gateInput(input);
+    if (!gateResult.allowed) {
+        return {
+            allowed: false,
+            reason: gateResult.reason,
+            text: gateResult.response,
+            schema: null
+        };
+    }
+
+    // Route
+    const intentConfig = routeIntent(input, dial);
+
+    // Process & Render
+    const result = processAndRender(rawOutput, intentConfig);
+
+    return {
+        allowed: true,
+        ...result,
+        intentConfig
+    };
 }
 
 // Re-exports for convenience
-export { FALLBACK_SCHEMA, detectMode } from './reflectionSchema';
+export { FALLBACK_SCHEMA } from './reflectionSchema';
 export const FALLBACK_RESPONSE = renderFallback();

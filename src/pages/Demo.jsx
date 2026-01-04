@@ -16,8 +16,8 @@ import { detectCapabilities, MODEL_TIERS } from '../utils/capabilities';
 // Smart Download System
 import { checkDownloadConditions, watchDownloadConditions, DOWNLOAD_CONDITIONS } from '../utils/smartDownload';
 
-// MirrorGate v4.0 — Split-Stack Architecture
-import { gateInput, processAndRender } from '../utils/mirrorGate';
+// MirrorGate v5.0 — Two-Lane Conversation System
+import { gateInput, routeIntent, processAndRender } from '../utils/mirrorGate';
 import { SUBSTRATE_PROMPT_CLOUD, SUBSTRATE_PROMPT_LOCAL } from '../utils/substratePrompt';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -58,9 +58,12 @@ export default function Demo() {
     const [downloadPaused, setDownloadPaused] = useState(false);
     const [userDeclinedDownload, setUserDeclinedDownload] = useState(false);
 
-    // MirrorGate v4.0 — Schema tracking for transparency
+    // MirrorGate v5.0 — Schema tracking for transparency
     const [lastSchema, setLastSchema] = useState(null);
     const [showThinking, setShowThinking] = useState(false);
+
+    // Two-Lane Dial: 0 = More Direct, 1 = More Mirror, 0.5 = Balanced
+    const [dial, setDial] = useState(0.5);
 
     // ─────────────────────────────────────────────────────────────────────────
     // CONFIGURATION
@@ -289,7 +292,10 @@ export default function Demo() {
                     setIsLoading(false);
                     return;
                 }
-                const detectedMode = gateResult.mode;
+
+                // v5.0: Route intent with dial
+                const intentConfig = routeIntent(userMsg, dial);
+                console.log(`⟡ Intent: ${intentConfig.intentLabel}, Mix: ${Math.round(intentConfig.laneMix.direct * 100)}% Direct`);
 
                 try {
                     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -317,8 +323,8 @@ export default function Demo() {
                     const data = await response.json();
                     const rawOutput = data.choices[0]?.message?.content || "";
 
-                    // v4.0: Process through MirrorGate (validate + render)
-                    const { text, schema, valid } = processAndRender(rawOutput, detectedMode);
+                    // v5.0: Process through Two-Lane MirrorGate
+                    const { text, schema, valid } = processAndRender(rawOutput, intentConfig);
                     setLastSchema(schema);
                     setMessages(prev => [...prev, { role: "assistant", content: text }]);
                     setIsLoading(false);
@@ -339,8 +345,9 @@ export default function Demo() {
                     setIsLoading(false);
                     return;
                 }
+                const intentConfig = routeIntent(userMsg, dial);
                 setCurrentTier('tier2');
-                await runLocalInference(tier2Engine, userMsg, gateResult.mode);
+                await runLocalInference(tier2Engine, userMsg, intentConfig);
                 return;
             }
 
@@ -354,14 +361,16 @@ export default function Demo() {
                     setIsLoading(false);
                     return;
                 }
+                const intentConfig = routeIntent(userMsg, dial);
                 setCurrentTier('tier1');
-                await runLocalInference(tier1Engine, userMsg, gateResult.mode);
+                await runLocalInference(tier1Engine, userMsg, intentConfig);
                 return;
             }
 
             // STATIC FALLBACK - Always works, no API needed
             console.log("⟡ Using static fallback (no cloud key or local engine)");
-            const { text, schema } = processAndRender(null, 'unclear');
+            const fallbackConfig = routeIntent(userMsg, dial);
+            const { text, schema } = processAndRender(null, fallbackConfig);
             setLastSchema(schema);
             setMessages(prev => [...prev, { role: "assistant", content: text }]);
         } catch (err) {
@@ -376,9 +385,9 @@ export default function Demo() {
         }
     }
 
-    async function runLocalInference(engine, userMsg, detectedMode) {
+    async function runLocalInference(engine, userMsg, intentConfig) {
         try {
-            // v4.0: Use substrate prompt (JSON only)
+            // v5.0: Use substrate prompt (JSON only)
             const response = await engine.chat.completions.create({
                 messages: [
                     { role: "system", content: SUBSTRATE_PROMPT_LOCAL },
@@ -390,14 +399,14 @@ export default function Demo() {
 
             const rawOutput = response.choices[0]?.message?.content || "";
 
-            // v4.0: Process through MirrorGate
-            const { text, schema } = processAndRender(rawOutput, detectedMode);
+            // v5.0: Process through Two-Lane MirrorGate
+            const { text, schema } = processAndRender(rawOutput, intentConfig);
             setLastSchema(schema);
             setMessages(prev => [...prev, { role: "assistant", content: text }]);
 
         } catch (err) {
             console.error("⟡ Local inference error:", err);
-            const { text, schema } = processAndRender(null, detectedMode || 'unclear');
+            const { text, schema } = processAndRender(null, intentConfig);
             setLastSchema(schema);
             setMessages(prev => [...prev, { role: "assistant", content: text }]);
         } finally {
@@ -760,6 +769,21 @@ export default function Demo() {
                         >
                             <Send size={18} />
                         </button>
+                    </div>
+
+                    {/* Two-Lane Dial */}
+                    <div className="mt-3 flex items-center justify-center gap-3 text-xs text-zinc-500">
+                        <span className={dial < 0.4 ? 'text-blue-400' : ''}>Direct</span>
+                        <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.1"
+                            value={dial}
+                            onChange={(e) => setDial(parseFloat(e.target.value))}
+                            className="w-24 h-1 bg-zinc-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-purple-500"
+                        />
+                        <span className={dial > 0.6 ? 'text-purple-400' : ''}>Mirror</span>
                     </div>
                 </div>
             </div>

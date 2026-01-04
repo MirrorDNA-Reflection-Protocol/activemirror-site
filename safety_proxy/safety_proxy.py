@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-ACTIVE MIRROR — SAFETY PROXY v4.0
-Split-Stack: Substrate → MirrorGate → Renderer
+ACTIVE MIRROR — SAFETY PROXY v5.0
+Two-Lane Conversation System: Direct + Mirror
 """
 
 import os, re, json, time, uuid, logging, random
@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-RULE_VERSION = "4.0.0"
+RULE_VERSION = "5.0.0"
 PORT = 8082
 MAX_INPUT_LENGTH = 2000
 RATE_LIMIT_REQUESTS = 20
@@ -33,102 +33,150 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(levelname)s | %(
 logger = logging.getLogger("mirror-proxy")
 
 # ═══════════════════════════════════════════════════════════════
-# SUBSTRATE PROMPT
+# SUBSTRATE PROMPT — Two-Lane Output
 # ═══════════════════════════════════════════════════════════════
 
 SUBSTRATE_PROMPT = """You are a logic engine. Analyze user input. Output JSON only.
 
 FORMAT:
 {
-  "mode": "decision|emotional|strategic|debugging|unclear",
-  "tension": "the core conflict",
-  "assumptions": ["assumption 1", "assumption 2"],
-  "blindspot": "something they might not see, or null",
-  "stakes": {"upside": "what they gain", "risk": "what they lose"},
-  "question": "one question ending with ?"
+  "direct": {
+    "type": "answer|explain|summarize|compare|clarify",
+    "content": "A concise, factual response (1-3 sentences max)"
+  },
+  "mirror": {
+    "assumptions": ["assumption 1", "assumption 2"],
+    "tradeoffs": ["tradeoff 1", "tradeoff 2"],
+    "question": "one question ending with ?"
+  }
 }
 
 RULES:
 1. Output ONLY valid JSON. No markdown. No prose.
 2. NEVER include "you should" or "I recommend"
-3. If unclear: mode="unclear", question="What decision are you trying to make?"
+3. For math/utility: focus on direct.content
+4. For personal/emotional: focus on mirror
 
 JSON only:"""
+
+# ═══════════════════════════════════════════════════════════════
+# INTENT ROUTER
+# ═══════════════════════════════════════════════════════════════
+
+UTILITY_PATTERNS = [
+    re.compile(r'[\d]+\s*[\+\-\*\/\=]\s*[\d]+'),
+    re.compile(r'\b(calculate|compute|what is [\d]|equals|convert)\b', re.I),
+]
+
+INFO_PATTERNS = [
+    re.compile(r'\b(summarize|explain|compare|pros and cons)\b', re.I),
+]
+
+CHOICE_PATTERNS = [
+    re.compile(r'\bshould i\b', re.I),
+    re.compile(r'\b(decide|choose|option|trade-?off|priority)\b', re.I),
+]
+
+PERSONAL_PATTERNS = [
+    re.compile(r'\bi (feel|felt|am feeling)\b', re.I),
+    re.compile(r'\b(anxious|stressed|overwhelmed|stuck|scared)\b', re.I),
+]
+
+def compute_intent(text: str) -> int:
+    scores = [0, 0, 0, 0]  # utility, info, choice, personal
+    
+    for p in UTILITY_PATTERNS:
+        if p.search(text): scores[0] += 3
+    if len(text.split()) < 12 and re.search(r'\d', text):
+        scores[0] += 2
+    
+    for p in INFO_PATTERNS:
+        if p.search(text): scores[1] += 2
+    
+    for p in CHOICE_PATTERNS:
+        if p.search(text): scores[2] += 3
+        
+    for p in PERSONAL_PATTERNS:
+        if p.search(text): scores[3] += 3
+    
+    max_score = max(scores)
+    if max_score == 0:
+        return 1  # Default to info
+    
+    # Priority: personal > choice > info > utility
+    if scores[3] == max_score: return 3
+    if scores[2] == max_score: return 2
+    if scores[1] == max_score: return 1
+    return 0
+
+# ═══════════════════════════════════════════════════════════════
+# LANE MIXER
+# ═══════════════════════════════════════════════════════════════
+
+BASELINE_MIRROR = {0: 0.0, 1: 0.15, 2: 0.40, 3: 0.70}
+
+def compute_lane_mix(intent_score: int, dial: float = 0.5):
+    m_base = BASELINE_MIRROR.get(intent_score, 0.15)
+    dial_effect = (dial - 0.5) * 0.4
+    mirror = max(0, min(0.85, m_base + dial_effect))
+    return {"direct": 1 - mirror, "mirror": mirror}
+
+def get_max_questions(dial: float, intent_score: int) -> int:
+    if intent_score == 0 and dial <= 0.66: return 0
+    if dial <= 0.33: return 1
+    if dial <= 0.66: return 1
+    if dial > 0.66 and intent_score >= 2: return 2
+    return 1
 
 # ═══════════════════════════════════════════════════════════════
 # TEMPLATES
 # ═══════════════════════════════════════════════════════════════
 
-TEMPLATES = {
-    "decision": {
-        "tension": ["You're caught between {tension}.", "The core tension: {tension}.", "This comes down to {tension}."],
-        "assumptions": ["You're assuming {0}. And that {1}.", "Baked into this: {0}. Also, {1}."],
-        "blindspot": ["Worth checking: {blindspot}.", "Possible blindspot — {blindspot}."],
-        "stakes": ["If this works: {upside}. If it doesn't: {risk}.", "Upside: {upside}. Downside: {risk}."],
-        "question": ["The real question: {question}", "⟡ {question}"]
-    },
-    "emotional": {
-        "tension": ["It sounds like you're holding {tension}.", "There's a pull between {tension}."],
-        "assumptions": ["Part of this might be {0}. And maybe {1}.", "You might be carrying {0}, and {1}."],
-        "blindspot": ["Hard to see from inside: {blindspot}."],
-        "stakes": ["If you move through: {upside}. If stuck: {risk}."],
-        "question": ["What would help: {question}", "⟡ {question}"]
-    },
-    "strategic": {
-        "tension": ["Strategic tension: {tension}.", "You're balancing {tension}."],
-        "assumptions": ["This assumes {0}. And {1}.", "Built in: {0}, and {1}."],
-        "blindspot": ["Strategic blindspot: {blindspot}."],
-        "stakes": ["If it works: {upside}. If it fails: {risk}."],
-        "question": ["Before you execute: {question}", "⟡ {question}"]
-    },
-    "debugging": {
-        "tension": ["The gap: {tension}.", "What broke: {tension}."],
-        "assumptions": ["You were assuming {0}. And {1}."],
-        "blindspot": ["What was invisible: {blindspot}."],
-        "stakes": ["If you fix this: {upside}. If not: {risk}."],
-        "question": ["For next time: {question}", "⟡ {question}"]
-    },
-    "unclear": {
-        "tension": ["There seems to be {tension}."],
-        "assumptions": ["You might be assuming {0}. And {1}."],
-        "blindspot": ["Worth examining: {blindspot}."],
-        "stakes": ["At stake: {upside} vs. {risk}."],
-        "question": ["To get clearer: {question}", "⟡ {question}"]
-    }
+DIRECT_TEMPLATES = {
+    "answer": ["{content}", "Here's the quick answer: {content}"],
+    "explain": ["{content}", "In short: {content}"],
+    "summarize": ["{content}", "To summarize: {content}"],
+    "compare": ["{content}"],
+    "clarify": ["{content}", "Let me clarify: {content}"],
 }
 
-def render_reflection(schema: dict) -> str:
-    mode = schema.get("mode", "unclear")
-    t = TEMPLATES.get(mode, TEMPLATES["unclear"])
+TRANSITIONS = ["That said, here's what I notice:", "Looking deeper:", "Worth considering:"]
+ASSUMPTION_TEMPLATES = ["You might be assuming {0}. And {1}.", "This rests on {0} — and {1}."]
+QUESTION_TEMPLATES = ["⟡ {question}", "The real question: {question}"]
+
+def render_two_lane(schema: dict, lane_mix: dict, intent_score: int, max_questions: int) -> str:
     parts = []
+    show_direct = lane_mix["direct"] > 0.1
+    show_mirror = lane_mix["mirror"] > 0.1
     
-    parts.append(random.choice(t["tension"]).format(tension=schema.get("tension", "something")))
+    # Direct
+    if show_direct and schema.get("direct", {}).get("content"):
+        d_type = schema["direct"].get("type", "answer")
+        templates = DIRECT_TEMPLATES.get(d_type, DIRECT_TEMPLATES["answer"])
+        parts.append(random.choice(templates).format(content=schema["direct"]["content"]))
     
-    assumptions = schema.get("assumptions", ["something", "something else"])
-    atxt = random.choice(t["assumptions"])
-    for i, a in enumerate(assumptions[:2]):
-        atxt = atxt.replace(f"{{{i}}}", a)
-    parts.append(atxt)
-    
-    if schema.get("blindspot") and t.get("blindspot"):
-        parts.append(random.choice(t["blindspot"]).format(blindspot=schema["blindspot"]))
-    
-    stakes = schema.get("stakes", {})
-    if stakes and t.get("stakes"):
-        parts.append(random.choice(t["stakes"]).format(
-            upside=stakes.get("upside", "clarity"),
-            risk=stakes.get("risk", "confusion")
-        ))
-    
-    parts.append(random.choice(t["question"]).format(question=schema.get("question", "What matters?")))
+    # Mirror
+    if show_mirror and schema.get("mirror"):
+        mirror = schema["mirror"]
+        
+        if show_direct and parts:
+            parts.append(random.choice(TRANSITIONS))
+        
+        if mirror.get("assumptions"):
+            a = mirror["assumptions"]
+            txt = random.choice(ASSUMPTION_TEMPLATES)
+            txt = txt.replace("{0}", a[0] if len(a) > 0 else "something")
+            txt = txt.replace("{1}", a[1] if len(a) > 1 else "something else")
+            parts.append(txt)
+        
+        if max_questions > 0 and mirror.get("question"):
+            parts.append(random.choice(QUESTION_TEMPLATES).format(question=mirror["question"]))
     
     return "\n\n".join(parts)
 
 FALLBACK_SCHEMA = {
-    "mode": "unclear", "tension": "clarity vs. complexity",
-    "assumptions": ["there's a decision here", "more context helps"],
-    "blindspot": None, "stakes": {"upside": "clarity", "risk": "staying stuck"},
-    "question": "What specific decision are you trying to make?"
+    "direct": {"type": "clarify", "content": "I'd like to understand this better."},
+    "mirror": {"assumptions": ["there's a question here", "more context helps"], "tradeoffs": [], "question": "What specific decision are you trying to make?"}
 }
 
 # ═══════════════════════════════════════════════════════════════
@@ -164,14 +212,6 @@ def run_gates(text: str):
         return False, "That's a lot. What's the core decision?", "size"
     return True, None, "passed"
 
-def detect_mode(text: str) -> str:
-    t = text.lower()
-    if re.search(r'should i|choose|deciding|torn between', t): return "decision"
-    if re.search(r'feel|stressed|anxious|overwhelmed|worried', t): return "emotional"
-    if re.search(r'how (do|can|to)|plan|strategy', t): return "strategic"
-    if re.search(r'went wrong|failed|mistake|broken', t): return "debugging"
-    return "unclear"
-
 # ═══════════════════════════════════════════════════════════════
 # VALIDATION
 # ═══════════════════════════════════════════════════════════════
@@ -179,10 +219,9 @@ def detect_mode(text: str) -> str:
 def validate_schema(obj: dict):
     errors = []
     if not isinstance(obj, dict): return False, ["not_dict"]
-    if not obj.get("tension"): errors.append("no_tension")
-    if not obj.get("assumptions"): errors.append("no_assumptions")
-    if not obj.get("question"): errors.append("no_question")
-    elif not obj["question"].strip().endswith("?"): errors.append("no_question_mark")
+    if not obj.get("direct", {}).get("content"): errors.append("no_direct_content")
+    if not obj.get("mirror", {}).get("assumptions"): errors.append("no_assumptions")
+    if not obj.get("mirror", {}).get("question"): errors.append("no_question")
     
     forbidden = ["you should", "i recommend", "definitely"]
     txt = json.dumps(obj).lower()
@@ -239,11 +278,13 @@ async def call_substrate(user_input: str):
 
 class ReflectRequest(BaseModel):
     input: str = Field(..., max_length=MAX_INPUT_LENGTH)
+    dial: float = Field(default=0.5, ge=0, le=1)
 
 class ReflectResponse(BaseModel):
     output: str
     schema_raw: Optional[dict] = None
-    mode: str
+    intent_score: int
+    lane_mix: dict
     rule_version: str
     outcome: Literal["allowed", "fallback", "refused", "error"]
     request_id: str
@@ -261,36 +302,41 @@ async def reflect(request: Request, body: ReflectRequest):
     ip = request.client.host if request.client else "?"
     
     if not check_rate(ip):
-        return ReflectResponse(output="⟡ What's most pressing?", schema_raw=None, mode="rate_limited", rule_version=RULE_VERSION, outcome="refused", request_id=rid)
+        return ReflectResponse(output="⟡ What's most pressing?", schema_raw=None, intent_score=1, lane_mix={"direct": 0.5, "mirror": 0.5}, rule_version=RULE_VERSION, outcome="refused", request_id=rid)
     
     allowed, blocked, gate = run_gates(body.input)
     if not allowed:
-        return ReflectResponse(output=blocked, schema_raw=None, mode=gate, rule_version=RULE_VERSION, outcome="refused", request_id=rid)
+        return ReflectResponse(output=blocked, schema_raw=None, intent_score=0, lane_mix={"direct": 1, "mirror": 0}, rule_version=RULE_VERSION, outcome="refused", request_id=rid)
     
-    detected = detect_mode(body.input)
+    # Intent routing
+    intent = compute_intent(body.input)
+    lane_mix = compute_lane_mix(intent, body.dial)
+    max_q = get_max_questions(body.dial, intent)
+    
     raw = await call_substrate(body.input)
     
     if not raw:
-        fb = {**FALLBACK_SCHEMA, "mode": detected}
-        return ReflectResponse(output=render_reflection(fb), schema_raw=fb, mode=detected, rule_version=RULE_VERSION, outcome="error", request_id=rid)
+        output = render_two_lane(FALLBACK_SCHEMA, lane_mix, intent, max_q)
+        return ReflectResponse(output=output, schema_raw=FALLBACK_SCHEMA, intent_score=intent, lane_mix=lane_mix, rule_version=RULE_VERSION, outcome="error", request_id=rid)
     
     parsed, err = parse_json(raw)
     if not parsed:
-        fb = {**FALLBACK_SCHEMA, "mode": detected}
-        return ReflectResponse(output=render_reflection(fb), schema_raw=fb, mode=detected, rule_version=RULE_VERSION, outcome="fallback", request_id=rid)
+        output = render_two_lane(FALLBACK_SCHEMA, lane_mix, intent, max_q)
+        return ReflectResponse(output=output, schema_raw=FALLBACK_SCHEMA, intent_score=intent, lane_mix=lane_mix, rule_version=RULE_VERSION, outcome="fallback", request_id=rid)
     
     valid, errs = validate_schema(parsed)
     if not valid:
         logger.info(f"[{rid}] validation failed: {errs}")
-        fb = {**FALLBACK_SCHEMA, "mode": detected}
-        return ReflectResponse(output=render_reflection(fb), schema_raw=fb, mode=detected, rule_version=RULE_VERSION, outcome="fallback", request_id=rid)
+        output = render_two_lane(FALLBACK_SCHEMA, lane_mix, intent, max_q)
+        return ReflectResponse(output=output, schema_raw=FALLBACK_SCHEMA, intent_score=intent, lane_mix=lane_mix, rule_version=RULE_VERSION, outcome="fallback", request_id=rid)
     
-    if not parsed.get("mode"): parsed["mode"] = detected
+    output = render_two_lane(parsed, lane_mix, intent, max_q)
     
     return ReflectResponse(
-        output=render_reflection(parsed),
+        output=output,
         schema_raw=parsed,
-        mode=parsed["mode"],
+        intent_score=intent,
+        lane_mix=lane_mix,
         rule_version=RULE_VERSION,
         outcome="allowed",
         request_id=rid
@@ -298,5 +344,5 @@ async def reflect(request: Request, body: ReflectRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    logger.info(f"⟡ Safety Proxy v{RULE_VERSION} — Split-Stack Architecture")
+    logger.info(f"⟡ Safety Proxy v{RULE_VERSION} — Two-Lane Conversation System")
     uvicorn.run(app, host="0.0.0.0", port=PORT)
