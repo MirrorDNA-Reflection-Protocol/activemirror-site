@@ -155,17 +155,18 @@ export default function TestLab() {
 
     return (
         <div className="relative min-h-screen font-sans text-white overflow-hidden selection:bg-purple-500/30 bg-black">
-            {/* AMBIENT LAYERS */}
-            <div className={`fixed inset-0 transition-all duration-1000 ${mode.id === 'cloud' ? 'bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-cyan-900/10 via-black to-black' : 'bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-green-900/10 via-black to-black'} z-0`}></div>
+            {/* AMBIENT LAYERS - Purple base with mode overlay */}
+            <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-900/15 via-black to-black z-0"></div>
+            <div className={`fixed inset-0 transition-all duration-1000 ${mode.id === 'cloud' ? 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-900/20 via-transparent to-transparent' : 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-green-900/20 via-transparent to-transparent'} z-0`}></div>
             <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none z-0"></div>
 
             <main className="relative z-10 w-full min-h-screen flex items-center justify-center p-4">
-                <div className={`w-full max-w-3xl h-[90vh] flex flex-col rounded-3xl border bg-black/80 backdrop-blur-3xl shadow-2xl transition-all duration-500 ${mode.border}`}>
+                <div className={`w-full max-w-3xl h-[90vh] flex flex-col rounded-3xl border bg-black/80 backdrop-blur-3xl shadow-2xl shadow-purple-500/10 ring-1 ring-purple-500/10 transition-all duration-500 ${mode.border}`}>
 
                     {/* HEADER */}
-                    <div className="h-20 border-b border-white/5 flex items-center justify-between px-6">
-                        <Link to="/" className="text-zinc-500 hover:text-white transition-colors"><ArrowLeft size={18} /></Link>
-                        <div className="flex bg-white/5 rounded-full p-1 border border-white/10">
+                    <div className="h-20 border-b border-purple-500/10 flex items-center justify-between px-6">
+                        <Link to="/" className="text-zinc-500 hover:text-purple-400 transition-colors"><ArrowLeft size={18} /></Link>
+                        <div className="flex bg-purple-500/5 rounded-full p-1 border border-purple-500/20">
                             <button
                                 onClick={() => setMode(MODES.CLOUD)}
                                 className={`px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 transition-all ${mode.id === 'cloud' ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.2)]' : 'text-zinc-500 hover:text-zinc-300'}`}
@@ -179,7 +180,7 @@ export default function TestLab() {
                                 <Shield size={14} /> Sovereign
                             </button>
                         </div>
-                        <div className="w-8 text-xs text-zinc-600 font-mono">LAB</div>
+                        <div className="w-8 text-xs text-purple-500/50 font-mono">LAB</div>
                     </div>
 
                     {/* CHAT AREA */}
@@ -196,7 +197,7 @@ export default function TestLab() {
                         )}
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[85%] px-6 py-4 rounded-2xl backdrop-blur-md shadow-sm ${msg.role === 'user' ? 'bg-white text-black' : 'bg-white/5 border border-white/5 text-zinc-200'}`}>
+                                <div className={`max-w-[85%] px-6 py-4 rounded-2xl backdrop-blur-md shadow-sm ${msg.role === 'user' ? 'bg-gradient-to-r from-purple-500 to-violet-500 text-white' : 'bg-white/5 border border-purple-500/10 text-zinc-200'}`}>
                                     {msg.role === 'assistant' && i === messages.length - 1 && !isLoading ?
                                         <BlurText text={msg.content} /> :
                                         <div className="text-[15px] leading-7 whitespace-pre-wrap">{msg.content}</div>
@@ -206,11 +207,11 @@ export default function TestLab() {
                         ))}
                         {isLoading && (
                             <div className="flex justify-start">
-                                <div className="px-6 py-4 rounded-2xl bg-white/5 border border-white/5">
+                                <div className="px-6 py-4 rounded-2xl bg-white/5 border border-purple-500/10">
                                     <div className="flex gap-1">
-                                        <span className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                                        <span className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                                        <span className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                                        <span className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                                        <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                                        <span className="w-2 h-2 bg-purple-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
                                     </div>
                                 </div>
                             </div>
@@ -219,26 +220,26 @@ export default function TestLab() {
                     </div>
 
                     {/* INPUT */}
-                    <div className="p-6 border-t border-white/5">
+                    <div className="p-6 border-t border-purple-500/10">
                         <div className="relative flex items-center">
                             <input
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSend()}
                                 disabled={isLoading}
-                                className={`w-full bg-black/50 border rounded-2xl py-4 pl-6 pr-14 text-white focus:outline-none transition-all ${mode.id === 'cloud' ? 'focus:border-cyan-500/50' : 'focus:border-green-500/50'} border-white/10 disabled:opacity-50`}
+                                className={`w-full bg-black/50 border rounded-2xl py-4 pl-6 pr-14 text-white focus:outline-none transition-all focus:border-purple-500/50 border-purple-500/20 disabled:opacity-50`}
                                 placeholder={mode.id === 'cloud' ? "Ask the Oracle..." : "Reflect in the Vault..."}
                             />
                             <button
                                 onClick={handleSend}
                                 disabled={isLoading || !input.trim()}
-                                className="absolute right-3 p-2 bg-white text-black rounded-xl hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                className="absolute right-3 p-2 bg-gradient-to-r from-purple-500 to-violet-500 text-white rounded-xl hover:from-purple-400 hover:to-violet-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)]"
                             >
                                 <Send size={18} />
                             </button>
                         </div>
-                        <p className="text-center text-[10px] text-zinc-700 mt-3 font-mono">
-                            {mode.id === 'cloud' ? '☁️ Cloud: Llama 3.3-70B via Groq' : '🔒 Sovereign: Phi-3.5 on-device WebGPU'} • Identity Lock Active
+                        <p className="text-center text-[10px] text-purple-500/50 mt-3 font-mono">
+                            {mode.id === 'cloud' ? '☁️ Cloud: Llama 3.3-70B via Groq' : '🔒 Sovereign: Phi-3.5 on-device WebGPU'} • ⟡ Identity Lock Active
                         </p>
                     </div>
                 </div>
