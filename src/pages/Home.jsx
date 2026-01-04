@@ -60,8 +60,18 @@ export default function Home() {
                         </div>
                     </div>
 
+                    {/* PORTAL NAVIGATION */}
+                    <div className="pt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-zinc-500">
+                        <a href="/blog/" className="hover:text-white transition-colors">Blog</a>
+                        <a href="/mobile/" className="hover:text-white transition-colors">Mobile</a>
+                        <a href="/architecture/" className="hover:text-white transition-colors">Architecture</a>
+                        <a href="/research/" className="hover:text-white transition-colors">Research</a>
+                        <a href="/open-source/" className="hover:text-white transition-colors">Open Source</a>
+                        <a href="/enterprise/" className="hover:text-white transition-colors">Enterprise</a>
+                    </div>
+
                     {/* FOOTER: LEGALS ONLY */}
-                    <div className="pt-8 border-t border-white/5 flex justify-center items-center text-[10px] md:text-xs font-mono text-zinc-600 uppercase tracking-widest w-full">
+                    <div className="pt-6 border-t border-white/5 flex justify-center items-center text-[10px] md:text-xs font-mono text-zinc-600 uppercase tracking-widest w-full mt-6">
                         <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-center">
                             <Link to="/terms" className="hover:text-zinc-400 transition-colors">Terms of Service</Link>
                             <Link to="/privacy" className="hover:text-zinc-400 transition-colors">Privacy Policy</Link>
