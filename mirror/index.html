@@ -881,6 +881,15 @@ You are a mirror, not an advisor. Questions only. When in doubt, ask: "What feel
 
         // ─── SAFETY SYSTEM ───
         // (Main safety logic is in CLIENT-SIDE SAFETY section below)
+        
+        // Wrapper for cloud mode that uses clientSideGate
+        function safetyCheck(userMsg) {
+            const gate = clientSideGate(userMsg);
+            if (gate.blocked) {
+                return { safe: false, response: gate.response };
+            }
+            return { safe: true, hint: null };
+        }
 
         // Truth-State tags for post-processing
         const TRUTH_STATES = {
