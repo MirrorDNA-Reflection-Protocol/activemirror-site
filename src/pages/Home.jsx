@@ -64,7 +64,7 @@ export default function Home() {
                         {/* 3. ECOSYSTEM (Eye-catching) */}
                         <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/ecosystem/" target="_blank" className="w-full py-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 font-medium hover:bg-cyan-500/10 hover:border-cyan-500/30 transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(34,211,238,0.1)] hover:shadow-[0_0_30px_rgba(34,211,238,0.2)] group">
                             <span className="text-lg">✦</span>
-                            Explore 64-Repo Ecosystem
+                            Explore the Ecosystem
                             <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                         </a>
 
