@@ -56,7 +56,7 @@ export default function Home() {
                         </a>
 
                         {/* 2. VISIT SITE (Secondary, Glowing) */}
-                        <a href="./legacy/index.html" className="w-full py-4 rounded-xl border border-purple-500/20 bg-white/5 text-white font-medium hover:bg-purple-500/10 hover:border-purple-500/30 transition-all flex items-center justify-center gap-3 shadow-[0_0_15px_rgba(168,85,247,0.05)] hover:shadow-[0_0_25px_rgba(168,85,247,0.15)] group">
+                        <a href="/legacy/index.html" className="w-full py-4 rounded-xl border border-purple-500/20 bg-white/5 text-white font-medium hover:bg-purple-500/10 hover:border-purple-500/30 transition-all flex items-center justify-center gap-3 shadow-[0_0_15px_rgba(168,85,247,0.05)] hover:shadow-[0_0_25px_rgba(168,85,247,0.15)] group">
                             <Globe size={18} className="group-hover:rotate-12 transition-transform text-zinc-400 group-hover:text-purple-400" />
                             Visit Site
                         </a>
