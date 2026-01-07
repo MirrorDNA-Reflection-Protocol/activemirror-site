@@ -316,39 +316,45 @@ export default function Demo() {
                 }
 
                 try {
-                    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    // MIRRORGATE OS (v5.0): call the governance wrapper instead of raw LLM
+                    const response = await fetch("http://localhost:8082/mirror", {
                         method: "POST",
                         headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${groqKey}`
+                            "Content-Type": "application/json"
                         },
                         body: JSON.stringify({
-                            model: GROQ_MODEL,
-                            messages: [
-                                { role: "system", content: SUBSTRATE_PROMPT_CLOUD },
-                                { role: "user", content: userMsg }
-                            ],
-                            temperature: 0.3,
-                            max_tokens: 500
+                            message: userMsg,
+                            persona: "reflection",
+                            dial: dial
                         })
                     });
 
                     if (!response.ok) {
-                        const errorData = await response.json().catch(() => ({}));
-                        throw new Error(errorData.error?.message || `API Error: ${response.status}`);
+                        throw new Error(`MirrorGate OS Error: ${response.status}`);
                     }
 
                     const data = await response.json();
-                    const rawOutput = data.choices[0]?.message?.content || "";
 
-                    // v5.0: Process through Two-Lane MirrorGate
-                    const { text, schema, valid } = processAndRender(rawOutput, intentConfig);
-                    setLastSchema(schema);
-                    setMessages(prev => [...prev, { role: "assistant", content: text }]);
+                    if (data.status === "blocked") {
+                        setMessages(prev => [...prev, { role: "assistant", content: data.content }]); // Show refusal
+                        setIsLoading(false);
+                        return;
+                    }
+
+                    // Direct Utility Shortcut (no schema needed)
+                    if (data.source === "shortcut") {
+                        setMessages(prev => [...prev, { role: "assistant", content: data.content }]);
+                        setIsLoading(false);
+                        return;
+                    }
+
+                    // Standard Response
+                    setLastSchema(data.schema_raw);
+                    setMessages(prev => [...prev, { role: "assistant", content: data.content }]);
                     setIsLoading(false);
                     return;
                 } catch (err) {
-                    console.log("⟡ Cloud failed, trying local:", err.message);
+                    console.log("⟡ MirrorGate OS failed, trying local:", err.message);
                     // Fall through to local
                 }
             }
