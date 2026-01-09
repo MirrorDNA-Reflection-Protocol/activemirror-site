@@ -6,6 +6,7 @@ import Legal from './pages/Legal';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import TestLab from './pages/TestLab';
+import Hub from './pages/Hub';
 
 export default function App() {
     return (
@@ -19,6 +20,7 @@ export default function App() {
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/mirror" element={<Demo />} />
                 <Route path="/lab" element={<TestLab />} />
+                <Route path="/hub" element={<Hub />} />
             </Routes>
         </BrowserRouter>
     );
