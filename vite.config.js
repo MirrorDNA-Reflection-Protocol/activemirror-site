@@ -1,26 +1,28 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
 
 export default defineConfig({
     plugins: [react()],
     base: '/',
     build: {
         outDir: 'dist',
-        chunkSizeWarningLimit: 1000, // Suppress warnings for intentionally large chunks
+        chunkSizeWarningLimit: 1000,
         rollupOptions: {
+            input: {
+                main: resolve(__dirname, 'index.html'),
+                'clean-mirror': resolve(__dirname, 'clean-mirror/index.html')
+            },
             output: {
                 manualChunks: {
-                    // Split WebLLM into its own chunk (only loaded when needed)
                     'web-llm': ['@mlc-ai/web-llm'],
-                    // Split React ecosystem
                     'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-                    // Split animations
                     'vendor-motion': ['framer-motion'],
                 }
             }
         }
     },
     optimizeDeps: {
-        exclude: ['@mlc-ai/web-llm'] // Don't pre-bundle, load on demand
+        exclude: ['@mlc-ai/web-llm']
     }
 })
