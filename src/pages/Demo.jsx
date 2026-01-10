@@ -8,7 +8,12 @@ export default function Demo() {
     const [isLoading, setIsLoading] = useState(false);
     const bottomRef = useRef(null);
 
-    // Auto-scroll to bottom
+    // Debug mount
+    useEffect(() => {
+        console.log("⟡ Mirror v9.2 MAIN Mounted");
+    }, []);
+
+    // Auto-scroll
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, isLoading]);
@@ -43,9 +48,7 @@ export default function Demo() {
             if (!response.ok) throw new Error(`Server error: ${response.status}`);
 
             const data = await response.json();
-
-            // Handle blocked/rate-limited responses gracefully as assistant messages
-            const content = data.content || "⟡ The mirror is clouded. Please try again.";
+            const content = data.content || "⟡ The mirror is clouded.";
 
             setMessages(prev => [...prev, { role: "assistant", content }]);
         } catch (err) {
@@ -69,8 +72,9 @@ export default function Demo() {
                 <div className="flex items-center gap-2">
                     <span className="text-purple-400 text-xl">⟡</span>
                     <span className="font-medium tracking-wide">Mirror</span>
+                    <span className="text-[10px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded border border-purple-500/30">v9.2 MAIN</span>
                 </div>
-                <div className="w-9"></div> {/* Spacer for balance */}
+                <div className="w-9"></div>
             </div>
 
             {/* Chat Area */}
@@ -78,7 +82,7 @@ export default function Demo() {
                 {messages.length === 0 && (
                     <div className="h-full flex flex-col items-center justify-center text-zinc-500 opacity-60 mt-20">
                         <span className="text-4xl mb-4 text-purple-500/50">⟡</span>
-                        <p>Speak to the mirror.</p>
+                        <p>Reflect.</p>
                     </div>
                 )}
 
@@ -90,7 +94,6 @@ export default function Demo() {
                             }`}>
                             <div className="whitespace-pre-wrap leading-relaxed">
                                 {msg.role === 'assistant' ? (
-                                    // Parse for glyphs to style them
                                     msg.content.split(/(⟡)/).map((part, idx) =>
                                         part === '⟡'
                                             ? <span key={idx} className="text-purple-400 font-bold mx-1">⟡</span>
