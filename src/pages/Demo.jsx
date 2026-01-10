@@ -1,14 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CreateWebWorkerMLCEngine } from "@mlc-ai/web-llm";
-import { ArrowLeft, Send, Fingerprint, Menu, Cloud, Lock, Brain, Download, Check, Wifi, WifiOff, Info } from 'lucide-react';
+import { ArrowLeft, Send, Fingerprint, Menu, Cloud, Lock, Brain, Download, Check, Wifi, WifiOff, Info, Clock, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+
+// Mirror Effects CSS
+import '../mirror-effects.css';
 
 // Reflection & Vault Integration
 import { useVault } from '../hooks/useVault';
 import ReflectionPrompt from '../components/ReflectionPrompt';
 import ReflectionHistory from '../components/ReflectionHistory';
 import SessionCloseControls from '../components/SessionCloseControls';
+import SessionReplay from '../components/SessionReplay';
 
 // Capability Detection
 import { detectCapabilities, MODEL_TIERS } from '../utils/capabilities';
@@ -50,6 +55,8 @@ export default function Demo() {
     const { reflections, stats, saveReflection, hasReflectedToday } = useVault();
     const [intent, setIntent] = useState(null);
     const [isHistoryOpen, setHistoryOpen] = useState(false);
+    const [showReplay, setShowReplay] = useState(false);
+    const [sessionMeta, setSessionMeta] = useState({ timePeriod: 'day', showPrivacyNote: false });
     const [showInfo, setShowInfo] = useState(false); // Hybrid mode info panel
 
     // Smart Download State
@@ -67,6 +74,13 @@ export default function Demo() {
 
     // WebGPU support detection (v0.2 Polish)
     const [hasWebGPU, setHasWebGPU] = useState(true);
+
+    // v7.0 — Session awareness
+    const [sessionStart] = useState(() => new Date().toISOString());
+    const [showSomaticAnchor, setShowSomaticAnchor] = useState(true);
+    const [showExitRitual, setShowExitRitual] = useState(false);
+    const [exitReflection, setExitReflection] = useState("");
+    const [sessionMeta, setSessionMeta] = useState({ emotional_weight: 5, time_period: 'day' });
 
     // ─────────────────────────────────────────────────────────────────────────
     // CONFIGURATION
@@ -316,7 +330,7 @@ export default function Demo() {
                 }
 
                 try {
-                    // MIRRORGATE OS (v6.1): call the governance wrapper instead of raw LLM
+                    // MIRRORGATE OS (v7.0): Full MirrorDNA experience
                     const response = await fetch("http://localhost:8082/mirror", {
                         method: "POST",
                         headers: {
@@ -326,7 +340,12 @@ export default function Demo() {
                             message: userMsg,
                             persona: "reflection",
                             dial: dial,
-                            turn_count: messages.length  // Track conversation depth for vault prompt
+                            turn_count: messages.length,
+                            is_first_message: messages.length === 0,
+                            previous_topics: messages
+                                .filter(m => m.role === 'user')
+                                .slice(-5)
+                                .map(m => m.content.slice(0, 50))
                         })
                     });
 
@@ -351,6 +370,9 @@ export default function Demo() {
 
                     // Standard Response
                     setLastSchema(data.schema_raw);
+                    if (data.meta) {
+                        setSessionMeta(prev => ({ ...prev, ...data.meta }));
+                    }
                     setMessages(prev => [...prev, { role: "assistant", content: data.content }]);
                     setIsLoading(false);
                     return;
@@ -492,6 +514,16 @@ export default function Demo() {
                         reflections={reflections}
                         stats={stats}
                         onClose={() => setHistoryOpen(false)}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* ⟡ SESSION REPLAY - Your Journey */}
+            <AnimatePresence>
+                {showReplay && (
+                    <SessionReplay
+                        messages={messages}
+                        onClose={() => setShowReplay(false)}
                     />
                 )}
             </AnimatePresence>
@@ -707,26 +739,68 @@ export default function Demo() {
                         </div>
                     )}
 
-                    {/* Ready State */}
+                    {/* Ready State — with Somatic Anchor */}
                     {initComplete && messages.length === 0 && (
-                        <div className="h-full flex flex-col items-center justify-center text-zinc-700 gap-6 opacity-60">
-                            <Fingerprint size={48} strokeWidth={1} className="text-purple-500" />
-                            <p className="text-sm font-mono tracking-widest uppercase text-purple-500/70">Mirror is Clear</p>
-                            {intent && (
-                                <p className="text-sm text-zinc-400 mt-2 px-8 text-center">Intent: "{intent}"</p>
+                        <div className="h-full flex flex-col items-center justify-center gap-6">
+                            {showSomaticAnchor ? (
+                                <motion.div 
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="somatic-anchor max-w-md"
+                                >
+                                    <div className="glyph-breathing text-purple-400 text-3xl mb-6">⟡</div>
+                                    <div className="somatic-anchor-step">Put your feet flat on the floor.</div>
+                                    <div className="somatic-anchor-step">Take one breath.</div>
+                                    <div className="somatic-anchor-step">Notice where you're holding tension.</div>
+                                    <button 
+                                        onClick={() => setShowSomaticAnchor(false)}
+                                        className="somatic-anchor-ready mt-6 px-6 py-2 bg-purple-600/20 hover:bg-purple-600/30 rounded-full transition-colors"
+                                    >
+                                        I'm ready
+                                    </button>
+                                </motion.div>
+                            ) : (
+                                <motion.div 
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="text-center"
+                                >
+                                    <Fingerprint size={48} strokeWidth={1} className="text-purple-500 mx-auto mb-4" />
+                                    <p className="text-sm font-mono tracking-widest uppercase text-purple-500/70">Mirror is Clear</p>
+                                    {sessionMeta.time_period === 'late_night' && (
+                                        <div className="time-badge mt-4 mx-auto">
+                                            <Clock size={12} />
+                                            <span>Late night session</span>
+                                        </div>
+                                    )}
+                                </motion.div>
                             )}
                         </div>
                     )}
 
                     {/* Messages */}
                     {messages.map((msg, i) => (
-                        <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <motion.div 
+                            key={i} 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4 }}
+                            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
                             <div className={`max-w-[85%] px-6 py-4 rounded-2xl backdrop-blur-md shadow-sm ${msg.role === 'user' ? 'bg-white rounded-tr-sm' : 'bg-white/15 border border-white/25 rounded-tl-sm'}`}>
-                                <div className={`text-[16px] leading-7 whitespace-pre-wrap ${msg.role === 'user' ? 'text-black font-medium' : 'text-white font-normal'}`}>
-                                    {msg.content}
+                                <div className={`text-[16px] leading-7 whitespace-pre-wrap mirror-response ${msg.role === 'user' ? 'text-black font-medium' : 'text-white font-normal'}`}>
+                                    {msg.role === 'assistant' ? (
+                                        // Render glyphs with breathing animation
+                                        msg.content.split('⟡').map((part, idx) => (
+                                            <React.Fragment key={idx}>
+                                                {idx > 0 && <span className="glyph glyph-breathe">⟡</span>}
+                                                {part}
+                                            </React.Fragment>
+                                        ))
+                                    ) : msg.content}
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
                     ))}
 
                     {/* Reflecting Indicator */}
@@ -749,6 +823,19 @@ export default function Demo() {
                     {initComplete && messages.length > 1 && !isLoading && !hasReflectedToday && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000">
                             <SessionCloseControls onOutcome={handleOutcome} />
+                        </div>
+                    )}
+
+                    {/* ⟡ Session Replay Button - Shows after 5+ exchanges */}
+                    {messages.length >= 6 && !isLoading && (
+                        <div className="flex justify-center mt-4">
+                            <button
+                                onClick={() => setShowReplay(true)}
+                                className="flex items-center gap-2 text-xs text-purple-400 hover:text-purple-300 transition-colors px-4 py-2 rounded-full bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20"
+                            >
+                                <Sparkles size={14} />
+                                See your journey
+                            </button>
                         </div>
                     )}
 

@@ -11,3 +11,39 @@ body {
 html {
     scroll-behavior: smooth;
 }
+
+/* ⟡ Glyph Breathing Animation */
+.glyph-breathe {
+    display: inline-block;
+    animation: breathe 4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+    0%, 100% { 
+        opacity: 0.6; 
+        transform: scale(1);
+    }
+    50% { 
+        opacity: 1; 
+        transform: scale(1.05);
+    }
+}
+
+/* Mirror response styling */
+.mirror-response {
+    line-height: 1.8;
+}
+
+.mirror-response .glyph {
+    color: #a855f7; /* purple-500 */
+    font-weight: 500;
+}
+
+/* Late night mode - softer, warmer */
+.late-night .mirror-response {
+    color: #d4d4d8; /* zinc-300 */
+}
+
+.late-night .glyph {
+    color: #c084fc; /* purple-400 */
+}
