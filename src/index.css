@@ -18,15 +18,23 @@ html {
     animation: breathe 4s ease-in-out infinite;
 }
 
-@keyframes breathe {
-    0%, 100% { 
-        opacity: 0.6; 
+@keyframes pulse-glyph {
+
+    0%,
+    100% {
+        opacity: 1;
         transform: scale(1);
     }
-    50% { 
-        opacity: 1; 
-        transform: scale(1.05);
+
+    50% {
+        opacity: 0.6;
+        transform: scale(1.1);
     }
+}
+
+.glyph-pulse {
+    animation: pulse-glyph 1.5s ease-in-out infinite;
+    display: inline-block;
 }
 
 /* Mirror response styling */
@@ -35,15 +43,18 @@ html {
 }
 
 .mirror-response .glyph {
-    color: #a855f7; /* purple-500 */
+    color: #a855f7;
+    /* purple-500 */
     font-weight: 500;
 }
 
 /* Late night mode - softer, warmer */
 .late-night .mirror-response {
-    color: #d4d4d8; /* zinc-300 */
+    color: #d4d4d8;
+    /* zinc-300 */
 }
 
 .late-night .glyph {
-    color: #c084fc; /* purple-400 */
+    color: #c084fc;
+    /* purple-400 */
 }
