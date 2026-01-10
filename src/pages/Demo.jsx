@@ -316,7 +316,7 @@ export default function Demo() {
                 }
 
                 try {
-                    // MIRRORGATE OS (v5.0): call the governance wrapper instead of raw LLM
+                    // MIRRORGATE OS (v6.1): call the governance wrapper instead of raw LLM
                     const response = await fetch("http://localhost:8082/mirror", {
                         method: "POST",
                         headers: {
@@ -325,7 +325,8 @@ export default function Demo() {
                         body: JSON.stringify({
                             message: userMsg,
                             persona: "reflection",
-                            dial: dial
+                            dial: dial,
+                            turn_count: messages.length  // Track conversation depth for vault prompt
                         })
                     });
 
