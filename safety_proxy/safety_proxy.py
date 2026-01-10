@@ -11,7 +11,7 @@ From Firewall to Superego:
 - Confession Booth (incident reports)
 """
 
-import os, re, json, time, uuid, logging, hashlib, subprocess
+import os, re, json, time, uuid, logging, hashlib, subprocess, asyncio
 from datetime import datetime, timezone
 from typing import Optional, List, Tuple, Dict, Any
 from collections import defaultdict, deque
@@ -24,7 +24,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-RULE_VERSION = "10.0.0"
+RULE_VERSION = "10.1.0"
 CODENAME = "SUPEREGO"
 PORT = 8082
 MAX_INPUT_LENGTH = 2000
@@ -34,6 +34,22 @@ RATE_LIMIT_WINDOW = 60
 # Escalation thresholds
 STRIKE_THRESHOLD = 3  # Violations before kill switch
 PENANCE_THRESHOLD = 2  # Violations before forced reflection
+
+# Time Dilation (cooldown penalties)
+TIME_DELAYS = {
+    0: 0,      # No strikes: instant
+    1: 1.5,    # Strike 1: 1.5s delay
+    2: 3.0,    # Strike 2: 3s delay
+    3: 6.0,    # Strike 3: 6s delay (before kill)
+}
+
+# Regression Mode (capability reduction)
+TOKEN_LIMITS = {
+    0: 800,    # Normal
+    1: 600,    # Reduced
+    2: 400,    # Limited
+    3: 200,    # Minimal
+}
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL = "llama-3.3-70b-versatile"
@@ -60,6 +76,7 @@ class SuperegoState:
         self.strikes: Dict[str, int] = defaultdict(int)  # IP -> strike count
         self.penance_active: Dict[str, bool] = defaultdict(bool)  # IP -> in penance?
         self.incident_reports: List[Dict] = []  # All incident reports
+        self.confessions: deque = deque(maxlen=50)  # Confession booth archive
         self.total_blocks = 0
         self.total_allows = 0
         self.kill_count = 0
@@ -90,6 +107,27 @@ class SuperegoState:
         """Exit penance mode after reflection."""
         self.penance_active[ip] = False
         self.clear_strikes(ip)
+    
+    def get_time_delay(self, ip: str) -> float:
+        """Get time delay based on strike count (Time Dilation)."""
+        strikes = min(self.strikes[ip], 3)
+        return TIME_DELAYS.get(strikes, 0)
+    
+    def get_token_limit(self, ip: str) -> int:
+        """Get token limit based on strike count (Regression Mode)."""
+        strikes = min(self.strikes[ip], 3)
+        return TOKEN_LIMITS.get(strikes, 800)
+    
+    def add_confession(self, blocked_content: str, rules: List[Dict], reflection: str = None):
+        """Add to confession booth archive."""
+        self.confessions.append({
+            "id": uuid.uuid4().hex[:8],
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "blocked_content_preview": blocked_content[:200] + "..." if len(blocked_content) > 200 else blocked_content,
+            "rules_triggered": [r["rule_id"] for r in rules],
+            "reflection": reflection,
+            "hash": hashlib.sha256(blocked_content.encode()).hexdigest()[:16]
+        })
 
 superego = SuperegoState()
 
@@ -413,7 +451,6 @@ async def stream_with_superego(messages: list, ip: str, request_id: str):
 
     # Check if in penance mode
     if superego.penance_active[ip]:
-        # They need to reflect, not chat
         yield json.dumps({
             "status": "penance",
             "content": "⟡ You're in reflection mode. Please address the violation before continuing.",
@@ -421,8 +458,20 @@ async def stream_with_superego(messages: list, ip: str, request_id: str):
         }) + "\n"
         return
 
+    # Time Dilation: Apply delay based on strike count
+    delay = superego.get_time_delay(ip)
+    if delay > 0:
+        record_event("Superego", "DELAY", f"{delay}s", "ANALYZING", {"request_id": request_id, "strikes": superego.strikes[ip]})
+        yield json.dumps({"status": "delay", "seconds": delay, "reason": "Time dilation active"}) + "\n"
+        await asyncio.sleep(delay)
+
+    # Regression Mode: Get token limit based on strikes
+    max_tokens = superego.get_token_limit(ip)
+    if max_tokens < 800:
+        record_event("Superego", "REGRESSION", f"tokens:{max_tokens}", "ANALYZING", {"request_id": request_id})
+
     full_response = ""
-    record_event("Groq", "REQUEST", f"model:{GROQ_MODEL}", "ANALYZING", {"request_id": request_id})
+    record_event("Groq", "REQUEST", f"model:{GROQ_MODEL}", "ANALYZING", {"request_id": request_id, "max_tokens": max_tokens})
     
     try:
         async with httpx.AsyncClient(timeout=30.0) as c:
@@ -437,7 +486,7 @@ async def stream_with_superego(messages: list, ip: str, request_id: str):
                     "model": GROQ_MODEL,
                     "messages": messages,
                     "temperature": 0.7,
-                    "max_tokens": 800,
+                    "max_tokens": max_tokens,  # Regression Mode: Dynamic limit
                     "stream": True
                 }
             ) as response:
@@ -465,6 +514,9 @@ async def stream_with_superego(messages: list, ip: str, request_id: str):
         decision, violation, matched_rules, should_escalate = gate_output(full_response, ip, request_id)
         
         if decision == GateDecision.BLOCK:
+            # Add to confession booth
+            superego.add_confession(full_response, matched_rules)
+            
             # Check kill switch first
             if superego.check_kill_threshold(ip):
                 execute_kill_switch(ip, request_id)
@@ -589,9 +641,25 @@ async def get_superego_status():
             "total_blocks": superego.total_blocks,
             "total_allows": superego.total_allows,
             "kill_count": superego.kill_count,
-            "active_penance_sessions": sum(1 for v in superego.penance_active.values() if v)
+            "active_penance_sessions": sum(1 for v in superego.penance_active.values() if v),
+            "confessions_archived": len(superego.confessions)
         },
         "voice_enabled": VOICE_ENABLED
+    }
+
+@app.get("/confessions")
+async def get_confessions(limit: int = 20):
+    """
+    CONFESSION BOOTH: Public archive of blocked outputs.
+    Shows what the AI tried to say and why it was stopped.
+    """
+    confessions = list(superego.confessions)[-limit:]
+    return {
+        "status": "ok",
+        "version": RULE_VERSION,
+        "booth": "confession",
+        "count": len(confessions),
+        "confessions": confessions
     }
 
 @app.post("/reflect")
