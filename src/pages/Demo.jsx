@@ -331,7 +331,12 @@ export default function Demo() {
 
                 try {
                     // MIRRORGATE OS (v7.0): Full MirrorDNA experience
-                    const response = await fetch("http://localhost:8082/mirror", {
+                    // Use production URL when not on localhost
+                    const PROXY_URL = window.location.hostname === 'localhost' 
+                        ? 'http://localhost:8082' 
+                        : 'https://proxy.activemirror.ai';
+                    
+                    const response = await fetch(`${PROXY_URL}/mirror`, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json"
