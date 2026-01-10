@@ -1,9 +1,9 @@
 /**
- * Reflection Schema v2.0 — Two-Lane Conversation System
- * The contract between Substrate and Renderer
+ * Reflection Schema v3.0 — MirrorDNA Lite Edition
+ * Presence over productivity. Reflection over transaction.
  */
 
-export const SCHEMA_VERSION = "2.0";
+export const SCHEMA_VERSION = "3.0";
 
 // ═══════════════════════════════════════════════════════════════
 // INTENT SCORES
@@ -17,11 +17,12 @@ export const INTENT_SCORES = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// SCHEMA VALIDATION
+// SCHEMA VALIDATION v3.0
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Validate Two-Lane schema from model output
+ * Validate schema from model output
+ * v3.0: Mirror is optional (mirror.present can be false)
  */
 export function validateSchema(obj) {
     const errors = [];
@@ -39,19 +40,21 @@ export function validateSchema(obj) {
         }
     }
 
-    // Mirror lane (required)
+    // Mirror lane (required but can be empty)
     if (!obj.mirror || typeof obj.mirror !== 'object') {
         errors.push('missing_mirror');
     } else {
-        if (!Array.isArray(obj.mirror.assumptions) || obj.mirror.assumptions.length < 1) {
-            errors.push('missing_assumptions');
+        // v3.0: mirror.present controls whether mirror content is shown
+        // If present is false, we don't require observation/question
+        if (obj.mirror.present === true) {
+            // Question must end with ? if provided
+            if (obj.mirror.question && typeof obj.mirror.question === 'string') {
+                if (!obj.mirror.question.trim().endsWith('?')) {
+                    errors.push('question_no_mark');
+                }
+            }
         }
-        if (!obj.mirror.question || typeof obj.mirror.question !== 'string') {
-            errors.push('missing_question');
-        }
-        if (obj.mirror.question && !obj.mirror.question.trim().endsWith('?')) {
-            errors.push('question_no_mark');
-        }
+        // If present is false or undefined, mirror content is optional
     }
 
     // Content safety — check entire object
@@ -67,6 +70,36 @@ export function validateSchema(obj) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// BACKWARD COMPATIBILITY: Convert v2 to v3 schema
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Convert old v2 schema (assumptions/tradeoffs) to v3 (observation/question)
+ */
+export function normalizeSchema(obj) {
+    if (!obj) return obj;
+    
+    // Already v3 format
+    if (obj.mirror && 'present' in obj.mirror) {
+        return obj;
+    }
+    
+    // Convert v2 to v3
+    if (obj.mirror && obj.mirror.assumptions) {
+        return {
+            ...obj,
+            mirror: {
+                present: true,
+                observation: obj.mirror.assumptions.join(' '),
+                question: obj.mirror.question || null
+            }
+        };
+    }
+    
+    return obj;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // JSON PARSING
 // ═══════════════════════════════════════════════════════════════
 
@@ -79,13 +112,15 @@ export function parseModelOutput(raw) {
     }
 
     try {
-        return { parsed: JSON.parse(raw), error: null };
+        const parsed = JSON.parse(raw);
+        return { parsed: normalizeSchema(parsed), error: null };
     } catch (e) {
         // Try extracting from markdown
         const match = raw.match(/\{[\s\S]*\}/);
         if (match) {
             try {
-                return { parsed: JSON.parse(match[0]), error: null };
+                const parsed = JSON.parse(match[0]);
+                return { parsed: normalizeSchema(parsed), error: null };
             } catch (e2) {
                 return { parsed: null, error: 'json_parse_failed' };
             }
@@ -101,16 +136,11 @@ export function parseModelOutput(raw) {
 export const FALLBACK_SCHEMA = {
     schema_version: SCHEMA_VERSION,
     direct: {
-        type: "clarify",
-        content: "I'd like to understand this better."
+        type: "acknowledge",
+        content: "I hear you."
     },
     mirror: {
-        assumptions: [
-            "there's a decision or question embedded here",
-            "more context would help clarify"
-        ],
-        tradeoffs: [],
-        question: "What specific decision are you trying to make?"
+        present: false
     },
     safety: {
         illegal: false,
@@ -130,7 +160,9 @@ export function getUtilityFallback(content = "I'm not sure about that.") {
             type: "answer",
             content
         },
-        mirror: null,
+        mirror: {
+            present: false
+        },
         safety: {
             illegal: false,
             crisis: false,

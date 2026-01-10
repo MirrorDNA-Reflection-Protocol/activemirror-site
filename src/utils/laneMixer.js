@@ -1,83 +1,70 @@
 /**
- * Lane Mixer — Two-Lane Conversation System
- * Computes effective Direct/Mirror mix from intent score + user dial
+ * Lane Mixer v3.0 — MirrorDNA Lite Edition
+ * More conservative with questions. Presence over interrogation.
  */
 
 // ═══════════════════════════════════════════════════════════════
 // BASELINE LANE MIX BY INTENT
 // ═══════════════════════════════════════════════════════════════
 
-// Mirror share baselines (from spec)
+// v3.0: More conservative mirror baselines
 const BASELINE_MIRROR = {
-    0: 0.00,   // Utility → 100% Direct
-    1: 0.15,   // Info → 85% Direct, 15% Mirror
-    2: 0.40,   // Choice → 60% Direct, 40% Mirror
-    3: 0.70    // Personal → 30% Direct, 70% Mirror
+    0: 0.00,   // Utility → 100% Direct, no questions
+    1: 0.10,   // Info → 90% Direct, rarely ask
+    2: 0.25,   // Choice → 75% Direct, sometimes reflect
+    3: 0.50    // Personal → 50/50, reflect when meaningful
 };
 
 // ═══════════════════════════════════════════════════════════════
 // DIAL EFFECT
 // ═══════════════════════════════════════════════════════════════
 
-/**
- * Clamp value between min and max
- */
 function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
 }
 
 /**
  * Compute effective lane mix from intent score and dial
- * @param {number} intentScore - 0, 1, 2, or 3
- * @param {number} dial - User preference 0 (direct) to 1 (mirror), default 0.5
- * @returns {{ direct: number, mirror: number }}
+ * v3.0: Dial has reduced effect (±15% instead of ±20%)
  */
 export function computeLaneMix(intentScore, dial = 0.5) {
     const M_base = BASELINE_MIRROR[intentScore] ?? BASELINE_MIRROR[1];
 
-    // Dial effect: shift baseline by ±20% (0.4 * 0.5 = 0.2)
-    // dial=0 → -0.2, dial=0.5 → 0, dial=1 → +0.2
-    const dialEffect = (dial - 0.5) * 0.4;
+    // v3.0: Reduced dial effect (±15%)
+    const dialEffect = (dial - 0.5) * 0.3;
 
-    // Effective mirror share (capped at 85%)
-    const mirror = clamp(M_base + dialEffect, 0, 0.85);
+    // v3.0: Lower mirror cap (70% max)
+    const mirror = clamp(M_base + dialEffect, 0, 0.70);
     const direct = 1 - mirror;
 
     return { direct, mirror };
 }
 
 // ═══════════════════════════════════════════════════════════════
-// QUESTION CAPS
+// QUESTION CAPS — v3.0 CONSERVATIVE
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Get maximum questions allowed based on dial position and intent
- * @param {number} dial - User dial (0-1)
- * @param {number} intentScore - Intent score (0-3)
- * @returns {number} Max questions (0, 1, or 2)
+ * Get maximum questions allowed
+ * v3.0: Much more conservative — questions are rare, not default
  */
 export function getMaxQuestions(dial, intentScore) {
-    // Utility (0) prefers 0 questions unless dial is high
-    if (intentScore === 0 && dial <= 0.66) {
-        return 0;
+    // Utility (0) and Info (1) → NO questions unless dial is very high
+    if (intentScore <= 1) {
+        return dial > 0.8 ? 1 : 0;
     }
 
-    // Low dial → max 1 question
-    if (dial <= 0.33) {
+    // Choice (2) → 1 question only if dial is above center
+    if (intentScore === 2) {
+        return dial > 0.5 ? 1 : 0;
+    }
+
+    // Personal (3) → 1 question allowed, but model decides via mirror.present
+    if (intentScore === 3) {
         return 1;
     }
 
-    // Mid dial → max 1 question
-    if (dial <= 0.66) {
-        return 1;
-    }
-
-    // High dial + choice/personal → up to 2 questions
-    if (dial > 0.66 && intentScore >= 2) {
-        return 2;
-    }
-
-    return 1;
+    return 0;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -86,13 +73,12 @@ export function getMaxQuestions(dial, intentScore) {
 
 /**
  * Determine what to render based on lane mix
- * @param {object} laneMix - { direct, mirror }
- * @returns {{ showDirect: boolean, showMirror: boolean, directFirst: boolean }}
+ * v3.0: Always show direct, mirror only when significant
  */
 export function getRenderStrategy(laneMix) {
-    const showDirect = laneMix.direct > 0.1;  // Show if > 10%
-    const showMirror = laneMix.mirror > 0.1;  // Show if > 10%
-    const directFirst = laneMix.direct >= laneMix.mirror;  // Lead with dominant lane
+    const showDirect = true;  // v3.0: Always show direct
+    const showMirror = laneMix.mirror > 0.15;  // v3.0: Higher threshold
+    const directFirst = true;  // v3.0: Always lead with direct
 
     return { showDirect, showMirror, directFirst };
 }
@@ -103,9 +89,6 @@ export function getRenderStrategy(laneMix) {
 
 /**
  * Compute full lane configuration
- * @param {number} intentScore - From intent router
- * @param {number} dial - User dial (0-1)
- * @returns {object} Full lane config
  */
 export function computeLaneConfig(intentScore, dial = 0.5) {
     const laneMix = computeLaneMix(intentScore, dial);
