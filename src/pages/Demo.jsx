@@ -237,6 +237,11 @@ export default function Demo() {
         }
     };
 
+    const cleanExit = () => {
+        localStorage.removeItem("mirror_chat_v10");
+        setMessages([]);
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -263,14 +268,14 @@ export default function Demo() {
                 transition={{ duration: 0.5 }}
                 className="absolute top-0 left-0 right-0 p-4 z-20 flex justify-between items-center"
             >
-                <a href="/" onMouseEnter={SoundEngine.playHover} className="group flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/5 hover:bg-white/10 transition-all hover:border-white/10 hover:scale-105 active:scale-95">
+                <a href="/" onClick={cleanExit} onMouseEnter={SoundEngine.playHover} className="group flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/5 hover:bg-white/10 transition-all hover:border-white/10 hover:scale-105 active:scale-95">
                     <ArrowLeft size={16} className="text-zinc-400 group-hover:text-white transition-colors" />
                     <span className="text-sm font-medium text-zinc-300 group-hover:text-white">Exit</span>
                 </a>
 
                 <div className="flex items-center gap-2 px-6 py-2 rounded-full bg-black/40 backdrop-blur-xl border border-white/5 shadow-2xl">
                     <span className="text-purple-400 text-lg animate-pulse shadow-purple-500/50">⟡</span>
-                    <span className="text-xs font-medium tracking-[0.2em] text-zinc-500 uppercase">Zenith</span>
+                    <span className="text-xs font-medium tracking-[0.2em] text-zinc-500 uppercase">Zenith 12.1</span>
                 </div>
 
                 <div className="relative">
@@ -294,7 +299,7 @@ export default function Demo() {
                                     <Plus size={16} /> New Reflection
                                 </button>
                                 <div className="h-px bg-white/5 mx-4 my-1" />
-                                <a href="/" className="w-full text-left px-4 py-3 hover:bg-white/5 flex items-center gap-3 text-sm text-zinc-300 hover:text-white transition-colors">
+                                <a href="/" onClick={cleanExit} className="w-full text-left px-4 py-3 hover:bg-white/5 flex items-center gap-3 text-sm text-zinc-300 hover:text-white transition-colors">
                                     <ArrowLeft size={16} /> Reality
                                 </a>
                                 <a href="https://github.com/MirrorDNA-Reflection-Protocol" target="_blank" className="w-full text-left px-4 py-3 hover:bg-white/5 flex items-center gap-3 text-sm text-zinc-300 hover:text-white transition-colors">
@@ -340,8 +345,8 @@ export default function Demo() {
                             className={`flex mb-8 ${msg.role === 'user' ? 'justify-end' : 'justify-start group'}`}
                         >
                             <div className={`max-w-[85%] md:max-w-2xl px-8 py-6 rounded-[2rem] leading-loose backdrop-blur-md transition-all duration-500 ${msg.role === 'user'
-                                    ? 'bg-white/5 text-white border border-white/5 shadow-[0_0_30px_rgba(255,255,255,0.02)]'
-                                    : 'text-zinc-200 hover:text-white'
+                                ? 'bg-white/5 text-white border border-white/5 shadow-[0_0_30px_rgba(255,255,255,0.02)]'
+                                : 'text-zinc-200 hover:text-white'
                                 }`}>
                                 <div className={`whitespace-pre-wrap ${msg.role === 'assistant' ? 'font-light text-lg/loose' : 'font-normal'}`}>
                                     <LiquidText text={msg.content} />

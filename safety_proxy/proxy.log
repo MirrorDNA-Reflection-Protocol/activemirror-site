@@ -227,3 +227,13 @@ INFO:     127.0.0.1:49844 - "GET /health HTTP/1.1" 200 OK
 INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
 INFO:     127.0.0.1:50188 - "GET /health HTTP/1.1" 200 OK
 INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50774 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50892 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.11:0 - "OPTIONS /mirror HTTP/1.1" 200 OK
+2026-01-10 22:05:20,718 | INFO | [41767d35] Stream requested. Hist: 0
+INFO:     103.210.48.11:0 - "POST /mirror HTTP/1.1" 200 OK
+2026-01-10 22:05:21,003 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-01-10 22:05:42,152 | INFO | [aee75ffa] Stream requested. Hist: 2
+INFO:     103.210.48.11:0 - "POST /mirror HTTP/1.1" 200 OK
+2026-01-10 22:05:42,341 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
