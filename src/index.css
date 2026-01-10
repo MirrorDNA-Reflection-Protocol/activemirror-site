@@ -37,6 +37,23 @@ html {
     display: inline-block;
 }
 
+/* Global Polish */
+::selection {
+    background: rgba(168, 85, 247, 0.3);
+    /* Purple-500 @ 30% */
+    color: white;
+}
+
+/* Utility: Hide Scrollbar but keep functionality */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
 /* Mirror response styling */
 .mirror-response {
     line-height: 1.8;
