@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
+import Landing from './pages/Landing';
 import Demo from './pages/Demo';
 import Mirror from './pages/Mirror';
 import MirrorWithAuth from './pages/MirrorWithAuth';
@@ -16,7 +17,8 @@ export default function App() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={<Landing />} />
+                <Route path="/home" element={<Home />} />
                 <Route path="/legal" element={<Legal />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
