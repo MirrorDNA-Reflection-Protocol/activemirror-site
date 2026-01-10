@@ -206,10 +206,11 @@ export default function Demo() {
 
             {/* HEADER (Floating Glass) */}
             <header className="absolute top-0 left-0 right-0 p-4 z-20 flex justify-between items-center">
-                <Link to="/" className="group flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/5 hover:bg-white/10 transition-all hover:border-white/10">
+                {/* EXIT: Use standard <a> for Hard Navigation */}
+                <a href="/" className="group flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/5 hover:bg-white/10 transition-all hover:border-white/10">
                     <ArrowLeft size={16} className="text-zinc-400 group-hover:text-white transition-colors" />
                     <span className="text-sm font-medium text-zinc-300 group-hover:text-white">Exit</span>
-                </Link>
+                </a>
 
                 <div className="flex items-center gap-2 px-6 py-2 rounded-full bg-black/40 backdrop-blur-xl border border-white/5 shadow-2xl">
                     <span className="text-purple-400 text-lg animate-pulse" style={{ animationDuration: '3s' }}>⟡</span>
@@ -230,14 +231,27 @@ export default function Demo() {
                                 initial={{ opacity: 0, scale: 0.9, y: 10 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                                className="absolute top-full right-0 mt-2 w-48 bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl z-50"
+                                className="absolute top-full right-0 mt-2 w-56 bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl z-50 py-1"
                             >
                                 <button onClick={() => { setMessages([]); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-white/5 flex items-center gap-3 text-sm text-zinc-300 hover:text-white transition-colors">
                                     <Plus size={16} /> New Reflection
                                 </button>
-                                <div className="h-px bg-white/5 mx-4" />
+
+                                <div className="h-px bg-white/5 mx-4 my-1" />
+
+                                <a href="/" className="w-full text-left px-4 py-3 hover:bg-white/5 flex items-center gap-3 text-sm text-zinc-300 hover:text-white transition-colors">
+                                    <ArrowLeft size={16} /> Return to Reality
+                                </a>
+                                <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/ecosystem/" target="_blank" className="w-full text-left px-4 py-3 hover:bg-white/5 flex items-center gap-3 text-sm text-zinc-300 hover:text-white transition-colors">
+                                    <Sparkles size={16} /> Ecosystem
+                                </a>
+                                <a href="https://github.com/MirrorDNA-Reflection-Protocol" target="_blank" className="w-full text-left px-4 py-3 hover:bg-white/5 flex items-center gap-3 text-sm text-zinc-300 hover:text-white transition-colors">
+                                    <span className="font-mono text-xs border border-zinc-600 rounded px-1">SRC</span> Protocol Source
+                                </a>
+
+                                <div className="h-px bg-white/5 mx-4 my-1" />
                                 <div className="px-4 py-2 text-[10px] text-zinc-600 uppercase tracking-widest text-center">
-                                    v11.0 ETHEREAL
+                                    v11.1 NAV
                                 </div>
                             </motion.div>
                         )}
@@ -281,8 +295,8 @@ export default function Demo() {
                             className={`flex mb-6 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
                             <div className={`max-w-[85%] md:max-w-2xl px-6 py-4 rounded-3xl leading-relaxed backdrop-blur-sm ${msg.role === 'user'
-                                    ? 'bg-white/10 text-white rounded-tr-sm border border-white/10 shadow-[0_0_20px_rgba(255,255,255,0.05)]'
-                                    : 'text-zinc-100'
+                                ? 'bg-white/10 text-white rounded-tr-sm border border-white/10 shadow-[0_0_20px_rgba(255,255,255,0.05)]'
+                                : 'text-zinc-100'
                                 }`}>
                                 <div className={`whitespace-pre-wrap ${msg.role === 'assistant' ? 'font-light text-lg/relaxed' : 'font-normal'}`}>
                                     {msg.role === 'assistant' ? renderMarkdown(msg.content) : msg.content}
