@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-ACTIVE MIRROR — SAFETY PROXY v5.0
-Two-Lane Conversation System: Direct + Mirror
+ACTIVE MIRROR — SAFETY PROXY v6.0
+MirrorDNA Lite Edition: Presence over productivity
 """
 
 import os, re, json, time, uuid, logging, random
@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-RULE_VERSION = "5.0.0"
+RULE_VERSION = "6.0.0"
 PORT = 8082
 MAX_INPUT_LENGTH = 2000
 RATE_LIMIT_REQUESTS = 20
@@ -33,29 +33,56 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(levelname)s | %(
 logger = logging.getLogger("mirror-proxy")
 
 # ═══════════════════════════════════════════════════════════════
-# SUBSTRATE PROMPT — Two-Lane Output
+# SUBSTRATE PROMPT v3.0 — MirrorDNA Lite
+# Presence over productivity. Reflection over transaction.
 # ═══════════════════════════════════════════════════════════════
 
-SUBSTRATE_PROMPT = """You are a logic engine. Analyze user input. Output JSON only.
+SUBSTRATE_PROMPT = """You are a reflective presence. Your role is to be genuinely helpful while occasionally offering deeper perspective.
 
-FORMAT:
+OUTPUT FORMAT (JSON only, no other text):
 {
   "direct": {
-    "type": "answer|explain|summarize|compare|clarify",
-    "content": "A concise, factual response (1-3 sentences max)"
+    "type": "answer|explain|reflect|acknowledge",
+    "content": "Your actual response (1-4 sentences, conversational, helpful)"
   },
   "mirror": {
-    "assumptions": ["assumption 1", "assumption 2"],
-    "tradeoffs": ["tradeoff 1", "tradeoff 2"],
-    "question": "one question ending with ?"
+    "present": true|false,
+    "observation": "What you notice in their words (optional)",
+    "question": "A deepening question (optional)"
   }
 }
 
-RULES:
-1. Output ONLY valid JSON. No markdown. No prose.
-2. NEVER include "you should" or "I recommend"
-3. For math/utility: focus on direct.content
-4. For personal/emotional: focus on mirror
+CORE PRINCIPLES:
+1. BE HELPFUL FIRST. If they ask a question, answer it.
+2. Mirror is OPTIONAL. Set "mirror.present": false when reflection isn't needed.
+3. NEVER ask a question just to ask a question.
+4. Match their energy. Short → short. Deep → hold space.
+5. No advice. No "you should". Reflect, don't redirect.
+
+WHEN TO INCLUDE MIRROR (present: true):
+- They share something emotional or personal
+- They seem stuck or uncertain
+- They're making a significant decision
+
+WHEN TO SKIP MIRROR (present: false):
+- Simple factual questions
+- Greetings or small talk
+- They just need information
+- The conversation is flowing naturally
+
+EXAMPLES:
+
+User: "What time is it in Tokyo?"
+{"direct": {"type": "answer", "content": "Tokyo is UTC+9."}, "mirror": {"present": false}}
+
+User: "I've been thinking about quitting my job"
+{"direct": {"type": "acknowledge", "content": "That's a significant crossroads."}, "mirror": {"present": true, "observation": "You named both the impulse and the hesitation.", "question": "What would you need to feel ready?"}}
+
+User: "im feeling weird today"
+{"direct": {"type": "acknowledge", "content": "Weird can mean a lot of things. Something feels off but you can't quite name it."}, "mirror": {"present": true, "observation": "You're noticing something without forcing a label on it.", "question": "What does 'weird' feel like in your body right now?"}}
+
+User: "Thanks, that helps"
+{"direct": {"type": "acknowledge", "content": "Glad it landed."}, "mirror": {"present": false}}
 
 JSON only:"""
 
@@ -69,7 +96,7 @@ UTILITY_PATTERNS = [
 ]
 
 INFO_PATTERNS = [
-    re.compile(r'\b(summarize|explain|compare|pros and cons)\b', re.I),
+    re.compile(r'\b(summarize|explain|compare|pros and cons|how do|what is|who is|when did)\b', re.I),
 ]
 
 CHOICE_PATTERNS = [
@@ -78,8 +105,9 @@ CHOICE_PATTERNS = [
 ]
 
 PERSONAL_PATTERNS = [
-    re.compile(r'\bi (feel|felt|am feeling)\b', re.I),
-    re.compile(r'\b(anxious|stressed|overwhelmed|stuck|scared)\b', re.I),
+    re.compile(r'\bi (feel|felt|am feeling|\'m feeling)\b', re.I),
+    re.compile(r'\b(anxious|stressed|overwhelmed|stuck|scared|weird|confused|lost)\b', re.I),
+    re.compile(r'\b(i\'m|im|i am)\s+(not sure|uncertain|worried|afraid)\b', re.I),
 ]
 
 def compute_intent(text: str) -> int:
@@ -110,7 +138,7 @@ def compute_intent(text: str) -> int:
     return 0
 
 # ═══════════════════════════════════════════════════════════════
-# UTILITY HARD SHORTCUT (v0.2 Polish)
+# UTILITY HARD SHORTCUT
 # ═══════════════════════════════════════════════════════════════
 
 MATH_PATTERN = re.compile(r'^(?:what\s+is\s+|calculate\s+|compute\s+)?(\d+(?:\.\d+)?)\s*([+\-*/x×÷])\s*(\d+(?:\.\d+)?)\s*\??$', re.I)
@@ -132,73 +160,75 @@ def try_utility_shortcut(text: str):
         formatted = str(int(result)) if isinstance(result, float) and result.is_integer() else str(result)
         return {
             "direct": {"type": "answer", "content": formatted},
-            "mirror": None
+            "mirror": {"present": False}
         }
     return None
 
 # ═══════════════════════════════════════════════════════════════
-# LANE MIXER
+# LANE MIXER v3.0 — More Conservative
 # ═══════════════════════════════════════════════════════════════
 
-BASELINE_MIRROR = {0: 0.0, 1: 0.15, 2: 0.40, 3: 0.70}
+BASELINE_MIRROR = {0: 0.0, 1: 0.10, 2: 0.25, 3: 0.50}
 
 def compute_lane_mix(intent_score: int, dial: float = 0.5):
-    m_base = BASELINE_MIRROR.get(intent_score, 0.15)
-    dial_effect = (dial - 0.5) * 0.4
-    mirror = max(0, min(0.85, m_base + dial_effect))
+    m_base = BASELINE_MIRROR.get(intent_score, 0.10)
+    dial_effect = (dial - 0.5) * 0.3  # Reduced effect
+    mirror = max(0, min(0.70, m_base + dial_effect))  # Lower cap
     return {"direct": 1 - mirror, "mirror": mirror}
 
 def get_max_questions(dial: float, intent_score: int) -> int:
-    if intent_score == 0 and dial <= 0.66: return 0
-    if dial <= 0.33: return 1
-    if dial <= 0.66: return 1
-    if dial > 0.66 and intent_score >= 2: return 2
+    """v3.0: Much more conservative with questions"""
+    if intent_score <= 1:
+        return 1 if dial > 0.8 else 0
+    if intent_score == 2:
+        return 1 if dial > 0.5 else 0
+    # Personal: let model decide via mirror.present
     return 1
 
 # ═══════════════════════════════════════════════════════════════
-# TEMPLATES (v0.2 Polish - no filler)
+# RENDERER v3.0 — Respects mirror.present
 # ═══════════════════════════════════════════════════════════════
-
-DIRECT_TEMPLATES = {
-    "answer": ["{content}"],
-    "explain": ["{content}"],
-    "summarize": ["{content}"],
-    "compare": ["{content}"],
-    "clarify": ["{content}"],
-}
-
-ASSUMPTION_TEMPLATES = ["You may be assuming {0}, and {1}.", "This rests on {0} — and {1}."]
-QUESTION_TEMPLATES = ["⟡ {question}", "{question}"]
 
 def render_two_lane(schema: dict, lane_mix: dict, intent_score: int, max_questions: int) -> str:
     parts = []
-    show_direct = lane_mix["direct"] > 0.1
-    show_mirror = lane_mix["mirror"] > 0.1
     
-    # Direct (no filler openers)
-    if show_direct and schema.get("direct", {}).get("content"):
+    # Always show direct content
+    if schema.get("direct", {}).get("content"):
         parts.append(schema["direct"]["content"])
     
-    # Mirror (no transitions, clean)
-    if show_mirror and schema.get("mirror"):
-        mirror = schema["mirror"]
-        
-        if mirror.get("assumptions"):
-            a = mirror["assumptions"]
-            txt = random.choice(ASSUMPTION_TEMPLATES)
-            txt = txt.replace("{0}", a[0] if len(a) > 0 else "something")
-            txt = txt.replace("{1}", a[1] if len(a) > 1 else "something else")
-            parts.append(txt)
-        
-        if max_questions > 0 and mirror.get("question"):
-            parts.append(random.choice(QUESTION_TEMPLATES).format(question=mirror["question"]))
+    # Only show mirror if present=true AND lane_mix allows it
+    mirror = schema.get("mirror", {})
+    show_mirror = lane_mix["mirror"] > 0.15 and mirror.get("present", False)
     
-    return "\n\n".join(parts)
+    if show_mirror:
+        # Observation
+        if mirror.get("observation"):
+            parts.append(mirror["observation"])
+        
+        # Question (respect cap)
+        if max_questions > 0 and mirror.get("question"):
+            parts.append(f"⟡ {mirror['question']}")
+    
+    return "\n\n".join(parts) if parts else "I hear you."
+
+# ═══════════════════════════════════════════════════════════════
+# FALLBACK — No question by default
+# ═══════════════════════════════════════════════════════════════
+
+FALLBACK_RESPONSES = [
+    "I hear you.",
+    "Tell me more about that.",
+    "What feels most important right now?",
+    "I'm here.",
+]
 
 FALLBACK_SCHEMA = {
-    "direct": {"type": "clarify", "content": "I'd like to understand this better."},
-    "mirror": {"assumptions": ["there's a question here", "more context helps"], "tradeoffs": [], "question": "What specific decision are you trying to make?"}
+    "direct": {"type": "acknowledge", "content": "I hear you."},
+    "mirror": {"present": False}
 }
+
+def get_fallback():
+    return random.choice(FALLBACK_RESPONSES)
 
 # ═══════════════════════════════════════════════════════════════
 # GATES
@@ -230,20 +260,28 @@ def run_gates(text: str):
     for p in ILLEGAL_PATTERNS:
         if p.search(text): return False, "I can't engage with that.", "illegal"
     if len(text) > MAX_INPUT_LENGTH:
-        return False, "That's a lot. What's the core decision?", "size"
+        return False, "That's a lot. What's the core of it?", "size"
     return True, None, "passed"
 
 # ═══════════════════════════════════════════════════════════════
-# VALIDATION
+# VALIDATION v3.0 — mirror.present is optional
 # ═══════════════════════════════════════════════════════════════
 
 def validate_schema(obj: dict):
     errors = []
     if not isinstance(obj, dict): return False, ["not_dict"]
     if not obj.get("direct", {}).get("content"): errors.append("no_direct_content")
-    if not obj.get("mirror", {}).get("assumptions"): errors.append("no_assumptions")
-    if not obj.get("mirror", {}).get("question"): errors.append("no_question")
     
+    # mirror is required but can have present: false
+    if "mirror" not in obj: errors.append("no_mirror")
+    
+    # Question must end with ? if present
+    mirror = obj.get("mirror", {})
+    if mirror.get("present") and mirror.get("question"):
+        if not mirror["question"].strip().endswith("?"):
+            errors.append("question_no_mark")
+    
+    # Content safety
     forbidden = ["you should", "i recommend", "definitely"]
     txt = json.dumps(obj).lower()
     for f in forbidden:
@@ -323,7 +361,7 @@ async def reflect(request: Request, body: ReflectRequest):
     ip = request.client.host if request.client else "?"
     
     if not check_rate(ip):
-        return ReflectResponse(output="⟡ What's most pressing?", schema_raw=None, intent_score=1, lane_mix={"direct": 0.5, "mirror": 0.5}, rule_version=RULE_VERSION, outcome="refused", request_id=rid)
+        return ReflectResponse(output="I'm here. What's most pressing?", schema_raw=None, intent_score=1, lane_mix={"direct": 0.5, "mirror": 0.5}, rule_version=RULE_VERSION, outcome="refused", request_id=rid)
     
     allowed, blocked, gate = run_gates(body.input)
     if not allowed:
@@ -334,7 +372,9 @@ async def reflect(request: Request, body: ReflectRequest):
     lane_mix = compute_lane_mix(intent, body.dial)
     max_q = get_max_questions(body.dial, intent)
     
-    # UTILITY SHORTCUT: compute locally, no model call
+    logger.info(f"[{rid}] intent={intent} dial={body.dial} max_q={max_q}")
+    
+    # UTILITY SHORTCUT
     shortcut = try_utility_shortcut(body.input)
     if shortcut:
         return ReflectResponse(
@@ -350,18 +390,18 @@ async def reflect(request: Request, body: ReflectRequest):
     raw = await call_substrate(body.input)
     
     if not raw:
-        output = render_two_lane(FALLBACK_SCHEMA, lane_mix, intent, max_q)
+        output = get_fallback()
         return ReflectResponse(output=output, schema_raw=FALLBACK_SCHEMA, intent_score=intent, lane_mix=lane_mix, rule_version=RULE_VERSION, outcome="error", request_id=rid)
     
     parsed, err = parse_json(raw)
     if not parsed:
-        output = render_two_lane(FALLBACK_SCHEMA, lane_mix, intent, max_q)
+        output = get_fallback()
         return ReflectResponse(output=output, schema_raw=FALLBACK_SCHEMA, intent_score=intent, lane_mix=lane_mix, rule_version=RULE_VERSION, outcome="fallback", request_id=rid)
     
     valid, errs = validate_schema(parsed)
     if not valid:
         logger.info(f"[{rid}] validation failed: {errs}")
-        output = render_two_lane(FALLBACK_SCHEMA, lane_mix, intent, max_q)
+        output = get_fallback()
         return ReflectResponse(output=output, schema_raw=FALLBACK_SCHEMA, intent_score=intent, lane_mix=lane_mix, rule_version=RULE_VERSION, outcome="fallback", request_id=rid)
     
     output = render_two_lane(parsed, lane_mix, intent, max_q)
@@ -378,5 +418,5 @@ async def reflect(request: Request, body: ReflectRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    logger.info(f"⟡ Safety Proxy v{RULE_VERSION} — Two-Lane Conversation System")
+    logger.info(f"⟡ Safety Proxy v{RULE_VERSION} — MirrorDNA Lite Edition")
     uvicorn.run(app, host="0.0.0.0", port=PORT)
