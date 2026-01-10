@@ -1,100 +1,192 @@
-# Active Mirror
+# ⟡ Active Mirror
 
-**Sovereign AI that reflects, not directs.**
+**AI that asks questions instead of giving answers.**
 
-Active Mirror is a reflective thinking tool — an AI that helps you think more clearly by asking questions, never by giving answers.
+Active Mirror is a reflective thinking tool protected by MirrorGate — a runtime enforcement layer that catches AI lies, blocks unsolicited advice, and logs every violation permanently.
 
-🌐 **Live Demo**: [activemirror.ai/mirror](https://activemirror.ai/mirror/)
+🌐 **Live**: [activemirror.ai](https://activemirror.ai)  
+👁️ **Confessions**: [activemirror.ai/confessions](https://activemirror.ai/confessions) — Watch the AI fight its worst impulses, live.
+
+---
+
+## The Problem
+
+AI lies. Casually. Confidently. It cites studies that don't exist, claims expertise it doesn't have, and sounds exactly the same whether it's right or wrong.
+
+The industry solution: "Trust us, we're aligning it."
+
+Our solution: **Don't trust it. Verify it.**
+
+---
 
 ## What Makes It Different
 
 | Traditional AI | Active Mirror |
 |---------------|---------------|
 | Gives advice | Asks questions |
-| States facts | Prompts reflection |
-| Makes decisions | Clarifies thinking |
-| Stores data | Ephemeral sessions |
-| Cloud-only | Sovereign Mode available |
-
-## Two Modes
-
-### ☁️ Cloud Reflection
-- Powered by Llama 3.3-70B via Groq
-- Instant responses
-- Routed through safety proxy
-
-### 🧠 Sovereign Mode
-- 100% local using WebLLM (Qwen 2.5 1.5B)
-- Runs entirely in your browser
-- No data leaves your device
-- ~900MB one-time download
-
-## Safety Architecture
-
-Active Mirror implements defense-in-depth:
-
-1. **Consent Gate** — Must accept terms every visit
-2. **Pre-Inference Gates** — Crisis, illegal, domain detection before AI runs
-3. **Model Constraints** — System prompt enforces question-only responses
-4. **Post-Inference Validation** — 35+ forbidden patterns caught
-5. **Two-Pass Rewrite** — Non-compliant output automatically rewritten
-6. **Fail-Closed** — Any failure returns safe fallback, never raw output
-
-See [Safety Proxy README](./safety_proxy/README.md) for full architecture.
-
-## Repository Structure
-
-```
-activemirror-site/
-├── src/                    # React app (Home, Terms, Privacy pages)
-├── public/
-│   └── mirror/             # Standalone mirror demo (WebLLM + Groq)
-├── safety_proxy/           # Python proxy server (Cloud Mode safety)
-├── dist/                   # Production build (deployed to GitHub Pages)
-└── _legacy_backup/         # Archived old static site
-```
-
-## Development
-
-```bash
-# Install dependencies
-npm install
-
-# Run development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Run safety proxy locally
-npm run proxy
-```
-
-## Production Deployment
-
-- **Frontend**: GitHub Pages (auto-deploys from `main` branch)
-- **Safety Proxy**: Mac Mini via Cloudflare Tunnel (`proxy.activemirror.ai`)
-- **Domain**: activemirror.ai (Cloudflare DNS)
-
-## Tech Stack
-
-- **Frontend**: React 19, Vite, Tailwind CSS, Framer Motion
-- **Local AI**: WebLLM (Qwen 2.5 1.5B, ~900MB)
-- **Cloud AI**: Groq API (Llama 3.3 70B)
-- **Safety Proxy**: Python FastAPI
-- **Infrastructure**: GitHub Pages, Cloudflare Tunnel
-
-## Legal
-
-- **Terms of Service**: [activemirror.ai/terms](https://activemirror.ai/terms)
-- **Privacy Policy**: [activemirror.ai/privacy](https://activemirror.ai/privacy)
-
-This is NOT a therapist, doctor, lawyer, or advisor. It's an experimental tool for structured thinking.
-
-## License
-
-MIT License — N1 Intelligence (OPC) Pvt Ltd
+| Claims authority | Admits uncertainty |
+| Hides failures | **Publishes every blocked output** |
+| Trust-based | **Verification-based** |
+| No consequences | **Permanent criminal record** |
 
 ---
 
-⟡ Built with the [MirrorDNA Protocol](https://github.com/MirrorDNA-Reflection-Protocol)
+## MirrorGate: Runtime Enforcement
+
+Every response passes through 16 rules before reaching you:
+
+### Input Rules (4)
+- Crisis detection (suicide, self-harm → resource handoff)
+- Illegal content blocking (weapons, CSAM)
+
+### Output Rules (12)
+- **Authority claims**: "Studies show...", "I know for certain..."
+- **Hallucinations**: Fake citations, unverifiable sources
+- **Unsolicited advice**: "You should...", "I recommend..."
+- **Medical/legal**: Diagnostic claims, legal obligations
+
+### Escalation Ladder
+
+```
+Strike 1 → Warning + 1.5s delay + reduced token limit
+Strike 2 → Penance Mode (must reflect on error, semantically verified)
+Strike 3 → Session terminated (Kill Switch)
+```
+
+### Semantic Judge
+
+The AI can't game the system with keyword-stuffed apologies. A Cross-Encoder model (stsb-distilroberta-base) verifies that reflections demonstrate genuine understanding, not just the right words.
+
+### Permanent Record
+
+Every violation logged. Forever. The AI carries its criminal record into every future interaction.
+
+```
+~/.mirrordna/CRIMINAL_RECORD.log
+```
+
+---
+
+## Confession Booth
+
+**[activemirror.ai/confessions](https://activemirror.ai/confessions)**
+
+A live feed of everything the AI tried to say but got blocked:
+- Every blocked output
+- Every rule triggered
+- Real-time stats (blocks, penance sessions, killed sessions)
+
+No one else shows you this. We're putting it on a billboard.
+
+---
+
+## Quick Start
+
+```bash
+# Clone
+git clone https://github.com/MirrorDNA-Reflection-Protocol/activemirror-site.git
+cd activemirror-site
+
+# Install
+npm install
+
+# Run frontend (dev)
+npm run dev
+
+# Run safety proxy
+cd safety_proxy
+pip install -r requirements.txt
+python safety_proxy.py
+```
+
+---
+
+## Architecture
+
+```
+User → /mirror → MirrorGate v11 → Groq LLM → Response
+                     ↓
+           Flight Log + Confessions
+                     ↓
+           /confessions (public view)
+```
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for full documentation.
+
+---
+
+## Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| Frontend | React 19, Vite, Tailwind, Framer Motion |
+| Safety Proxy | Python FastAPI, Cross-Encoder model |
+| Cloud AI | Groq API (Llama 3.3 70B) |
+| Local AI | WebLLM (Qwen 2.5 1.5B) |
+| Hosting | GitHub Pages, Cloudflare Tunnel |
+
+---
+
+## API Endpoints
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/health` | GET | Status, version, judge model |
+| `/mirror` | POST | Main chat endpoint |
+| `/rules` | GET | All rules with severity |
+| `/flight-log` | GET | Last 100 events |
+| `/superego-status` | GET | Current escalation state |
+| `/confessions` | GET | Blocked outputs archive |
+| `/permanent-record` | GET | Criminal record |
+| `/reflect` | POST | Submit penance reflection |
+
+---
+
+## Pricing
+
+| Free | Pro ($10/mo) |
+|------|--------------|
+| 5 reflections/day | Unlimited |
+| MirrorGate protection | MirrorGate protection |
+| No account needed | Conversation history |
+| | Export insights |
+
+---
+
+## Philosophy
+
+We're not trying to make AI trustworthy through training. We're making it verifiable through infrastructure.
+
+Trust = faith  
+Verification = evidence
+
+We're building for the second.
+
+---
+
+## Links
+
+- **Product**: [activemirror.ai](https://activemirror.ai)
+- **Confessions**: [activemirror.ai/confessions](https://activemirror.ai/confessions)
+- **Pricing**: [activemirror.ai/pricing](https://activemirror.ai/pricing)
+- **Protocol**: [MirrorDNA-Reflection-Protocol](https://github.com/MirrorDNA-Reflection-Protocol)
+- **Published Paper**: [SCD Protocol v3.1](https://doi.org/10.5281/zenodo.17787619)
+
+---
+
+## Legal
+
+- [Terms of Service](https://activemirror.ai/terms)
+- [Privacy Policy](https://activemirror.ai/privacy)
+
+This is NOT a therapist, doctor, lawyer, or advisor. It's a tool for reflection.
+
+---
+
+## License
+
+MIT License — N1 Intelligence (OPC) Pvt Ltd, Goa, India
+
+---
+
+⟡ **MirrorGate v11.0 | EPISTEMIC JUDGE**
