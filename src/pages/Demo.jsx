@@ -7,6 +7,7 @@ export default function Demo() {
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const bottomRef = useRef(null);
+    const inputRef = useRef(null);
 
     // Debug mount
     useEffect(() => {
@@ -89,8 +90,8 @@ export default function Demo() {
                 {messages.map((msg, i) => (
                     <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[85%] md:max-w-2xl px-5 py-3 rounded-2xl ${msg.role === 'user'
-                                ? 'bg-white text-black rounded-tr-sm'
-                                : 'bg-white/10 text-zinc-100 rounded-tl-sm border border-white/5'
+                            ? 'bg-white text-black rounded-tr-sm'
+                            : 'bg-white/10 text-zinc-100 rounded-tl-sm border border-white/5'
                             }`}>
                             <div className="whitespace-pre-wrap leading-relaxed">
                                 {msg.role === 'assistant' ? (
@@ -121,12 +122,12 @@ export default function Demo() {
             <div className="p-4 border-t border-white/10 bg-black sticky bottom-0">
                 <form onSubmit={handleSend} className="max-w-3xl mx-auto relative flex items-center gap-2">
                     <input
+                        ref={inputRef} // Add ref to input
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="Reflect..."
                         className="flex-1 bg-white/5 border border-white/10 rounded-full px-6 py-4 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all text-white placeholder-zinc-500"
-                        disabled={isLoading}
                         autoFocus
                     />
                     <button
