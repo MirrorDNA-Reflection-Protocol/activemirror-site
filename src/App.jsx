@@ -7,6 +7,7 @@ import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import TestLab from './pages/TestLab';
 import Hub from './pages/Hub';
+import Confessions from './pages/Confessions';
 
 export default function App() {
     return (
@@ -21,6 +22,7 @@ export default function App() {
                 <Route path="/mirror" element={<Demo />} />
                 <Route path="/lab" element={<TestLab />} />
                 <Route path="/hub" element={<Hub />} />
+                <Route path="/confessions" element={<Confessions />} />
             </Routes>
         </BrowserRouter>
     );
