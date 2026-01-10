@@ -2,17 +2,31 @@
  * ⟡ PRICING PAGE — Active Mirror Plans
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Check, Sparkles, Shield, MessageCircle, History, Download, Zap, ArrowLeft } from 'lucide-react';
 import { getUser, upgradeToPro, TIERS } from '../lib/auth';
+import { redirectToCheckout, checkUpgradeSuccess, clearUpgradeParam, STRIPE_CONFIG } from '../lib/stripe';
 import AuthModal from '../components/AuthModal';
 
 const Pricing = () => {
   const [user, setUser] = useState(getUser());
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState('signin');
+  const [justUpgraded, setJustUpgraded] = useState(false);
+
+  // Check for successful upgrade on mount
+  useEffect(() => {
+    if (checkUpgradeSuccess()) {
+      if (user) {
+        const upgraded = upgradeToPro(user);
+        setUser(upgraded);
+        setJustUpgraded(true);
+      }
+      clearUpgradeParam();
+    }
+  }, []);
 
   const handleUpgrade = () => {
     if (!user) {
@@ -20,16 +34,17 @@ const Pricing = () => {
       setShowAuth(true);
       return;
     }
-    // In production, this would open Stripe
-    // For now, upgrade directly (testing)
-    const upgraded = upgradeToPro(user);
-    setUser(upgraded);
-  };
-
-  const openStripeCheckout = () => {
-    // Stripe payment link (test mode)
-    // Replace with actual Stripe link when ready
-    window.open('https://buy.stripe.com/test_YOUR_LINK', '_blank');
+    
+    // Check if Stripe is configured
+    if (STRIPE_CONFIG.paymentLinkUrl.includes('YOUR_LINK')) {
+      // Stripe not configured — upgrade directly for testing
+      const upgraded = upgradeToPro(user);
+      setUser(upgraded);
+      setJustUpgraded(true);
+    } else {
+      // Stripe configured — redirect to checkout
+      redirectToCheckout(user.email);
+    }
   };
 
   return (
