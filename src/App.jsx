@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Demo from './pages/Demo';
+import Mirror from './pages/Mirror';
 import Legal from './pages/Legal';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
@@ -19,7 +20,8 @@ export default function App() {
                 <Route path="/legal" element={<Legal />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
-                <Route path="/mirror" element={<Demo />} />
+                <Route path="/mirror" element={<Mirror />} />
+                <Route path="/demo" element={<Demo />} />
                 <Route path="/lab" element={<TestLab />} />
                 <Route path="/hub" element={<Hub />} />
                 <Route path="/confessions" element={<Confessions />} />
