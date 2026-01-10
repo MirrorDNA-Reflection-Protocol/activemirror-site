@@ -330,8 +330,7 @@ export default function Demo() {
                 }
 
                 try {
-                    // MIRRORGATE OS (v7.0): Full MirrorDNA experience
-                    // Use production URL when not on localhost
+                    // MIRRORGATE OS (v8.0): Conversational with history
                     const PROXY_URL = window.location.hostname === 'localhost' 
                         ? 'http://localhost:8082' 
                         : 'https://proxy.activemirror.ai';
@@ -343,14 +342,8 @@ export default function Demo() {
                         },
                         body: JSON.stringify({
                             message: userMsg,
-                            persona: "reflection",
-                            dial: dial,
-                            turn_count: messages.length,
-                            is_first_message: messages.length === 0,
-                            previous_topics: messages
-                                .filter(m => m.role === 'user')
-                                .slice(-5)
-                                .map(m => m.content.slice(0, 50))
+                            history: messages.slice(-20),  // Send last 20 messages (10 exchanges)
+                            dial: dial
                         })
                     });
 
@@ -360,24 +353,13 @@ export default function Demo() {
 
                     const data = await response.json();
 
-                    if (data.status === "blocked") {
-                        setMessages(prev => [...prev, { role: "assistant", content: data.content }]); // Show refusal
-                        setIsLoading(false);
-                        return;
-                    }
-
-                    // Direct Utility Shortcut (no schema needed)
-                    if (data.source === "shortcut") {
+                    if (data.status === "blocked" || data.status === "rate_limited") {
                         setMessages(prev => [...prev, { role: "assistant", content: data.content }]);
                         setIsLoading(false);
                         return;
                     }
 
-                    // Standard Response
-                    setLastSchema(data.schema_raw);
-                    if (data.meta) {
-                        setSessionMeta(prev => ({ ...prev, ...data.meta }));
-                    }
+                    // v8.0: Simple response format - just add the content
                     setMessages(prev => [...prev, { role: "assistant", content: data.content }]);
                     setIsLoading(false);
                     return;
