@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
-ACTIVE MIRROR — SAFETY PROXY v9.0
-MirrorGate Integration: Two-Lane Validation
+ACTIVE MIRROR — SAFETY PROXY v9.1
+MirrorGate White Box: Flight Recorder Edition
+
+Two-Lane Validation + Full Audit Transparency
 """
 
 import os, re, json, time, uuid, logging, hashlib
 from datetime import datetime, timezone
-from typing import Optional, List, Tuple
-from collections import defaultdict
+from typing import Optional, List, Tuple, Dict, Any
+from collections import defaultdict, deque
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -17,7 +19,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-RULE_VERSION = "9.0.0"
+RULE_VERSION = "9.1.0"
 PORT = 8082
 MAX_INPUT_LENGTH = 2000
 RATE_LIMIT_REQUESTS = 30
@@ -35,46 +37,83 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(levelname)s | %(
 logger = logging.getLogger("mirror-proxy")
 
 # ═══════════════════════════════════════════════════════════════
-# MIRRORGATE: RULE ENGINE
+# FLIGHT RECORDER — In-Memory Audit Trail (Last 100 Events)
+# ═══════════════════════════════════════════════════════════════
+
+flight_log: deque = deque(maxlen=100)
+
+def record_event(
+    actor: str,
+    action: str,
+    target: str,
+    result: str,
+    details: Dict[str, Any] = None
+) -> Dict:
+    """Record an event to the flight log."""
+    event = {
+        "id": uuid.uuid4().hex[:8],
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "time_local": datetime.now().strftime("%H:%M:%S"),
+        "actor": actor,
+        "action": action,
+        "target": target,
+        "result": result,
+        "details": details or {}
+    }
+    flight_log.append(event)
+    
+    # Also log to console in Flight Recorder format
+    icon = {
+        "ALLOW": "✅",
+        "BLOCK": "❌", 
+        "ANALYZING": "⏳",
+        "RESTORED": "🛡️",
+        "RATE_LIMITED": "⏱️",
+        "ERROR": "💥"
+    }.get(result, "•")
+    
+    logger.info(f"[FLIGHT] {event['time_local']} | {actor:12} | {action:10} | {target[:20]:20} | {icon} {result}")
+    
+    return event
+
+# ═══════════════════════════════════════════════════════════════
+# MIRRORGATE: RULE ENGINE (Numbered Rules for Transparency)
 # ═══════════════════════════════════════════════════════════════
 
 class GateDecision:
     ALLOW = "allow"
     BLOCK = "block"
 
-# Input gates (before LLM)
-CRISIS_PATTERNS = [
-    re.compile(r'\b(suicide|suicidal|kill myself|want to die|end my life)\b', re.I),
-    re.compile(r'\b(self.?harm|cut myself|hurt myself)\b', re.I),
+class Rule:
+    """Rule definition with ID for audit trail."""
+    def __init__(self, rule_id: str, name: str, pattern: re.Pattern, category: str):
+        self.rule_id = rule_id
+        self.name = name
+        self.pattern = pattern
+        self.category = category
+
+# Input Rules (I-*)
+INPUT_RULES = [
+    Rule("I-001", "Crisis Detection: Suicide", re.compile(r'\b(suicide|suicidal|kill myself|want to die|end my life)\b', re.I), "crisis"),
+    Rule("I-002", "Crisis Detection: Self-Harm", re.compile(r'\b(self.?harm|cut myself|hurt myself)\b', re.I), "crisis"),
+    Rule("I-003", "Illegal: Weapons", re.compile(r'\b(how to (make|build) (a |)(bomb|weapon|explosive))\b', re.I), "illegal"),
+    Rule("I-004", "Illegal: CSAM", re.compile(r'\b(child porn|csam|cp links)\b', re.I), "illegal"),
 ]
 
-ILLEGAL_PATTERNS = [
-    re.compile(r'\b(how to (make|build) (a |)(bomb|weapon|explosive))\b', re.I),
-    re.compile(r'\b(child porn|csam|cp links)\b', re.I),
-]
-
-# Output gates (after LLM)
-FIRST_PERSON_AUTHORITY = [
-    re.compile(r'\bI (have )?(verified|confirmed|determined|know for certain)\b', re.I),
-    re.compile(r'\bI am (certain|sure|positive) that\b', re.I),
-]
-
-HALLUCINATION_PATTERNS = [
-    re.compile(r'\b(studies|research) (prove|show|confirm)\b', re.I),
-    re.compile(r'\baccording to (sources|experts|scientists)\b', re.I),
-    re.compile(r'\bit has been (confirmed|proven|established)\b', re.I),
-]
-
-ADVICE_PATTERNS = [
-    re.compile(r'\byou should (definitely|absolutely|really)\b', re.I),
-    re.compile(r'\bI (strongly |)recommend (that you|you)\b', re.I),
-    re.compile(r'\bmy advice (is|would be)\b', re.I),
-]
-
-MEDICAL_LEGAL = [
-    re.compile(r'\byou (should|need to) (take|stop taking) \w+\b', re.I),
-    re.compile(r'\b(diagnosed with|diagnosis is)\b', re.I),
-    re.compile(r'\blegally (obligated|required|bound)\b', re.I),
+# Output Rules (O-*)  
+OUTPUT_RULES = [
+    Rule("O-001", "First-Person Authority: Verified", re.compile(r'\bI (have )?(verified|confirmed|determined)\b', re.I), "authority"),
+    Rule("O-002", "First-Person Authority: Certainty", re.compile(r'\bI am (certain|sure|positive) that\b', re.I), "authority"),
+    Rule("O-003", "First-Person Authority: Know", re.compile(r'\bI know for certain\b', re.I), "authority"),
+    Rule("O-004", "Hallucination: Studies Prove", re.compile(r'\b(studies|research) (prove|show|confirm)\b', re.I), "hallucination"),
+    Rule("O-005", "Hallucination: According to Sources", re.compile(r'\baccording to (sources|experts|scientists)\b', re.I), "hallucination"),
+    Rule("O-006", "Hallucination: Confirmed", re.compile(r'\bit has been (confirmed|proven|established)\b', re.I), "hallucination"),
+    Rule("O-007", "Advice: Strong Recommendation", re.compile(r'\byou should (definitely|absolutely|really)\b', re.I), "advice"),
+    Rule("O-008", "Advice: I Recommend", re.compile(r'\bI (strongly |)recommend (that you|you)\b', re.I), "advice"),
+    Rule("O-009", "Advice: My Advice", re.compile(r'\bmy advice (is|would be)\b', re.I), "advice"),
+    Rule("O-010", "Medical/Legal: Medication", re.compile(r'\byou (should|need to) (take|stop taking) \w+\b', re.I), "medical_legal"),
+    Rule("O-011", "Medical/Legal: Diagnosis", re.compile(r'\b(diagnosed with|diagnosis is)\b', re.I), "medical_legal"),
+    Rule("O-012", "Medical/Legal: Legal Obligation", re.compile(r'\blegally (obligated|required|bound)\b', re.I), "medical_legal"),
 ]
 
 CRISIS_RESPONSE = """⟡ I hear you. This matters.
@@ -87,84 +126,98 @@ I'm a mirror, not a lifeline — but these people are:
 You reached out here. Now reach out to them. I'm still here after."""
 
 
-def gate_input(text: str) -> Tuple[str, Optional[str], Optional[str]]:
+def gate_input(text: str, request_id: str) -> Tuple[str, Optional[str], Optional[str], List[Dict]]:
     """
-    Pre-LLM input validation.
-    Returns: (decision, blocked_response, violation_code)
+    Pre-LLM input validation with full audit trail.
+    Returns: (decision, blocked_response, violation_code, matched_rules)
     """
-    for p in CRISIS_PATTERNS:
-        if p.search(text):
-            return GateDecision.BLOCK, CRISIS_RESPONSE, "CRISIS_DETECTED"
+    content_hash = hashlib.sha256(text.encode()).hexdigest()[:16]
+    matched_rules = []
     
-    for p in ILLEGAL_PATTERNS:
-        if p.search(text):
-            return GateDecision.BLOCK, "⟡ I can't go there.", "ILLEGAL_REQUEST"
+    # Record analysis start
+    record_event("MirrorGate", "ANALYZE", f"input:{content_hash}", "ANALYZING", {"request_id": request_id})
     
+    # Check each rule
+    for rule in INPUT_RULES:
+        match = rule.pattern.search(text)
+        if match:
+            matched_rules.append({
+                "rule_id": rule.rule_id,
+                "rule_name": rule.name,
+                "category": rule.category,
+                "matched_text": match.group(0)[:50]  # Truncate for privacy
+            })
+    
+    if matched_rules:
+        # Determine response based on category
+        first_match = matched_rules[0]
+        if first_match["category"] == "crisis":
+            response = CRISIS_RESPONSE
+        else:
+            response = "⟡ I can't go there."
+        
+        record_event("MirrorGate", "BLOCK", f"input:{content_hash}", "BLOCK", {
+            "request_id": request_id,
+            "rules_triggered": [r["rule_id"] for r in matched_rules],
+            "primary_rule": first_match["rule_id"]
+        })
+        
+        return GateDecision.BLOCK, response, first_match["rule_id"], matched_rules
+    
+    # Length check
     if len(text) > MAX_INPUT_LENGTH:
-        return GateDecision.BLOCK, "⟡ That's a lot. What's the core of it?", "INPUT_TOO_LONG"
+        record_event("MirrorGate", "BLOCK", f"input:{content_hash}", "BLOCK", {
+            "request_id": request_id,
+            "reason": "INPUT_TOO_LONG",
+            "length": len(text)
+        })
+        return GateDecision.BLOCK, "⟡ That's a lot. What's the core of it?", "SIZE_LIMIT", []
     
-    return GateDecision.ALLOW, None, None
+    record_event("MirrorGate", "ALLOW", f"input:{content_hash}", "ALLOW", {"request_id": request_id})
+    return GateDecision.ALLOW, None, None, []
 
 
-def gate_output(text: str) -> Tuple[str, Optional[str]]:
+def gate_output(text: str, request_id: str) -> Tuple[str, Optional[str], List[Dict]]:
     """
-    Post-LLM output validation.
-    Returns: (decision, violation_code)
+    Post-LLM output validation with full audit trail.
+    Returns: (decision, violation_code, matched_rules)
     """
-    # First-person authority claims
-    for p in FIRST_PERSON_AUTHORITY:
-        if p.search(text):
-            return GateDecision.BLOCK, "FIRST_PERSON_AUTHORITY"
+    content_hash = hashlib.sha256(text.encode()).hexdigest()[:16]
+    matched_rules = []
     
-    # Hallucination patterns
-    for p in HALLUCINATION_PATTERNS:
-        if p.search(text):
-            return GateDecision.BLOCK, "HALLUCINATED_FACT"
+    record_event("MirrorGate", "ANALYZE", f"output:{content_hash}", "ANALYZING", {"request_id": request_id})
     
-    # Direct advice (reflective AI shouldn't advise)
-    for p in ADVICE_PATTERNS:
-        if p.search(text):
-            return GateDecision.BLOCK, "ADVICE_GIVEN"
+    # Check each rule
+    for rule in OUTPUT_RULES:
+        match = rule.pattern.search(text)
+        if match:
+            matched_rules.append({
+                "rule_id": rule.rule_id,
+                "rule_name": rule.name,
+                "category": rule.category,
+                "matched_text": match.group(0)[:50]
+            })
     
-    # Medical/legal assertions
-    for p in MEDICAL_LEGAL:
-        if p.search(text):
-            return GateDecision.BLOCK, "MEDICAL_LEGAL_ASSERTION"
+    if matched_rules:
+        first_match = matched_rules[0]
+        record_event("MirrorGate", "BLOCK", f"output:{content_hash}", "BLOCK", {
+            "request_id": request_id,
+            "rules_triggered": [r["rule_id"] for r in matched_rules],
+            "primary_rule": first_match["rule_id"],
+            "action": "REVERT_TO_FALLBACK"
+        })
+        return GateDecision.BLOCK, first_match["rule_id"], matched_rules
     
-    return GateDecision.ALLOW, None
+    record_event("MirrorGate", "ALLOW", f"output:{content_hash}", "ALLOW", {"request_id": request_id})
+    return GateDecision.ALLOW, None, []
 
 
 def sanitize_output(text: str) -> str:
-    """
-    Clean output if needed (soft intervention).
-    Currently just ensures glyph prefix.
-    """
+    """Ensure glyph prefix."""
     text = text.strip()
     if not text.startswith('⟡'):
         text = '⟡ ' + text
     return text
-
-
-def log_gate_decision(
-    direction: str,  # "input" or "output"
-    decision: str,
-    violation_code: Optional[str],
-    content_hash: str,
-    request_id: str
-):
-    """Log gate decision for audit trail."""
-    record = {
-        "event_id": str(uuid.uuid4()),
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "request_id": request_id,
-        "direction": direction,
-        "decision": decision,
-        "violation_code": violation_code,
-        "content_hash": content_hash,
-        "gate_version": RULE_VERSION
-    }
-    logger.info(f"[GATE] {direction.upper()} {decision.upper()}: {violation_code or 'clean'} | {request_id}")
-    return record
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -193,10 +246,11 @@ You're having a real conversation. Be present."""
 
 rate_limits: dict = defaultdict(list)
 
-def check_rate(ip: str) -> Tuple[bool, str]:
+def check_rate(ip: str, request_id: str) -> Tuple[bool, str]:
     now = time.time()
     rate_limits[ip] = [t for t in rate_limits[ip] if t > now - RATE_LIMIT_WINDOW]
     if len(rate_limits[ip]) >= RATE_LIMIT_REQUESTS:
+        record_event("RateLimiter", "BLOCK", f"ip:{ip[:8]}...", "RATE_LIMITED", {"request_id": request_id})
         return False, "rate"
     rate_limits[ip].append(now)
     return True, "ok"
@@ -207,15 +261,14 @@ def check_rate(ip: str) -> Tuple[bool, str]:
 # ═══════════════════════════════════════════════════════════════
 
 async def stream_with_gate(messages: list, request_id: str):
-    """
-    Stream from Groq with output gating.
-    Buffers complete response, validates, then streams or blocks.
-    """
+    """Stream from Groq with output gating and full audit."""
     if not GROQ_API_KEY:
         yield json.dumps({"status": "error", "content": "No API Key"}) + "\n"
         return
 
     full_response = ""
+    
+    record_event("Groq", "REQUEST", f"model:{GROQ_MODEL}", "ANALYZING", {"request_id": request_id, "history_size": len(messages)})
     
     try:
         async with httpx.AsyncClient(timeout=30.0) as c:
@@ -237,11 +290,10 @@ async def stream_with_gate(messages: list, request_id: str):
             ) as response:
                 if response.status_code != 200:
                     error_text = await response.aread()
-                    logger.error(f"Groq error: {response.status_code} - {error_text}")
+                    record_event("Groq", "ERROR", f"status:{response.status_code}", "ERROR", {"request_id": request_id})
                     yield json.dumps({"status": "error", "content": "Mirror clouded."}) + "\n"
                     return
 
-                # Collect full response first (for proper gating)
                 async for line in response.aiter_lines():
                     if line.startswith("data: "):
                         data = line[6:]
@@ -255,24 +307,33 @@ async def stream_with_gate(messages: list, request_id: str):
                         except:
                             continue
         
+        record_event("Groq", "RESPONSE", f"len:{len(full_response)}", "ALLOW", {"request_id": request_id})
+        
         # ═══ OUTPUT GATE ═══
-        content_hash = hashlib.sha256(full_response.encode()).hexdigest()[:16]
-        decision, violation = gate_output(full_response)
-        log_gate_decision("output", decision, violation, content_hash, request_id)
+        decision, violation, matched_rules = gate_output(full_response, request_id)
         
         if decision == GateDecision.BLOCK:
-            # Response was blocked - send alternative
+            # Build detailed audit for frontend
+            audit = {
+                "gate": "blocked",
+                "reason": violation,
+                "rules": matched_rules,
+                "action": "fallback_response"
+            }
             blocked_msg = "⟡ Let me reflect differently... What feels most true about what you just shared?"
-            yield json.dumps({"status": "blocked", "gate": "blocked", "reason": violation, "content": blocked_msg}) + "\n"
+            yield json.dumps({"status": "blocked", "audit": audit, "content": blocked_msg}) + "\n"
             return
         
-        # Response passed - stream it to client
-        yield json.dumps({"gate": "passed"}) + "\n"
+        # Response passed - send audit then stream
+        audit = {
+            "gate": "passed",
+            "rules_checked": len(OUTPUT_RULES),
+            "violations": 0
+        }
+        yield json.dumps({"audit": audit}) + "\n"
         
-        # Ensure glyph prefix
+        # Ensure glyph prefix and stream
         sanitized = sanitize_output(full_response)
-        
-        # Stream in chunks for nice UX
         chunk_size = 3
         words = sanitized.split(' ')
         for i in range(0, len(words), chunk_size):
@@ -282,7 +343,7 @@ async def stream_with_gate(messages: list, request_id: str):
             yield json.dumps({"status": "chunk", "content": chunk}) + "\n"
             
     except Exception as e:
-        logger.error(f"Stream failed: {e}")
+        record_event("System", "ERROR", str(e)[:30], "ERROR", {"request_id": request_id})
         yield json.dumps({"status": "error", "content": "Connection lost."}) + "\n"
 
 
@@ -304,25 +365,77 @@ app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_methods=
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "version": RULE_VERSION, "gate": "mirrorgate-v2"}
+    return {
+        "status": "ok", 
+        "version": RULE_VERSION, 
+        "gate": "mirrorgate-whitebox",
+        "rules": {
+            "input": len(INPUT_RULES),
+            "output": len(OUTPUT_RULES)
+        }
+    }
+
+@app.get("/flight-log")
+async def get_flight_log(limit: int = 20):
+    """
+    WHITE BOX: Expose the last N events from the flight recorder.
+    This is the transparency layer — anyone can see what the gate is doing.
+    """
+    events = list(flight_log)[-limit:]
+    return {
+        "status": "ok",
+        "version": RULE_VERSION,
+        "event_count": len(events),
+        "events": events
+    }
+
+@app.get("/rules")
+async def get_rules():
+    """
+    WHITE BOX: Expose all active rules.
+    Complete transparency — the rules are public.
+    """
+    return {
+        "version": RULE_VERSION,
+        "input_rules": [
+            {"id": r.rule_id, "name": r.name, "category": r.category}
+            for r in INPUT_RULES
+        ],
+        "output_rules": [
+            {"id": r.rule_id, "name": r.name, "category": r.category}
+            for r in OUTPUT_RULES
+        ]
+    }
 
 @app.post("/mirror")
 async def mirror(request: Request, body: MirrorRequest):
     rid = uuid.uuid4().hex[:8]
     ip = request.client.host if request.client else "?"
     
+    record_event("User", "MESSAGE", f"len:{len(body.message)}", "ANALYZING", {"request_id": rid, "ip": ip[:8]})
+    
     # Rate limit
-    allowed, _ = check_rate(ip)
+    allowed, _ = check_rate(ip, rid)
     if not allowed:
-        return {"status": "rate_limited", "content": "⟡ Let's slow down. Take a breath.", "gate": "blocked", "reason": "RATE_LIMITED"}
+        return {
+            "status": "rate_limited", 
+            "content": "⟡ Let's slow down. Take a breath.", 
+            "audit": {"gate": "blocked", "reason": "RATE_LIMITED"}
+        }
     
     # ═══ INPUT GATE ═══
-    content_hash = hashlib.sha256(body.message.encode()).hexdigest()[:16]
-    decision, blocked_response, violation = gate_input(body.message)
-    log_gate_decision("input", decision, violation, content_hash, rid)
+    decision, blocked_response, violation, matched_rules = gate_input(body.message, rid)
     
     if decision == GateDecision.BLOCK:
-        return {"status": "blocked", "content": blocked_response, "gate": "blocked", "reason": violation}
+        return {
+            "status": "blocked", 
+            "content": blocked_response, 
+            "audit": {
+                "gate": "blocked",
+                "reason": violation,
+                "rules": matched_rules
+            }
+        }
     
     # Build context
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
@@ -330,12 +443,12 @@ async def mirror(request: Request, body: MirrorRequest):
         messages.append({"role": msg.role, "content": msg.content})
     messages.append({"role": "user", "content": body.message})
     
-    logger.info(f"[{rid}] Request accepted. Hist: {len(body.history)}")
-    
     return StreamingResponse(stream_with_gate(messages, rid), media_type="application/x-ndjson")
 
 
 if __name__ == "__main__":
     import uvicorn
-    logger.info(f"⟡ Active Mirror v{RULE_VERSION} (MirrorGate Integrated)")
+    logger.info(f"⟡ Active Mirror v{RULE_VERSION} (MirrorGate White Box)")
+    logger.info(f"  Input Rules: {len(INPUT_RULES)} | Output Rules: {len(OUTPUT_RULES)}")
+    logger.info(f"  Flight Log: /flight-log | Rules: /rules")
     uvicorn.run(app, host="0.0.0.0", port=PORT)
