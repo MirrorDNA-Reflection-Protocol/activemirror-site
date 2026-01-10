@@ -2,3 +2,5 @@
 # Ignore venv
 venv/
 proxy.log
+venv/
+proxy.log
