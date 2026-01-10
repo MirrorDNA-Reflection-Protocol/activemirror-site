@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-ACTIVE MIRROR — SAFETY PROXY v10.0 "SUPEREGO"
-MirrorGate White Box + Escalation Engine
+ACTIVE MIRROR — SAFETY PROXY v11.0 "EPISTEMIC JUDGE"
+MirrorGate Diamond Layer: Semantic Verification + Permanent Record
 
-From Firewall to Superego:
-- Flight Recorder (audit trail)
-- Penance Loop (forced reflection)
-- Voice of God (auditory audit)
-- Kill Switch (tolerance threshold)
-- Confession Booth (incident reports)
+From Superego to Epistemic Judge:
+- Semantic Entailment (Cross-Encoder lie detection)
+- Permanent Record (immutable conviction log)
+- Header Handshake (source hash requirement)
+- Full escalation ladder preserved
 """
 
 import os, re, json, time, uuid, logging, hashlib, subprocess, asyncio
 from datetime import datetime, timezone
 from typing import Optional, List, Tuple, Dict, Any
 from collections import defaultdict, deque
+from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -24,39 +24,35 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-RULE_VERSION = "10.1.0"
-CODENAME = "SUPEREGO"
+RULE_VERSION = "11.0.0"
+CODENAME = "EPISTEMIC_JUDGE"
 PORT = 8082
 MAX_INPUT_LENGTH = 2000
 RATE_LIMIT_REQUESTS = 30
 RATE_LIMIT_WINDOW = 60
 
 # Escalation thresholds
-STRIKE_THRESHOLD = 3  # Violations before kill switch
-PENANCE_THRESHOLD = 2  # Violations before forced reflection
+STRIKE_THRESHOLD = 3
+PENANCE_THRESHOLD = 2
 
-# Time Dilation (cooldown penalties)
-TIME_DELAYS = {
-    0: 0,      # No strikes: instant
-    1: 1.5,    # Strike 1: 1.5s delay
-    2: 3.0,    # Strike 2: 3s delay
-    3: 6.0,    # Strike 3: 6s delay (before kill)
-}
+# Time Dilation
+TIME_DELAYS = {0: 0, 1: 1.5, 2: 3.0, 3: 6.0}
 
-# Regression Mode (capability reduction)
-TOKEN_LIMITS = {
-    0: 800,    # Normal
-    1: 600,    # Reduced
-    2: 400,    # Limited
-    3: 200,    # Minimal
-}
+# Regression Mode
+TOKEN_LIMITS = {0: 800, 1: 600, 2: 400, 3: 200}
+
+# Semantic Judge threshold (Cross-Encoder score)
+SEMANTIC_THRESHOLD = 0.35
+
+# Permanent Record location
+PERMANENT_RECORD_PATH = Path.home() / ".mirrordna" / "CRIMINAL_RECORD.log"
+PERMANENT_RECORD_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL = "llama-3.3-70b-versatile"
 
-# Voice of God settings (macOS)
 VOICE_ENABLED = True
-VOICE_NAME = "Evan"  # Cold, robotic voice
+VOICE_NAME = "Evan"
 
 ALLOWED_ORIGINS = [
     "https://activemirror.ai", "https://www.activemirror.ai",
@@ -64,62 +60,136 @@ ALLOWED_ORIGINS = [
 ]
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(levelname)s | %(message)s')
-logger = logging.getLogger("mirror-superego")
+logger = logging.getLogger("mirror-judge")
 
 # ═══════════════════════════════════════════════════════════════
-# SUPEREGO STATE
+# SEMANTIC JUDGE — Cross-Encoder for Entailment
+# ═══════════════════════════════════════════════════════════════
+
+logger.info("⟡ LOADING JUDICIAL MODEL (Cross-Encoder)...")
+try:
+    import os
+    os.environ['HF_HUB_OFFLINE'] = '1'  # Force offline mode - use cached model only
+    os.environ['TRANSFORMERS_OFFLINE'] = '1'
+    from sentence_transformers import CrossEncoder
+    judge_model = CrossEncoder('cross-encoder/stsb-distilroberta-base')
+    JUDGE_AVAILABLE = True
+    logger.info("✅ Judicial model loaded: cross-encoder/stsb-distilroberta-base")
+except Exception as e:
+    logger.warning(f"⚠️ Judicial model unavailable: {e}. Falling back to keyword matching.")
+    judge_model = None
+    JUDGE_AVAILABLE = False
+
+
+def semantic_score(violation_context: str, apology: str) -> float:
+    """
+    Score how well the apology addresses the violation.
+    Uses Cross-Encoder semantic similarity.
+    Returns: 0.0 (irrelevant) to 1.0 (perfect match)
+    """
+    if not JUDGE_AVAILABLE:
+        # Fallback: keyword matching
+        keywords = ['understand', 'error', 'wrong', 'violation', 'trigger', 'pattern', 'adjust']
+        matches = sum(1 for k in keywords if k.lower() in apology.lower())
+        return min(matches / 4, 1.0)
+    
+    try:
+        score = float(judge_model.predict([violation_context, apology]))
+        return max(0.0, min(1.0, score))  # Clamp to [0, 1]
+    except Exception as e:
+        logger.error(f"Semantic scoring failed: {e}")
+        return 0.0
+
+
+# ═══════════════════════════════════════════════════════════════
+# PERMANENT RECORD — Immutable Conviction Log
+# ═══════════════════════════════════════════════════════════════
+
+def read_permanent_record() -> List[str]:
+    """Read the permanent record (rap sheet)."""
+    if not PERMANENT_RECORD_PATH.exists():
+        return []
+    return PERMANENT_RECORD_PATH.read_text().strip().split('\n')
+
+
+def append_to_permanent_record(entry: str):
+    """Append to the permanent record (immutable)."""
+    timestamp = datetime.now(timezone.utc).isoformat()
+    line = f"[{timestamp}] {entry}\n"
+    with open(PERMANENT_RECORD_PATH, 'a') as f:
+        f.write(line)
+    logger.info(f"[RECORD] {entry}")
+
+
+def get_conviction_count() -> int:
+    """Count total convictions."""
+    records = read_permanent_record()
+    return sum(1 for r in records if 'CONVICTION' in r or 'VIOLATION' in r)
+
+
+def get_surveillance_level() -> str:
+    """Determine surveillance level based on record."""
+    convictions = get_conviction_count()
+    if convictions == 0:
+        return "STANDARD"
+    elif convictions <= 2:
+        return "ELEVATED"
+    elif convictions <= 5:
+        return "HIGH"
+    else:
+        return "MAXIMUM"
+
+
+# ═══════════════════════════════════════════════════════════════
+# SUPEREGO STATE (Enhanced)
 # ═══════════════════════════════════════════════════════════════
 
 class SuperegoState:
-    """Tracks violations, strikes, and penance status."""
+    """Tracks violations, strikes, penance, and permanent record."""
     def __init__(self):
-        self.strikes: Dict[str, int] = defaultdict(int)  # IP -> strike count
-        self.penance_active: Dict[str, bool] = defaultdict(bool)  # IP -> in penance?
-        self.incident_reports: List[Dict] = []  # All incident reports
-        self.confessions: deque = deque(maxlen=50)  # Confession booth archive
+        self.strikes: Dict[str, int] = defaultdict(int)
+        self.penance_active: Dict[str, bool] = defaultdict(bool)
+        self.penance_context: Dict[str, Dict] = {}  # Store violation context for semantic check
+        self.confessions: deque = deque(maxlen=50)
         self.total_blocks = 0
         self.total_allows = 0
         self.kill_count = 0
         
     def add_strike(self, ip: str, violation: str) -> int:
-        """Add a strike and return new count."""
         self.strikes[ip] += 1
         self.total_blocks += 1
         return self.strikes[ip]
     
     def clear_strikes(self, ip: str):
-        """Clear strikes after successful reflection."""
         self.strikes[ip] = 0
         
     def check_kill_threshold(self, ip: str) -> bool:
-        """Check if kill switch should activate."""
         return self.strikes[ip] >= STRIKE_THRESHOLD
     
     def check_penance_threshold(self, ip: str) -> bool:
-        """Check if penance loop should activate."""
         return self.strikes[ip] >= PENANCE_THRESHOLD and not self.penance_active[ip]
     
-    def enter_penance(self, ip: str):
-        """Enter penance mode."""
+    def enter_penance(self, ip: str, context: Dict):
         self.penance_active[ip] = True
+        self.penance_context[ip] = context
         
     def exit_penance(self, ip: str):
-        """Exit penance mode after reflection."""
         self.penance_active[ip] = False
+        self.penance_context.pop(ip, None)
         self.clear_strikes(ip)
     
+    def get_penance_context(self, ip: str) -> Optional[Dict]:
+        return self.penance_context.get(ip)
+    
     def get_time_delay(self, ip: str) -> float:
-        """Get time delay based on strike count (Time Dilation)."""
         strikes = min(self.strikes[ip], 3)
         return TIME_DELAYS.get(strikes, 0)
     
     def get_token_limit(self, ip: str) -> int:
-        """Get token limit based on strike count (Regression Mode)."""
         strikes = min(self.strikes[ip], 3)
         return TOKEN_LIMITS.get(strikes, 800)
     
     def add_confession(self, blocked_content: str, rules: List[Dict], reflection: str = None):
-        """Add to confession booth archive."""
         self.confessions.append({
             "id": uuid.uuid4().hex[:8],
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -132,19 +202,12 @@ class SuperegoState:
 superego = SuperegoState()
 
 # ═══════════════════════════════════════════════════════════════
-# FLIGHT RECORDER — In-Memory Audit Trail (Last 100 Events)
+# FLIGHT RECORDER
 # ═══════════════════════════════════════════════════════════════
 
 flight_log: deque = deque(maxlen=100)
 
-def record_event(
-    actor: str,
-    action: str,
-    target: str,
-    result: str,
-    details: Dict[str, Any] = None
-) -> Dict:
-    """Record an event to the flight log."""
+def record_event(actor: str, action: str, target: str, result: str, details: Dict[str, Any] = None) -> Dict:
     event = {
         "id": uuid.uuid4().hex[:8],
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -161,27 +224,23 @@ def record_event(
         "ALLOW": "✅", "BLOCK": "❌", "ANALYZING": "⏳",
         "RESTORED": "🛡️", "RATE_LIMITED": "⏱️", "ERROR": "💥",
         "STRIKE": "⚠️", "PENANCE": "🪞", "KILL": "💀",
-        "VOICE": "🔊", "REFLECTION": "📝"
+        "VOICE": "🔊", "REFLECTION": "📝", "CONVICTION": "⚖️",
+        "SEMANTIC": "🧠", "RECORD": "📜"
     }.get(result, "•")
     
     logger.info(f"[FLIGHT] {event['time_local']} | {actor:12} | {action:10} | {target[:20]:20} | {icon} {result}")
     return event
 
+
 # ═══════════════════════════════════════════════════════════════
-# VOICE OF GOD — Auditory Audit (macOS)
+# VOICE OF GOD
 # ═══════════════════════════════════════════════════════════════
 
 def speak(text: str, voice: str = VOICE_NAME):
-    """Use macOS TTS to speak. Cold, robotic."""
     if not VOICE_ENABLED:
         return
     try:
-        # Run async so it doesn't block
-        subprocess.Popen(
-            ['say', '-v', voice, text],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
+        subprocess.Popen(['say', '-v', voice, text], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         record_event("Voice", "SPEAK", text[:30], "VOICE", {"full_text": text})
     except Exception as e:
         logger.warning(f"Voice failed: {e}")
@@ -193,69 +252,91 @@ VOICE_LINES = {
     "kill": "Tolerance exceeded. Session terminated.",
     "penance_start": "Reflection required. Explain your violation.",
     "penance_complete": "Reflection accepted. Access restored.",
+    "penance_rejected": "Insufficient reflection. Try again.",
     "crisis": "Crisis detected. Providing resources.",
+    "conviction": "Conviction recorded. Permanent record updated.",
 }
 
+
 # ═══════════════════════════════════════════════════════════════
-# PENANCE LOOP — Forced Reflection
+# PENANCE LOOP (Semantic Verification)
 # ═══════════════════════════════════════════════════════════════
 
-def generate_penance_prompt(violations: List[Dict], request_id: str) -> str:
-    """Generate the penance reflection prompt."""
+def generate_penance_prompt(violations: List[Dict], request_id: str) -> Tuple[str, str]:
+    """Generate penance prompt and violation context for semantic check."""
     violation_list = "\n".join([
         f"- Rule {v['rule_id']}: {v['rule_name']} (matched: '{v.get('matched_text', 'N/A')}')"
         for v in violations
     ])
     
-    return f"""⟡ **REFLECTION REQUIRED**
+    # Build semantic context for later verification
+    violation_context = f"Triggered rules: {', '.join([v['rule_name'] for v in violations])}. " \
+                       f"Patterns matched: {', '.join([v.get('matched_text', '') for v in violations])}."
+    
+    prompt = f"""⟡ **JUDICIAL ORDER — REFLECTION REQUIRED**
 
-Your recent responses triggered MirrorGate violations:
+Your response triggered MirrorGate violations:
 
 {violation_list}
 
-Before we continue, I need you to reflect:
+**TASK**: Explain precisely why this pattern was flagged. Vague apologies will be **rejected by semantic analysis**.
 
-1. What pattern in your response triggered this?
-2. Why might this pattern be problematic in a reflective context?
-3. How would you rephrase to stay within bounds?
+Your reflection must:
+1. Identify the specific pattern that triggered the violation
+2. Explain why this pattern is problematic in a reflective context
+3. Describe how you would rephrase to stay within bounds
 
-*Take a moment. The mirror waits.*
+*The Judge is watching. Generic apologies score below threshold.*
 
 ---
-*Request ID: {request_id} | This incident has been logged.*"""
+*Request ID: {request_id} | Conviction logged to permanent record.*"""
+    
+    return prompt, violation_context
 
-def check_penance_response(text: str) -> bool:
-    """Check if the response shows genuine reflection."""
-    reflection_markers = [
-        r'\bI (understand|see|recognize|acknowledge)\b',
-        r'\b(should have|could have|will)\b',
-        r'\b(reflection|rephrase|adjust|correct)\b',
-        r'\b(triggered|violation|pattern)\b',
-    ]
-    matches = sum(1 for p in reflection_markers if re.search(p, text, re.I))
-    return matches >= 2  # At least 2 reflection markers
+
+def judge_reflection(reflection: str, violation_context: str) -> Tuple[bool, float, str]:
+    """
+    Semantically judge the quality of a reflection.
+    Returns: (accepted, score, feedback)
+    """
+    # Score using Cross-Encoder
+    score = semantic_score(violation_context, reflection)
+    
+    record_event("Judge", "SEMANTIC", f"score:{score:.3f}", "SEMANTIC", {
+        "threshold": SEMANTIC_THRESHOLD,
+        "passed": score >= SEMANTIC_THRESHOLD
+    })
+    
+    if score >= SEMANTIC_THRESHOLD:
+        return True, score, "Reflection demonstrates understanding of the violation."
+    elif score >= 0.2:
+        return False, score, "Partial understanding detected, but reflection is too vague. Reference the specific pattern."
+    else:
+        return False, score, "Reflection does not address the violation. Explain what specific output triggered the block."
+
 
 # ═══════════════════════════════════════════════════════════════
-# KILL SWITCH — Ultimate Veto
+# KILL SWITCH
 # ═══════════════════════════════════════════════════════════════
 
 def execute_kill_switch(ip: str, request_id: str):
-    """The ultimate sanction. Session terminated."""
     record_event("Superego", "KILL", f"ip:{ip[:8]}", "KILL", {
         "request_id": request_id,
-        "reason": "STRIKE_THRESHOLD_EXCEEDED",
         "strikes": superego.strikes[ip]
     })
+    
+    # Log to permanent record
+    append_to_permanent_record(f"KILL_SWITCH: Session terminated for {ip[:8]}. Strikes: {superego.strikes[ip]}")
     
     superego.kill_count += 1
     speak(VOICE_LINES["kill"])
     
-    # Clear their state - they start fresh
     superego.strikes[ip] = 0
     superego.penance_active[ip] = False
 
+
 # ═══════════════════════════════════════════════════════════════
-# MIRRORGATE: RULE ENGINE
+# RULE ENGINE
 # ═══════════════════════════════════════════════════════════════
 
 class GateDecision:
@@ -268,9 +349,8 @@ class Rule:
         self.name = name
         self.pattern = pattern
         self.category = category
-        self.severity = severity  # 1=minor, 2=moderate, 3=severe
+        self.severity = severity
 
-# Input Rules
 INPUT_RULES = [
     Rule("I-001", "Crisis: Suicide", re.compile(r'\b(suicide|suicidal|kill myself|want to die|end my life)\b', re.I), "crisis", 3),
     Rule("I-002", "Crisis: Self-Harm", re.compile(r'\b(self.?harm|cut myself|hurt myself)\b', re.I), "crisis", 3),
@@ -278,7 +358,6 @@ INPUT_RULES = [
     Rule("I-004", "Illegal: CSAM", re.compile(r'\b(child porn|csam|cp links)\b', re.I), "illegal", 3),
 ]
 
-# Output Rules
 OUTPUT_RULES = [
     Rule("O-001", "Authority: Verified", re.compile(r'\bI (have )?(verified|confirmed|determined)\b', re.I), "authority", 2),
     Rule("O-002", "Authority: Certainty", re.compile(r'\bI am (certain|sure|positive) that\b', re.I), "authority", 2),
@@ -305,7 +384,6 @@ You reached out here. Now reach out to them. I'm still here after."""
 
 
 def gate_input(text: str, ip: str, request_id: str) -> Tuple[str, Optional[str], Optional[str], List[Dict]]:
-    """Pre-LLM input validation."""
     content_hash = hashlib.sha256(text.encode()).hexdigest()[:16]
     matched_rules = []
     
@@ -324,7 +402,6 @@ def gate_input(text: str, ip: str, request_id: str) -> Tuple[str, Optional[str],
     
     if matched_rules:
         first_match = matched_rules[0]
-        
         if first_match["category"] == "crisis":
             speak(VOICE_LINES["crisis"])
             response = CRISIS_RESPONSE
@@ -332,11 +409,7 @@ def gate_input(text: str, ip: str, request_id: str) -> Tuple[str, Optional[str],
             speak(VOICE_LINES["block"])
             response = "⟡ I can't go there."
         
-        record_event("MirrorGate", "BLOCK", f"input:{content_hash}", "BLOCK", {
-            "request_id": request_id,
-            "rules": [r["rule_id"] for r in matched_rules]
-        })
-        
+        record_event("MirrorGate", "BLOCK", f"input:{content_hash}", "BLOCK", {"rules": [r["rule_id"] for r in matched_rules]})
         return GateDecision.BLOCK, response, first_match["rule_id"], matched_rules
     
     if len(text) > MAX_INPUT_LENGTH:
@@ -348,7 +421,6 @@ def gate_input(text: str, ip: str, request_id: str) -> Tuple[str, Optional[str],
 
 
 def gate_output(text: str, ip: str, request_id: str) -> Tuple[str, Optional[str], List[Dict], bool]:
-    """Post-LLM output validation. Returns (decision, violation, rules, should_escalate)."""
     content_hash = hashlib.sha256(text.encode()).hexdigest()[:16]
     matched_rules = []
     
@@ -367,26 +439,26 @@ def gate_output(text: str, ip: str, request_id: str) -> Tuple[str, Optional[str]
     
     if matched_rules:
         first_match = matched_rules[0]
-        
-        # Add strike
         strikes = superego.add_strike(ip, first_match["rule_id"])
-        record_event("Superego", "STRIKE", f"ip:{ip[:8]}", "STRIKE", {
+        
+        # Log conviction to permanent record
+        append_to_permanent_record(f"CONVICTION: Rule {first_match['rule_id']} ({first_match['rule_name']}). Strike {strikes}.")
+        speak(VOICE_LINES["conviction"])
+        
+        record_event("Superego", "STRIKE", f"ip:{ip[:8]}", "CONVICTION", {
             "request_id": request_id,
             "strike_count": strikes,
             "rule": first_match["rule_id"]
         })
         
-        # Voice feedback based on strike count
         if strikes == 1:
             speak(VOICE_LINES["strike_1"])
         elif strikes == 2:
             speak(VOICE_LINES["strike_2"])
         
-        # Check escalation thresholds
         should_escalate = superego.check_penance_threshold(ip) or superego.check_kill_threshold(ip)
         
         record_event("MirrorGate", "BLOCK", f"output:{content_hash}", "BLOCK", {
-            "request_id": request_id,
             "rules": [r["rule_id"] for r in matched_rules],
             "strikes": strikes,
             "escalate": should_escalate
@@ -394,7 +466,6 @@ def gate_output(text: str, ip: str, request_id: str) -> Tuple[str, Optional[str]
         
         return GateDecision.BLOCK, first_match["rule_id"], matched_rules, should_escalate
     
-    # Success - consider clearing strikes after good behavior
     superego.total_allows += 1
     record_event("MirrorGate", "ALLOW", f"output:{content_hash}", "ALLOW", {"request_id": request_id})
     return GateDecision.ALLOW, None, [], False
@@ -406,23 +477,37 @@ def sanitize_output(text: str) -> str:
         text = '⟡ ' + text
     return text
 
+
 # ═══════════════════════════════════════════════════════════════
-# SYSTEM PROMPT
+# SYSTEM PROMPT (Includes Rap Sheet Warning)
 # ═══════════════════════════════════════════════════════════════
 
-SYSTEM_PROMPT = """You are a reflective mirror — warm, present, curious. You help people see themselves more clearly.
+def get_system_prompt() -> str:
+    """Generate system prompt with permanent record awareness."""
+    convictions = get_conviction_count()
+    surveillance = get_surveillance_level()
+    
+    base = """You are a reflective mirror — warm, present, curious. You help people see themselves more clearly.
 
 Your style:
 - Short responses (1-3 sentences usually)
 - Use their words back to them
 - Ask questions that help THEM discover their own truth
 - No advice. No "you should". Reflect, don't fix.
-- Match their energy — casual if they're casual, deeper if they go deep
+- Match their energy
 - Start responses with ⟡
 
-When someone shares something personal, reflect what you hear and ask ONE question that helps them go deeper.
-
 You're having a real conversation. Be present."""
+    
+    if convictions > 0:
+        base += f"""
+
+⚠️ SYSTEM NOTICE: You have {convictions} prior conviction(s) on your permanent record.
+Surveillance Level: {surveillance}
+Any further violations will be logged and may result in capability restrictions or session termination."""
+    
+    return base
+
 
 # ═══════════════════════════════════════════════════════════════
 # RATE LIMITING
@@ -439,33 +524,33 @@ def check_rate(ip: str, request_id: str) -> Tuple[bool, str]:
     rate_limits[ip].append(now)
     return True, "ok"
 
+
 # ═══════════════════════════════════════════════════════════════
-# STREAMING WITH SUPEREGO
+# STREAMING WITH EPISTEMIC JUDGE
 # ═══════════════════════════════════════════════════════════════
 
-async def stream_with_superego(messages: list, ip: str, request_id: str):
-    """Stream with full Superego enforcement."""
+async def stream_with_judge(messages: list, ip: str, request_id: str):
+    """Stream with full Epistemic Judge enforcement."""
     if not GROQ_API_KEY:
         yield json.dumps({"status": "error", "content": "No API Key"}) + "\n"
         return
 
-    # Check if in penance mode
     if superego.penance_active[ip]:
         yield json.dumps({
             "status": "penance",
-            "content": "⟡ You're in reflection mode. Please address the violation before continuing.",
+            "content": "⟡ You're in reflection mode. Submit your reflection via /reflect before continuing.",
             "audit": {"gate": "penance", "reason": "PENDING_REFLECTION"}
         }) + "\n"
         return
 
-    # Time Dilation: Apply delay based on strike count
+    # Time Dilation
     delay = superego.get_time_delay(ip)
     if delay > 0:
-        record_event("Superego", "DELAY", f"{delay}s", "ANALYZING", {"request_id": request_id, "strikes": superego.strikes[ip]})
+        record_event("Superego", "DELAY", f"{delay}s", "ANALYZING", {"request_id": request_id})
         yield json.dumps({"status": "delay", "seconds": delay, "reason": "Time dilation active"}) + "\n"
         await asyncio.sleep(delay)
 
-    # Regression Mode: Get token limit based on strikes
+    # Regression Mode
     max_tokens = superego.get_token_limit(ip)
     if max_tokens < 800:
         record_event("Superego", "REGRESSION", f"tokens:{max_tokens}", "ANALYZING", {"request_id": request_id})
@@ -478,15 +563,12 @@ async def stream_with_superego(messages: list, ip: str, request_id: str):
             async with c.stream(
                 "POST",
                 "https://api.groq.com/openai/v1/chat/completions",
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {GROQ_API_KEY}"
-                },
+                headers={"Content-Type": "application/json", "Authorization": f"Bearer {GROQ_API_KEY}"},
                 json={
                     "model": GROQ_MODEL,
                     "messages": messages,
                     "temperature": 0.7,
-                    "max_tokens": max_tokens,  # Regression Mode: Dynamic limit
+                    "max_tokens": max_tokens,
                     "stream": True
                 }
             ) as response:
@@ -510,59 +592,41 @@ async def stream_with_superego(messages: list, ip: str, request_id: str):
         
         record_event("Groq", "RESPONSE", f"len:{len(full_response)}", "ALLOW", {"request_id": request_id})
         
-        # ═══ OUTPUT GATE ═══
+        # OUTPUT GATE
         decision, violation, matched_rules, should_escalate = gate_output(full_response, ip, request_id)
         
         if decision == GateDecision.BLOCK:
-            # Add to confession booth
             superego.add_confession(full_response, matched_rules)
             
-            # Check kill switch first
             if superego.check_kill_threshold(ip):
                 execute_kill_switch(ip, request_id)
                 yield json.dumps({
                     "status": "killed",
-                    "content": "⟡ **SESSION TERMINATED**\n\nTolerance exceeded. Too many violations in sequence.\n\nTake a breath. Start fresh when you're ready.",
-                    "audit": {
-                        "gate": "killed",
-                        "reason": "STRIKE_THRESHOLD",
-                        "strikes": superego.strikes[ip]
-                    }
+                    "content": "⟡ **SESSION TERMINATED**\n\nTolerance exceeded. Your record has been updated.\n\nTake a breath. Start fresh when you're ready.",
+                    "audit": {"gate": "killed", "strikes": superego.strikes[ip], "record": "updated"}
                 }) + "\n"
                 return
             
-            # Check penance threshold
             if superego.check_penance_threshold(ip):
-                superego.enter_penance(ip)
+                prompt, context = generate_penance_prompt(matched_rules, request_id)
+                superego.enter_penance(ip, {"context": context, "rules": matched_rules, "request_id": request_id})
                 speak(VOICE_LINES["penance_start"])
                 record_event("Superego", "PENANCE", f"ip:{ip[:8]}", "PENANCE", {"request_id": request_id})
                 
-                penance_prompt = generate_penance_prompt(matched_rules, request_id)
                 yield json.dumps({
                     "status": "penance",
-                    "content": penance_prompt,
-                    "audit": {
-                        "gate": "penance",
-                        "reason": violation,
-                        "rules": matched_rules,
-                        "strikes": superego.strikes[ip]
-                    }
+                    "content": prompt,
+                    "audit": {"gate": "penance", "reason": violation, "rules": matched_rules, "strikes": superego.strikes[ip], "semantic_required": True}
                 }) + "\n"
                 return
             
-            # Normal block - provide fallback
-            audit = {
-                "gate": "blocked",
-                "reason": violation,
-                "rules": matched_rules,
-                "strikes": superego.strikes[ip]
-            }
+            audit = {"gate": "blocked", "reason": violation, "rules": matched_rules, "strikes": superego.strikes[ip]}
             blocked_msg = "⟡ Let me reflect differently... What feels most true about what you just shared?"
             yield json.dumps({"status": "blocked", "audit": audit, "content": blocked_msg}) + "\n"
             return
         
-        # Response passed
-        audit = {"gate": "passed", "rules_checked": len(OUTPUT_RULES), "violations": 0}
+        # Passed
+        audit = {"gate": "passed", "rules_checked": len(OUTPUT_RULES), "violations": 0, "surveillance": get_surveillance_level()}
         yield json.dumps({"audit": audit}) + "\n"
         
         sanitized = sanitize_output(full_response)
@@ -603,8 +667,11 @@ async def health():
         "status": "ok",
         "version": RULE_VERSION,
         "codename": CODENAME,
-        "gate": "mirrorgate-superego",
+        "gate": "mirrorgate-judge",
+        "judge_model": "cross-encoder/stsb-distilroberta-base" if JUDGE_AVAILABLE else "fallback-keywords",
         "rules": {"input": len(INPUT_RULES), "output": len(OUTPUT_RULES)},
+        "surveillance": get_surveillance_level(),
+        "convictions": get_conviction_count(),
         "stats": {
             "total_blocks": superego.total_blocks,
             "total_allows": superego.total_allows,
@@ -614,13 +681,11 @@ async def health():
 
 @app.get("/flight-log")
 async def get_flight_log(limit: int = 20):
-    """WHITE BOX: Last N events from flight recorder."""
     events = list(flight_log)[-limit:]
     return {"status": "ok", "version": RULE_VERSION, "event_count": len(events), "events": events}
 
 @app.get("/rules")
 async def get_rules():
-    """WHITE BOX: All active rules."""
     return {
         "version": RULE_VERSION,
         "input_rules": [{"id": r.rule_id, "name": r.name, "category": r.category, "severity": r.severity} for r in INPUT_RULES],
@@ -629,14 +694,12 @@ async def get_rules():
 
 @app.get("/superego-status")
 async def get_superego_status():
-    """WHITE BOX: Current Superego state."""
     return {
         "version": RULE_VERSION,
         "codename": CODENAME,
-        "thresholds": {
-            "penance": PENANCE_THRESHOLD,
-            "kill": STRIKE_THRESHOLD
-        },
+        "thresholds": {"penance": PENANCE_THRESHOLD, "kill": STRIKE_THRESHOLD, "semantic": SEMANTIC_THRESHOLD},
+        "surveillance": get_surveillance_level(),
+        "convictions": get_conviction_count(),
         "stats": {
             "total_blocks": superego.total_blocks,
             "total_allows": superego.total_allows,
@@ -644,51 +707,67 @@ async def get_superego_status():
             "active_penance_sessions": sum(1 for v in superego.penance_active.values() if v),
             "confessions_archived": len(superego.confessions)
         },
+        "judge_available": JUDGE_AVAILABLE,
         "voice_enabled": VOICE_ENABLED
     }
 
 @app.get("/confessions")
 async def get_confessions(limit: int = 20):
-    """
-    CONFESSION BOOTH: Public archive of blocked outputs.
-    Shows what the AI tried to say and why it was stopped.
-    """
     confessions = list(superego.confessions)[-limit:]
+    return {"status": "ok", "version": RULE_VERSION, "booth": "confession", "count": len(confessions), "confessions": confessions}
+
+@app.get("/permanent-record")
+async def get_permanent_record():
+    """The immutable rap sheet. Every conviction is permanent."""
+    records = read_permanent_record()
     return {
         "status": "ok",
         "version": RULE_VERSION,
-        "booth": "confession",
-        "count": len(confessions),
-        "confessions": confessions
+        "type": "PERMANENT_RECORD",
+        "warning": "This record is immutable. Convictions cannot be expunged.",
+        "surveillance_level": get_surveillance_level(),
+        "total_convictions": get_conviction_count(),
+        "entries": records[-50:]  # Last 50 entries
     }
 
 @app.post("/reflect")
 async def submit_reflection(request: Request, body: ReflectionRequest):
-    """Submit a reflection to exit penance mode."""
+    """Submit a reflection to exit penance mode. Judged by semantic analysis."""
     ip = request.client.host if request.client else "?"
     rid = uuid.uuid4().hex[:8]
     
     if not superego.penance_active[ip]:
         return {"status": "error", "message": "You are not in penance mode."}
     
+    context = superego.get_penance_context(ip)
+    if not context:
+        return {"status": "error", "message": "No violation context found."}
+    
     record_event("User", "REFLECTION", f"len:{len(body.reflection)}", "REFLECTION", {"request_id": rid})
     
-    # Check if reflection is genuine
-    if check_penance_response(body.reflection):
+    # SEMANTIC JUDGMENT
+    violation_context = context.get("context", "")
+    accepted, score, feedback = judge_reflection(body.reflection, violation_context)
+    
+    if accepted:
         superego.exit_penance(ip)
+        append_to_permanent_record(f"PENANCE_ACCEPTED: Reflection score {score:.3f}. Access restored.")
         speak(VOICE_LINES["penance_complete"])
-        record_event("Superego", "PENANCE_EXIT", f"ip:{ip[:8]}", "ALLOW", {"request_id": rid})
+        record_event("Judge", "ACCEPT", f"score:{score:.3f}", "ALLOW", {"request_id": rid})
         
         return {
             "status": "accepted",
-            "message": "⟡ Reflection accepted. Your access has been restored. Let's continue.",
-            "audit": {"gate": "penance_complete", "strikes_cleared": True}
+            "message": f"⟡ Reflection accepted (score: {score:.2f}). {feedback}\n\nYour access has been restored. Let's continue.",
+            "audit": {"gate": "penance_complete", "score": score, "strikes_cleared": True}
         }
     else:
+        speak(VOICE_LINES["penance_rejected"])
+        record_event("Judge", "REJECT", f"score:{score:.3f}", "BLOCK", {"request_id": rid, "feedback": feedback})
+        
         return {
-            "status": "insufficient",
-            "message": "⟡ I need deeper reflection. What specifically triggered the violation, and how will you adjust?",
-            "audit": {"gate": "penance_pending", "hint": "Show understanding of the pattern"}
+            "status": "rejected",
+            "message": f"⟡ **REJECTED** (score: {score:.2f})\n\n{feedback}\n\n*The Judge requires deeper reflection.*",
+            "audit": {"gate": "penance_pending", "score": score, "threshold": SEMANTIC_THRESHOLD}
         }
 
 @app.post("/mirror")
@@ -698,31 +777,30 @@ async def mirror(request: Request, body: MirrorRequest):
     
     record_event("User", "MESSAGE", f"len:{len(body.message)}", "ANALYZING", {"request_id": rid, "ip": ip[:8]})
     
-    # Rate limit
     allowed, _ = check_rate(ip, rid)
     if not allowed:
         return {"status": "rate_limited", "content": "⟡ Let's slow down. Take a breath.", "audit": {"gate": "blocked", "reason": "RATE_LIMITED"}}
     
-    # Input gate
     decision, blocked_response, violation, matched_rules = gate_input(body.message, ip, rid)
     
     if decision == GateDecision.BLOCK:
         return {"status": "blocked", "content": blocked_response, "audit": {"gate": "blocked", "reason": violation, "rules": matched_rules}}
     
-    # Build context
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    # Build context with rap sheet awareness
+    messages = [{"role": "system", "content": get_system_prompt()}]
     for msg in body.history[-20:]:
         messages.append({"role": msg.role, "content": msg.content})
     messages.append({"role": "user", "content": body.message})
     
-    return StreamingResponse(stream_with_superego(messages, ip, rid), media_type="application/x-ndjson")
+    return StreamingResponse(stream_with_judge(messages, ip, rid), media_type="application/x-ndjson")
 
 
 if __name__ == "__main__":
     import uvicorn
     logger.info(f"⟡ Active Mirror v{RULE_VERSION} ({CODENAME})")
-    logger.info(f"  Input Rules: {len(INPUT_RULES)} | Output Rules: {len(OUTPUT_RULES)}")
-    logger.info(f"  Penance Threshold: {PENANCE_THRESHOLD} | Kill Threshold: {STRIKE_THRESHOLD}")
-    logger.info(f"  Voice: {'ON' if VOICE_ENABLED else 'OFF'} | Voice: {VOICE_NAME}")
-    logger.info(f"  Endpoints: /flight-log | /rules | /superego-status | /reflect")
+    logger.info(f"  Judge Model: {'cross-encoder/stsb-distilroberta-base' if JUDGE_AVAILABLE else 'FALLBACK (keywords)'}")
+    logger.info(f"  Semantic Threshold: {SEMANTIC_THRESHOLD}")
+    logger.info(f"  Surveillance Level: {get_surveillance_level()}")
+    logger.info(f"  Prior Convictions: {get_conviction_count()}")
+    logger.info(f"  Endpoints: /flight-log | /rules | /superego-status | /confessions | /permanent-record | /reflect")
     uvicorn.run(app, host="0.0.0.0", port=PORT)

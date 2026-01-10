@@ -1,2 +1,4 @@
 .env
 # Ignore venv
+venv/
+proxy.log
