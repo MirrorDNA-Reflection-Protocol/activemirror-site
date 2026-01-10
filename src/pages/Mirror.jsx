@@ -151,7 +151,7 @@ const Message = ({ msg, isLast }) => {
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════
 
-export default function Mirror() {
+export default function Mirror({ onMessageSent, disabled }) {
     // State
     const [messages, setMessages] = useState(() => {
         try {
@@ -234,7 +234,10 @@ export default function Mirror() {
     
     const handleSend = async (e) => {
         e?.preventDefault();
-        if (!input.trim() || isLoading) return;
+        if (!input.trim() || isLoading || disabled) return;
+        
+        // Notify parent of message sent (for usage tracking)
+        onMessageSent?.();
         
         SoundEngine.send();
         setIsIdle(false);
