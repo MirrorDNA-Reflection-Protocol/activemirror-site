@@ -103,15 +103,22 @@ def check_rate(ip: str) -> tuple:
 # INFERENCE — Pass conversation history
 # ═══════════════════════════════════════════════════════════════
 
-async def call_groq(messages: list):
-    """Call Groq with full conversation history"""
+from fastapi.responses import StreamingResponse
+
+# ═══════════════════════════════════════════════════════════════
+# STREAMING INFERENCE
+# ═══════════════════════════════════════════════════════════════
+
+async def stream_groq(messages: list):
+    """Yield chunks from Groq"""
     if not GROQ_API_KEY:
-        logger.error("No GROQ_API_KEY")
-        return None
-    
+        yield json.dumps({"status": "error", "content": "No API Key"}) + "\n"
+        return
+
     try:
-        async with httpx.AsyncClient(timeout=15.0) as c:
-            r = await c.post(
+        async with httpx.AsyncClient(timeout=30.0) as c:
+            async with c.stream(
+                "POST",
                 "https://api.groq.com/openai/v1/chat/completions",
                 headers={
                     "Content-Type": "application/json",
@@ -120,41 +127,52 @@ async def call_groq(messages: list):
                 json={
                     "model": GROQ_MODEL,
                     "messages": messages,
-                    "temperature": 0.7,  # Higher for more varied responses
-                    "max_tokens": 300,
-                    "top_p": 0.9
+                    "temperature": 0.7,
+                    "max_tokens": 800, # Increased for deeper reflection
+                    "top_p": 0.9,
+                    "stream": True # Enable streaming
                 }
-            )
-            if r.status_code != 200:
-                logger.error(f"Groq error: {r.status_code} - {r.text}")
-                return None
-            
-            content = r.json()["choices"][0]["message"]["content"]
-            
-            # Ensure response starts with glyph
-            if not content.strip().startswith("⟡"):
-                content = "⟡ " + content.strip()
-            
-            return content
+            ) as response:
+                if response.status_code != 200:
+                    error_text = await response.aread()
+                    logger.error(f"Groq error: {response.status_code} - {error_text}")
+                    yield json.dumps({"status": "error", "content": "Mirror clouded."}) + "\n"
+                    return
+
+                # Force glyph start
+                yield json.dumps({"status": "chunk", "content": "⟡ "}) + "\n"
+
+                async for line in response.aiter_lines():
+                    if line.startswith("data: "):
+                        data = line[6:]
+                        if data == "[DONE]":
+                            break
+                        try:
+                            chunk = json.loads(data)
+                            delta = chunk["choices"][0]["delta"].get("content", "")
+                            if delta:
+                                yield json.dumps({"status": "chunk", "content": delta}) + "\n"
+                        except:
+                            continue
     except Exception as e:
-        logger.error(f"Groq call failed: {e}")
-        return None
+        logger.error(f"Stream failed: {e}")
+        yield json.dumps({"status": "error", "content": "Connection lost."}) + "\n"
 
 # ═══════════════════════════════════════════════════════════════
 # API
 # ═══════════════════════════════════════════════════════════════
 
 class ChatMessage(BaseModel):
-    role: str  # "user" or "assistant"
+    role: str
     content: str
-
+    
 class MirrorRequest(BaseModel):
     message: str = Field(..., max_length=MAX_INPUT_LENGTH)
-    history: List[ChatMessage] = Field(default_factory=list)  # Conversation history
-    dial: float = Field(default=0.5, ge=0, le=1)
+    history: List[ChatMessage] = Field(default_factory=list)
+    dial: float = Field(default=0.5)
 
-app = FastAPI(title="Active Mirror", version=RULE_VERSION, docs_url=None)
-app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_methods=["POST", "GET", "OPTIONS"], allow_headers=["*"])
+app = FastAPI(title="Active Mirror", version=RULE_VERSION)
+app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_methods=["*"], allow_headers=["*"])
 
 @app.get("/health")
 async def health():
@@ -170,37 +188,22 @@ async def mirror(request: Request, body: MirrorRequest):
     if not allowed:
         return {"status": "rate_limited", "content": "⟡ Let's slow down. Take a breath."}
     
-    # Security gates
+    # Security gates (Still blocking input)
     allowed, blocked, gate = run_gates(body.message)
     if not allowed:
         return {"status": "blocked", "content": blocked, "gate": gate}
     
-    # Build messages array with history
+    # Build context
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-    
-    # Add conversation history (last 10 exchanges max to stay within context)
-    for msg in body.history[-20:]:  # 20 messages = 10 exchanges
+    for msg in body.history[-20:]:
         messages.append({"role": msg.role, "content": msg.content})
-    
-    # Add current message
     messages.append({"role": "user", "content": body.message})
     
-    logger.info(f"[{rid}] messages={len(messages)} history={len(body.history)}")
+    logger.info(f"[{rid}] Stream requested. Hist: {len(body.history)}")
     
-    # Call Groq
-    response = await call_groq(messages)
-    
-    if not response:
-        fallbacks = [
-            "⟡ I hear you. Tell me more.",
-            "⟡ What's underneath that?",
-            "⟡ Say more about that.",
-        ]
-        return {"status": "fallback", "content": random.choice(fallbacks)}
-    
-    return {"status": "ok", "content": response}
+    return StreamingResponse(stream_groq(messages), media_type="application/x-ndjson")
 
 if __name__ == "__main__":
     import uvicorn
-    logger.info(f"⟡ Active Mirror v{RULE_VERSION}")
+    logger.info(f"⟡ Active Mirror v{RULE_VERSION} (Streaming)")
     uvicorn.run(app, host="0.0.0.0", port=PORT)
