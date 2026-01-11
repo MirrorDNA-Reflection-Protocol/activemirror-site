@@ -17,13 +17,13 @@ export default function App() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/" element={<Landing />} />
-                <Route path="/home" element={<Home />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/preview" element={<Landing />} />
                 <Route path="/legal" element={<Legal />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
-                <Route path="/mirror" element={<MirrorWithAuth />} />
-                <Route path="/reflect" element={<Mirror />} />
+                <Route path="/mirror" element={<Mirror />} />
+                <Route path="/mirror-beta" element={<MirrorWithAuth />} />
                 <Route path="/demo" element={<Demo />} />
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/lab" element={<TestLab />} />

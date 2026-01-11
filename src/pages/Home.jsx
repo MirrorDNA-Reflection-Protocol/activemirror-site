@@ -77,6 +77,11 @@ export default function Home() {
                                 <Book size={16} /> The Story
                             </a>
                         </div>
+
+                        {/* 5. PREVIEW LINK */}
+                        <Link to="/preview" className="mt-4 text-xs text-zinc-600 hover:text-purple-400 transition-colors">
+                            ✨ Preview upcoming features →
+                        </Link>
                     </div>
 
 
