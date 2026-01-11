@@ -515,13 +515,21 @@ export default function Mirror({ onMessageSent, disabled }) {
     
     return (
         <div className="fixed inset-0 bg-[#030305] text-white flex flex-col overflow-hidden selection:bg-violet-500/30">
-            {/* Import font */}
+            {/* Import font and global styles */}
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500&display=swap');
                 * { font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif; }
                 
+                :root {
+                    --safe-top: env(safe-area-inset-top, 0px);
+                    --safe-bottom: env(safe-area-inset-bottom, 0px);
+                }
+                
                 .scrollbar-hide::-webkit-scrollbar { display: none; }
                 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+                
+                .safe-top { padding-top: var(--safe-top); }
+                .safe-bottom { padding-bottom: max(var(--safe-bottom), 16px); }
                 
                 @keyframes shimmer {
                     0% { background-position: -200% 0; }
@@ -533,6 +541,9 @@ export default function Mirror({ onMessageSent, disabled }) {
                     background-size: 200% 100%;
                     animation: shimmer 3s infinite;
                 }
+                
+                html, body { overscroll-behavior: none; }
+                input, textarea { font-size: 16px !important; }
             `}</style>
             
             {/* Ambient Background */}
@@ -601,7 +612,7 @@ export default function Mirror({ onMessageSent, disabled }) {
                     filter: isIdle ? 'blur(4px)' : 'blur(0px)'
                 }}
                 transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-                className="relative z-20 flex justify-between items-center p-4 pt-6"
+                className="relative z-20 flex justify-between items-center p-4 pt-6 safe-top"
             >
                 <motion.button 
                     onClick={exitMirror}
@@ -707,7 +718,7 @@ export default function Mirror({ onMessageSent, disabled }) {
                     filter: isIdle ? 'blur(2px)' : 'blur(0px)'
                 }}
                 transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-                className="absolute bottom-0 left-0 right-0 p-4 pb-6 z-20"
+                className="absolute bottom-0 left-0 right-0 p-4 pb-6 z-20 safe-bottom"
             >
                 {/* Gradient fade */}
                 <div className="absolute inset-x-0 bottom-full h-32 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent pointer-events-none" />
