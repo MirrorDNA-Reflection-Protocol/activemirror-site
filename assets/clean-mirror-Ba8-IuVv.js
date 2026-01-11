@@ -1,0 +1,1 @@
+import{R as e,d as o}from"./index-DdhCVtRE.js";import{j as r}from"./vendor-motion-VQJ2O-iG.js";import{b as t,B as s}from"./vendor-react-7sgml2Ky.js";e.createRoot(document.getElementById("root")).render(r.jsx(t.StrictMode,{children:r.jsx(s,{children:r.jsx(o,{})})}));
