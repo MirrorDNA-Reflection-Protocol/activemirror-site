@@ -1,13 +1,13 @@
 /**
  * ⟡ ACTIVE MIRROR — Sovereign Reflective Chat
- * Version: 14.0 (Crystalline Edition)
+ * Version: 15.0 (Ethereal Edition)
  * 
- * Aesthetic: Dark crystalline, meditative, still water at night
- * Typography: Geist for body, subtle glow effects
- * Motion: Liquid, breathing, never jarring
+ * Aesthetic: Deep space meditation, floating particles, liquid glass
+ * Typography: Inter Variable for body, ethereal glow effects
+ * Motion: Breathing, floating, never jarring
  */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Send, ArrowLeft, StopCircle, Plus, Menu, Shield, ShieldCheck, ShieldAlert, X, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 
@@ -16,8 +16,8 @@ import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from
 // ═══════════════════════════════════════════════════════════════
 
 const CONFIG = {
-    VERSION: '14.0',
-    STORAGE_KEY: 'mirror_v14',
+    VERSION: '15.0',
+    STORAGE_KEY: 'mirror_v15',
     PROXY_URL: typeof window !== 'undefined' && window.location.hostname === 'localhost' 
         ? 'http://localhost:8082' 
         : 'https://proxy.activemirror.ai',
@@ -40,7 +40,7 @@ const SoundEngine = {
         if (this.ctx?.state === 'suspended') this.ctx.resume();
     },
     
-    play(freq, duration, type = 'sine', volume = 0.02) {
+    play(freq, duration, type = 'sine', volume = 0.015) {
         if (!this.ctx || !this.enabled) return;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
@@ -54,10 +54,10 @@ const SoundEngine = {
         osc.stop(this.ctx.currentTime + duration);
     },
     
-    send() { this.play(520, 0.15, 'sine', 0.015); },
-    hover() { this.play(280, 0.04, 'triangle', 0.008); },
-    receive() { this.play(660, 0.12, 'sine', 0.012); },
-    block() { this.play(180, 0.25, 'sawtooth', 0.015); },
+    send() { this.play(440, 0.12, 'sine', 0.012); },
+    hover() { this.play(220, 0.03, 'triangle', 0.005); },
+    receive() { this.play(550, 0.1, 'sine', 0.01); },
+    block() { this.play(150, 0.2, 'sawtooth', 0.012); },
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -72,46 +72,109 @@ const GateStatus = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// AMBIENT ORB COMPONENT
+// FLOATING PARTICLES
 // ═══════════════════════════════════════════════════════════════
 
-const AmbientOrb = ({ className, delay = 0 }) => (
-    <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ 
-            scale: [0.8, 1.1, 0.9, 1.05, 0.85],
-            opacity: [0.15, 0.25, 0.18, 0.22, 0.15],
-        }}
-        transition={{
-            duration: 20,
-            repeat: Infinity,
-            delay,
-            ease: "easeInOut"
-        }}
-        className={`absolute rounded-full blur-3xl pointer-events-none ${className}`}
-    />
-);
+const FloatingParticles = ({ count = 30 }) => {
+    const particles = useMemo(() => 
+        Array.from({ length: count }, (_, i) => ({
+            id: i,
+            x: Math.random() * 100,
+            y: Math.random() * 100,
+            size: Math.random() * 3 + 1,
+            duration: Math.random() * 20 + 30,
+            delay: Math.random() * 10,
+            opacity: Math.random() * 0.3 + 0.1,
+        })), [count]
+    );
+    
+    return (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {particles.map((p) => (
+                <motion.div
+                    key={p.id}
+                    initial={{ 
+                        left: `${p.x}%`, 
+                        top: `${p.y}%`,
+                        opacity: 0 
+                    }}
+                    animate={{ 
+                        y: [0, -30, 0],
+                        x: [0, Math.sin(p.id) * 20, 0],
+                        opacity: [0, p.opacity, 0],
+                    }}
+                    transition={{
+                        duration: p.duration,
+                        repeat: Infinity,
+                        delay: p.delay,
+                        ease: "easeInOut",
+                    }}
+                    className="absolute rounded-full"
+                    style={{
+                        width: p.size,
+                        height: p.size,
+                        background: `radial-gradient(circle, rgba(139, 92, 246, 0.8) 0%, rgba(139, 92, 246, 0) 70%)`,
+                        boxShadow: `0 0 ${p.size * 2}px rgba(139, 92, 246, 0.5)`,
+                    }}
+                />
+            ))}
+        </div>
+    );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// AMBIENT ORB
+// ═══════════════════════════════════════════════════════════════
+
+const AmbientOrb = ({ className, delay = 0, color = "violet" }) => {
+    const colors = {
+        violet: "from-violet-600/20 to-violet-900/5",
+        indigo: "from-indigo-600/15 to-indigo-900/5",
+        fuchsia: "from-fuchsia-600/10 to-fuchsia-900/5",
+    };
+    
+    return (
+        <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ 
+                scale: [0.8, 1.15, 0.85, 1.1, 0.9],
+                opacity: [0.3, 0.5, 0.35, 0.45, 0.3],
+            }}
+            transition={{
+                duration: 25,
+                repeat: Infinity,
+                delay,
+                ease: "easeInOut"
+            }}
+            className={`absolute rounded-full blur-[100px] pointer-events-none bg-gradient-radial ${colors[color]} ${className}`}
+        />
+    );
+};
 
 // ═══════════════════════════════════════════════════════════════
 // TYPING INDICATOR
 // ═══════════════════════════════════════════════════════════════
 
 const TypingIndicator = () => (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1.5 py-2">
         {[0, 1, 2].map((i) => (
             <motion.div
                 key={i}
                 animate={{
-                    y: [0, -6, 0],
-                    opacity: [0.3, 1, 0.3],
+                    y: [0, -8, 0],
+                    scale: [1, 1.2, 1],
+                    opacity: [0.4, 1, 0.4],
                 }}
                 transition={{
-                    duration: 0.8,
+                    duration: 1,
                     repeat: Infinity,
-                    delay: i * 0.12,
+                    delay: i * 0.15,
                     ease: [0.4, 0, 0.2, 1]
                 }}
                 className="w-2 h-2 rounded-full bg-gradient-to-t from-violet-500 to-fuchsia-400"
+                style={{
+                    boxShadow: '0 0 8px rgba(139, 92, 246, 0.6)',
+                }}
             />
         ))}
     </div>
@@ -129,24 +192,26 @@ const Message = ({ msg, isLast, isStreaming }) => {
         return text.split(/(⟡|△|◈|⧉)/).map((part, i) => {
             if (['⟡', '△', '◈', '⧉'].includes(part)) {
                 return (
-                    <span 
-                        key={i} 
-                        className="text-violet-400 font-medium mx-0.5 animate-pulse"
+                    <motion.span 
+                        key={i}
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="inline-block text-violet-400 font-medium mx-1"
                         style={{ 
-                            textShadow: '0 0 12px rgba(139, 92, 246, 0.8), 0 0 24px rgba(139, 92, 246, 0.4)' 
+                            textShadow: '0 0 20px rgba(139, 92, 246, 0.9), 0 0 40px rgba(139, 92, 246, 0.5)' 
                         }}
                     >
                         {part}
-                    </span>
+                    </motion.span>
                 );
             }
             return part.split(/(\*\*.*?\*\*)/).map((chunk, j) => {
                 if (chunk.startsWith('**') && chunk.endsWith('**')) {
-                    return <strong key={`${i}-${j}`} className="text-white/95 font-semibold">{chunk.slice(2, -2)}</strong>;
+                    return <strong key={`${i}-${j}`} className="text-white font-medium">{chunk.slice(2, -2)}</strong>;
                 }
                 return chunk.split(/(\*.*?\*)/).map((sub, k) => {
                     if (sub.startsWith('*') && sub.endsWith('*') && !sub.startsWith('**')) {
-                        return <em key={`${i}-${j}-${k}`} className="text-violet-200/60 italic">{sub.slice(1, -1)}</em>;
+                        return <em key={`${i}-${j}-${k}`} className="text-violet-200/70">{sub.slice(1, -1)}</em>;
                     }
                     return sub;
                 });
@@ -156,50 +221,50 @@ const Message = ({ msg, isLast, isStreaming }) => {
     
     return (
         <motion.div
-            initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
+            initial={{ opacity: 0, y: 40, filter: 'blur(12px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             transition={{ 
-                duration: 0.6, 
+                duration: 0.7, 
                 ease: [0.16, 1, 0.3, 1],
             }}
-            className={`flex mb-8 ${isUser ? 'justify-end' : 'justify-start'}`}
+            className={`flex mb-6 ${isUser ? 'justify-end' : 'justify-start'}`}
         >
-            <div className={`relative max-w-[85%] sm:max-w-xl ${
-                isUser 
-                    ? 'ml-8' 
-                    : 'mr-8'
-            }`}>
-                {/* Glow effect for AI messages */}
+            <div className={`relative max-w-[88%] sm:max-w-xl ${isUser ? 'ml-4' : 'mr-4'}`}>
+                {/* Ambient glow for AI */}
                 {!isUser && (
-                    <div className="absolute -inset-4 bg-violet-500/5 rounded-3xl blur-2xl pointer-events-none" />
+                    <motion.div 
+                        animate={{ opacity: [0.3, 0.5, 0.3] }}
+                        transition={{ duration: 4, repeat: Infinity }}
+                        className="absolute -inset-6 bg-violet-500/5 rounded-3xl blur-2xl pointer-events-none" 
+                    />
                 )}
                 
                 <div className={`relative ${
                     isUser 
-                        ? 'bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/[0.12] backdrop-blur-xl px-5 py-4 rounded-2xl rounded-br-md shadow-lg shadow-black/20' 
-                        : 'px-1'
+                        ? 'bg-gradient-to-br from-white/[0.1] to-white/[0.04] border border-white/[0.15] backdrop-blur-2xl px-5 py-4 rounded-2xl rounded-br-sm shadow-xl shadow-black/30' 
+                        : 'px-1 py-1'
                 }`}>
-                    {/* Gate status indicator */}
+                    {/* Gate indicator */}
                     {!isUser && msg.gateStatus && msg.gateStatus !== GateStatus.NONE && (
                         <motion.div 
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className={`absolute -left-8 top-0 p-1.5 rounded-full ${
-                                msg.gateStatus === GateStatus.PASSED ? 'bg-emerald-500/20 text-emerald-400' :
-                                msg.gateStatus === GateStatus.BLOCKED ? 'bg-red-500/20 text-red-400' : 
-                                'bg-violet-500/20 text-violet-400'
-                            }`}
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className={`absolute -left-8 top-1 p-1.5 rounded-full backdrop-blur-xl ${
+                                msg.gateStatus === GateStatus.PASSED ? 'bg-emerald-500/20 text-emerald-400 shadow-emerald-500/20' :
+                                msg.gateStatus === GateStatus.BLOCKED ? 'bg-red-500/20 text-red-400 shadow-red-500/20' : 
+                                'bg-violet-500/20 text-violet-400 shadow-violet-500/20'
+                            } shadow-lg`}
                         >
-                            {msg.gateStatus === GateStatus.PASSED && <ShieldCheck size={12} />}
-                            {msg.gateStatus === GateStatus.BLOCKED && <ShieldAlert size={12} />}
-                            {msg.gateStatus === GateStatus.PENDING && <Shield size={12} className="animate-pulse" />}
+                            {msg.gateStatus === GateStatus.PASSED && <ShieldCheck size={11} />}
+                            {msg.gateStatus === GateStatus.BLOCKED && <ShieldAlert size={11} />}
+                            {msg.gateStatus === GateStatus.PENDING && <Shield size={11} className="animate-pulse" />}
                         </motion.div>
                     )}
                     
-                    <div className={`whitespace-pre-wrap leading-[1.8] ${
+                    <div className={`whitespace-pre-wrap leading-[1.9] ${
                         isUser 
                             ? 'text-zinc-100 text-[15px]' 
-                            : 'text-zinc-200/90 text-lg font-light tracking-wide'
+                            : 'text-zinc-200/95 text-[17px] font-light tracking-wide'
                     }`}>
                         {isStreaming && !msg.content ? (
                             <TypingIndicator />
@@ -214,84 +279,98 @@ const Message = ({ msg, isLast, isStreaming }) => {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// EMPTY STATE COMPONENT
+// EMPTY STATE
 // ═══════════════════════════════════════════════════════════════
 
 const EmptyState = () => (
     <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 1.5, ease: "easeOut" }}
+        transition={{ duration: 2 }}
         className="h-full flex flex-col items-center justify-center text-center px-6 relative"
     >
-        {/* Animated glyph */}
-        <motion.div
-            className="relative mb-12"
-        >
-            {/* Outer ring */}
+        {/* Animated glyph with rings */}
+        <motion.div className="relative mb-16">
+            {/* Outer rings */}
             <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-                className="absolute -inset-12 rounded-full border border-violet-500/10"
+                animate={{ rotate: 360, scale: [1, 1.02, 1] }}
+                transition={{ rotate: { duration: 80, repeat: Infinity, ease: "linear" }, scale: { duration: 8, repeat: Infinity } }}
+                className="absolute -inset-16 rounded-full border border-violet-500/[0.07]"
             />
             <motion.div
-                animate={{ rotate: -360 }}
-                transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
-                className="absolute -inset-8 rounded-full border border-violet-500/5"
+                animate={{ rotate: -360, scale: [1, 1.03, 1] }}
+                transition={{ rotate: { duration: 60, repeat: Infinity, ease: "linear" }, scale: { duration: 6, repeat: Infinity, delay: 1 } }}
+                className="absolute -inset-12 rounded-full border border-violet-500/[0.05]"
+            />
+            <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+                className="absolute -inset-8 rounded-full border border-violet-500/[0.03]"
             />
             
             {/* Core glyph */}
             <motion.div
                 animate={{ 
-                    scale: [1, 1.08, 1],
-                    opacity: [0.6, 1, 0.6],
+                    scale: [1, 1.1, 1],
+                    opacity: [0.7, 1, 0.7],
                 }}
                 transition={{ 
-                    duration: 6, 
+                    duration: 5, 
                     repeat: Infinity, 
                     ease: "easeInOut" 
                 }}
                 className="relative"
             >
                 <span 
-                    className="text-7xl sm:text-8xl block"
+                    className="text-7xl sm:text-8xl block select-none"
                     style={{ 
-                        color: 'rgba(139, 92, 246, 0.7)',
-                        textShadow: '0 0 60px rgba(139, 92, 246, 0.5), 0 0 120px rgba(139, 92, 246, 0.3), 0 0 180px rgba(139, 92, 246, 0.1)' 
+                        color: 'rgba(139, 92, 246, 0.85)',
+                        textShadow: '0 0 60px rgba(139, 92, 246, 0.6), 0 0 100px rgba(139, 92, 246, 0.4), 0 0 140px rgba(139, 92, 246, 0.2)' 
                     }}
                 >
                     ⟡
                 </span>
+                {/* Glow pulse */}
+                <motion.div
+                    animate={{ 
+                        scale: [1, 1.5, 1],
+                        opacity: [0.3, 0, 0.3],
+                    }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                    className="absolute inset-0 flex items-center justify-center"
+                >
+                    <div className="w-20 h-20 rounded-full bg-violet-500/30 blur-2xl" />
+                </motion.div>
             </motion.div>
         </motion.div>
         
         <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-            className="text-2xl sm:text-3xl font-extralight text-white/80 mb-4 tracking-tight"
+            transition={{ delay: 0.5, duration: 1 }}
+            className="text-3xl sm:text-4xl font-extralight text-white/90 mb-5 tracking-tight"
         >
             The Mirror Awaits
         </motion.h2>
         
         <motion.p 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-            className="text-zinc-500 text-sm sm:text-base tracking-[0.02em] max-w-sm leading-relaxed"
+            transition={{ delay: 0.7, duration: 1 }}
+            className="text-zinc-400 text-base sm:text-lg tracking-wide max-w-md leading-relaxed font-light"
         >
             Speak your truth. The mirror reflects without judgment.
         </motion.p>
         
-        {/* Subtle hint */}
+        {/* Tagline */}
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 2, duration: 1 }}
-            className="absolute bottom-32 flex items-center gap-2 text-zinc-600 text-xs"
+            transition={{ delay: 2.5, duration: 1.5 }}
+            className="absolute bottom-28 flex items-center gap-2.5 text-zinc-600 text-sm"
         >
-            <Sparkles size={12} />
-            <span>AI that reflects, not directs</span>
+            <Sparkles size={14} className="text-violet-500/50" />
+            <span className="font-light tracking-wide">AI that reflects, not directs</span>
         </motion.div>
     </motion.div>
 );
@@ -317,16 +396,14 @@ export default function Mirror({ onMessageSent, disabled }) {
     const inputRef = useRef(null);
     const abortRef = useRef(null);
     const idleTimer = useRef(null);
-    const chatContainerRef = useRef(null);
     
-    // Parallax motion
+    // Parallax
     const mouseX = useMotionValue(0);
     const mouseY = useMotionValue(0);
-    const springX = useSpring(mouseX, { stiffness: 20, damping: 30 });
-    const springY = useSpring(mouseY, { stiffness: 20, damping: 30 });
+    const springX = useSpring(mouseX, { stiffness: 15, damping: 40 });
+    const springY = useSpring(mouseY, { stiffness: 15, damping: 40 });
     
-    // ─── Effects ───
-    
+    // Effects
     useEffect(() => {
         const handleMove = (e) => {
             mouseX.set(e.clientX);
@@ -367,8 +444,6 @@ export default function Mirror({ onMessageSent, disabled }) {
             inputRef.current.style.height = Math.min(inputRef.current.scrollHeight, 160) + 'px';
         }
     }, [input]);
-    
-    // ─── Handlers ───
     
     const resetIdleTimer = useCallback(() => {
         setIsIdle(false);
@@ -425,16 +500,17 @@ export default function Mirror({ onMessageSent, disabled }) {
                     try {
                         const data = JSON.parse(line);
                         
-                        if (data.gate) {
+                        if (data.gate || data.audit?.gate) {
+                            const gateResult = data.gate || data.audit?.gate;
                             setMessages(prev => {
                                 const updated = [...prev];
                                 const last = updated[updated.length - 1];
                                 if (last.role === 'assistant') {
-                                    last.gateStatus = data.gate === 'blocked' ? GateStatus.BLOCKED : GateStatus.PASSED;
+                                    last.gateStatus = gateResult === 'blocked' ? GateStatus.BLOCKED : GateStatus.PASSED;
                                 }
                                 return updated;
                             });
-                            if (data.gate === 'blocked') {
+                            if (gateResult === 'blocked') {
                                 SoundEngine.block();
                                 setGateNotification({ type: 'blocked', reason: data.reason });
                                 setTimeout(() => setGateNotification(null), 4000);
@@ -503,101 +579,77 @@ export default function Mirror({ onMessageSent, disabled }) {
         setIsMenuOpen(false);
     };
     
-    const exitMirror = () => {
-        window.location.href = '/';
-    };
-    
-    // Transform for parallax orbs
-    const orbX = useTransform(springX, [0, typeof window !== 'undefined' ? window.innerWidth : 1920], [-50, 50]);
-    const orbY = useTransform(springY, [0, typeof window !== 'undefined' ? window.innerHeight : 1080], [-50, 50]);
-    
-    // ─── Render ───
+    const orbX = useTransform(springX, [0, typeof window !== 'undefined' ? window.innerWidth : 1920], [-40, 40]);
+    const orbY = useTransform(springY, [0, typeof window !== 'undefined' ? window.innerHeight : 1080], [-40, 40]);
     
     return (
-        <div className="fixed inset-0 bg-[#030305] text-white flex flex-col overflow-hidden selection:bg-violet-500/30">
-            {/* Import font and global styles */}
+        <div className="fixed inset-0 bg-[#020204] text-white flex flex-col overflow-hidden selection:bg-violet-500/30">
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500&display=swap');
-                * { font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif; }
-                
-                :root {
-                    --safe-top: env(safe-area-inset-top, 0px);
-                    --safe-bottom: env(safe-area-inset-bottom, 0px);
-                }
-                
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap');
+                * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+                :root { --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px); }
                 .scrollbar-hide::-webkit-scrollbar { display: none; }
                 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-                
                 .safe-top { padding-top: var(--safe-top); }
                 .safe-bottom { padding-bottom: max(var(--safe-bottom), 16px); }
+                html, body { overscroll-behavior: none; }
+                input, textarea { font-size: 16px !important; }
                 
                 @keyframes shimmer {
                     0% { background-position: -200% 0; }
                     100% { background-position: 200% 0; }
                 }
-                
                 .shimmer {
-                    background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.1), transparent);
+                    background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.08), transparent);
                     background-size: 200% 100%;
-                    animation: shimmer 3s infinite;
+                    animation: shimmer 4s infinite;
                 }
                 
-                html, body { overscroll-behavior: none; }
-                input, textarea { font-size: 16px !important; }
+                @keyframes breathe {
+                    0%, 100% { opacity: 0.6; }
+                    50% { opacity: 1; }
+                }
+                .breathe { animation: breathe 4s ease-in-out infinite; }
             `}</style>
             
-            {/* Ambient Background */}
+            {/* Background layers */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                {/* Base gradient */}
-                <div className="absolute inset-0 bg-gradient-to-b from-violet-950/10 via-[#030305] to-[#030305]" />
+                <div className="absolute inset-0 bg-gradient-to-b from-violet-950/[0.08] via-[#020204] to-[#020204]" />
                 
-                {/* Animated orbs */}
+                {/* Parallax orbs */}
                 <motion.div style={{ x: orbX, y: orbY }} className="absolute inset-0">
-                    <AmbientOrb 
-                        className="top-[-20%] left-[-10%] w-[600px] h-[600px] bg-violet-900/30" 
-                        delay={0} 
-                    />
-                    <AmbientOrb 
-                        className="bottom-[-30%] right-[-20%] w-[800px] h-[800px] bg-indigo-900/20" 
-                        delay={5} 
-                    />
-                    <AmbientOrb 
-                        className="top-[40%] right-[-30%] w-[500px] h-[500px] bg-fuchsia-900/15" 
-                        delay={10} 
-                    />
+                    <AmbientOrb className="top-[-25%] left-[-15%] w-[700px] h-[700px]" color="violet" delay={0} />
+                    <AmbientOrb className="bottom-[-35%] right-[-25%] w-[900px] h-[900px]" color="indigo" delay={5} />
+                    <AmbientOrb className="top-[30%] right-[-35%] w-[600px] h-[600px]" color="fuchsia" delay={10} />
                 </motion.div>
                 
-                {/* Noise texture */}
-                <div 
-                    className="absolute inset-0 opacity-[0.015]"
-                    style={{ 
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-                    }}
-                />
+                {/* Floating particles */}
+                <FloatingParticles count={25} />
                 
-                {/* Subtle vignette */}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" />
+                {/* Noise */}
+                <div className="absolute inset-0 opacity-[0.012]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")` }} />
+                
+                {/* Vignette */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)]" />
             </div>
             
-            {/* Gate Notification Toast */}
+            {/* Gate notification */}
             <AnimatePresence>
                 {gateNotification && (
                     <motion.div
-                        initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                        initial={{ opacity: 0, y: -30, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                        className="fixed top-20 left-1/2 -translate-x-1/2 z-50"
+                        exit={{ opacity: 0, y: -30, scale: 0.9 }}
+                        className="fixed top-24 left-1/2 -translate-x-1/2 z-50"
                     >
-                        <div className={`px-5 py-3 rounded-2xl backdrop-blur-xl border ${
+                        <div className={`px-6 py-3 rounded-2xl backdrop-blur-2xl border ${
                             gateNotification.type === 'blocked'
-                                ? 'bg-red-950/60 border-red-500/30 text-red-200'
-                                : 'bg-emerald-950/60 border-emerald-500/30 text-emerald-200'
+                                ? 'bg-red-950/70 border-red-500/30 text-red-200'
+                                : 'bg-emerald-950/70 border-emerald-500/30 text-emerald-200'
                         } shadow-2xl`}>
                             <div className="flex items-center gap-3">
                                 <ShieldAlert size={16} />
-                                <span className="text-sm font-medium">
-                                    {gateNotification.type === 'blocked' ? 'MirrorGate: Response filtered' : 'MirrorGate: Passed'}
-                                </span>
+                                <span className="text-sm font-medium">MirrorGate: Response filtered</span>
                             </div>
                         </div>
                     </motion.div>
@@ -606,51 +658,47 @@ export default function Mirror({ onMessageSent, disabled }) {
             
             {/* Header */}
             <motion.header
-                animate={{ 
-                    opacity: isIdle ? 0.2 : 1, 
-                    y: isIdle ? -20 : 0,
-                    filter: isIdle ? 'blur(4px)' : 'blur(0px)'
-                }}
-                transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+                animate={{ opacity: isIdle ? 0.15 : 1, y: isIdle ? -15 : 0, filter: isIdle ? 'blur(4px)' : 'blur(0px)' }}
+                transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
                 className="relative z-20 flex justify-between items-center p-4 pt-6 safe-top"
             >
                 <motion.button 
-                    onClick={exitMirror}
+                    onClick={() => window.location.href = '/'}
                     onMouseEnter={() => SoundEngine.hover()}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.06] hover:border-white/[0.12] transition-all duration-300 text-sm text-zinc-400 hover:text-white backdrop-blur-sm"
+                    className="flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-white/[0.1] transition-all duration-500 text-sm text-zinc-500 hover:text-white backdrop-blur-xl"
                 >
                     <ArrowLeft size={14} strokeWidth={1.5} />
                     <span className="hidden sm:inline font-light">Exit Mirror</span>
                 </motion.button>
                 
-                {/* Center indicator */}
                 <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 border border-white/[0.06] backdrop-blur-xl">
+                    <motion.div 
+                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/50 border border-white/[0.05] backdrop-blur-2xl"
+                        animate={{ borderColor: ['rgba(255,255,255,0.05)', 'rgba(139,92,246,0.15)', 'rgba(255,255,255,0.05)'] }}
+                        transition={{ duration: 6, repeat: Infinity }}
+                    >
                         <motion.span 
-                            animate={{ opacity: [0.5, 1, 0.5] }}
-                            transition={{ duration: 3, repeat: Infinity }}
+                            animate={{ opacity: [0.6, 1, 0.6], scale: [0.95, 1.05, 0.95] }}
+                            transition={{ duration: 4, repeat: Infinity }}
                             className="text-violet-400"
                         >
                             ⟡
                         </motion.span>
-                        <span className="text-[10px] font-medium tracking-[0.2em] text-zinc-500 uppercase">
-                            Mirror
-                        </span>
-                    </div>
+                        <span className="text-[10px] font-medium tracking-[0.25em] text-zinc-500 uppercase">Mirror</span>
+                    </motion.div>
                 </div>
                 
-                {/* Menu */}
                 <div className="relative">
                     <motion.button
                         onClick={() => { SoundEngine.hover(); setIsMenuOpen(!isMenuOpen); }}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className={`p-3 rounded-full transition-all duration-300 ${
+                        className={`p-3 rounded-full transition-all duration-500 ${
                             isMenuOpen 
                                 ? 'bg-white text-black' 
-                                : 'bg-white/[0.03] text-zinc-400 hover:bg-white/[0.06] hover:text-white border border-white/[0.08] hover:border-white/[0.12]'
+                                : 'bg-white/[0.03] text-zinc-500 hover:bg-white/[0.06] hover:text-white border border-white/[0.06] hover:border-white/[0.1]'
                         }`}
                     >
                         {isMenuOpen ? <X size={16} strokeWidth={1.5} /> : <Menu size={16} strokeWidth={1.5} />}
@@ -662,23 +710,22 @@ export default function Mirror({ onMessageSent, disabled }) {
                                 initial={{ opacity: 0, scale: 0.9, y: 10 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                                className="absolute top-full right-0 mt-3 w-52 bg-zinc-900/90 border border-white/[0.08] rounded-2xl shadow-2xl shadow-black/50 backdrop-blur-xl overflow-hidden"
+                                className="absolute top-full right-0 mt-3 w-56 bg-zinc-900/95 border border-white/[0.06] rounded-2xl shadow-2xl backdrop-blur-2xl overflow-hidden"
                             >
                                 <button 
                                     onClick={clearChat}
-                                    className="w-full text-left px-5 py-4 hover:bg-white/[0.04] flex items-center gap-3 text-sm text-zinc-300 hover:text-white transition-all duration-200"
+                                    className="w-full text-left px-5 py-4 hover:bg-white/[0.04] flex items-center gap-3 text-sm text-zinc-400 hover:text-white transition-all"
                                 >
                                     <Plus size={14} strokeWidth={1.5} /> 
                                     <span className="font-light">New Reflection</span>
                                 </button>
-                                <div className="h-px bg-white/[0.06] mx-4" />
+                                <div className="h-px bg-white/[0.05] mx-4" />
                                 <a 
                                     href="/research/"
-                                    className="w-full text-left px-5 py-4 hover:bg-white/[0.04] flex items-center gap-3 text-sm text-zinc-300 hover:text-white transition-all duration-200"
+                                    className="w-full text-left px-5 py-4 hover:bg-white/[0.04] flex items-center gap-3 text-sm text-zinc-400 hover:text-white transition-all"
                                 >
                                     <Shield size={14} strokeWidth={1.5} /> 
-                                    <span className="font-light">Research Papers</span>
+                                    <span className="font-light">Research</span>
                                 </a>
                             </motion.div>
                         )}
@@ -686,23 +733,15 @@ export default function Mirror({ onMessageSent, disabled }) {
                 </div>
             </motion.header>
             
-            {/* Chat Area */}
-            <div 
-                ref={chatContainerRef}
-                className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 pb-40 pt-4 z-10 scrollbar-hide"
-            >
+            {/* Chat */}
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 pb-44 pt-4 z-10 scrollbar-hide">
                 {messages.length === 0 ? (
                     <EmptyState />
                 ) : (
                     <div className="max-w-2xl mx-auto">
                         <AnimatePresence initial={false}>
                             {messages.map((msg, i) => (
-                                <Message 
-                                    key={i} 
-                                    msg={msg} 
-                                    isLast={i === messages.length - 1}
-                                    isStreaming={i === messages.length - 1 && isLoading}
-                                />
+                                <Message key={i} msg={msg} isLast={i === messages.length - 1} isStreaming={i === messages.length - 1 && isLoading} />
                             ))}
                         </AnimatePresence>
                     </div>
@@ -710,28 +749,21 @@ export default function Mirror({ onMessageSent, disabled }) {
                 <div ref={bottomRef} className="h-4" />
             </div>
             
-            {/* Input Area */}
+            {/* Input */}
             <motion.div
-                animate={{ 
-                    opacity: isIdle ? 0.4 : 1, 
-                    y: isIdle ? 20 : 0,
-                    filter: isIdle ? 'blur(2px)' : 'blur(0px)'
-                }}
-                transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+                animate={{ opacity: isIdle ? 0.3 : 1, y: isIdle ? 25 : 0, filter: isIdle ? 'blur(3px)' : 'blur(0px)' }}
+                transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
                 className="absolute bottom-0 left-0 right-0 p-4 pb-6 z-20 safe-bottom"
             >
-                {/* Gradient fade */}
-                <div className="absolute inset-x-0 bottom-full h-32 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent pointer-events-none" />
+                <div className="absolute inset-x-0 bottom-full h-40 bg-gradient-to-t from-[#020204] via-[#020204]/90 to-transparent pointer-events-none" />
                 
                 <div className="max-w-2xl mx-auto">
                     <motion.div 
-                        className="relative bg-zinc-900/60 backdrop-blur-2xl rounded-2xl border border-white/[0.08] shadow-2xl shadow-black/40 overflow-hidden group hover:border-white/[0.12] focus-within:border-violet-500/30 focus-within:shadow-[0_0_30px_rgba(139,92,246,0.15)] transition-all duration-300"
+                        className="relative bg-zinc-900/70 backdrop-blur-3xl rounded-2xl border border-white/[0.06] shadow-2xl shadow-black/50 overflow-hidden group hover:border-white/[0.1] focus-within:border-violet-500/40 transition-all duration-500"
+                        whileFocus={{ boxShadow: '0 0 40px rgba(139, 92, 246, 0.15)' }}
                     >
-                        {/* Shimmer effect on hover */}
-                        <div className="absolute inset-0 shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                        
-                        {/* Focus glow ring */}
-                        <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-violet-500/0 via-violet-500/20 to-violet-500/0 opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 pointer-events-none blur-sm" />
+                        <div className="absolute inset-0 shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                        <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-violet-500/0 via-violet-500/20 to-violet-500/0 opacity-0 group-focus-within:opacity-100 transition-opacity duration-700 pointer-events-none blur-sm" />
                         
                         <form onSubmit={handleSend} className="relative flex items-end gap-2 p-3 pl-5">
                             <textarea
@@ -741,7 +773,7 @@ export default function Mirror({ onMessageSent, disabled }) {
                                 onKeyDown={handleKeyDown}
                                 placeholder="What's on your mind?"
                                 rows={1}
-                                className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none resize-none text-white/90 placeholder-zinc-500 py-3 max-h-40 min-h-[48px] leading-relaxed text-[15px] font-light"
+                                className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none resize-none text-white/95 placeholder-zinc-600 py-3 max-h-40 min-h-[52px] leading-relaxed text-[15px] font-light"
                                 autoFocus
                             />
                             
@@ -754,7 +786,7 @@ export default function Mirror({ onMessageSent, disabled }) {
                                         exit={{ scale: 0.8, opacity: 0 }}
                                         type="button"
                                         onClick={() => abortRef.current?.abort()}
-                                        className="p-3.5 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20 border border-red-500/20 transition-all duration-200"
+                                        className="p-3.5 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20 border border-red-500/20 transition-all"
                                     >
                                         <StopCircle size={18} strokeWidth={1.5} />
                                     </motion.button>
@@ -766,7 +798,7 @@ export default function Mirror({ onMessageSent, disabled }) {
                                         exit={{ scale: 0.8, opacity: 0 }}
                                         type="submit"
                                         disabled={!input.trim()}
-                                        className="p-3.5 bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white rounded-xl hover:from-violet-400 hover:to-fuchsia-400 disabled:opacity-0 disabled:scale-75 transition-all duration-300 shadow-lg shadow-violet-500/20"
+                                        className="p-3.5 bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white rounded-xl hover:from-violet-400 hover:to-fuchsia-400 disabled:opacity-0 disabled:scale-75 transition-all duration-300 shadow-lg shadow-violet-500/25"
                                     >
                                         <Send size={18} strokeWidth={1.5} />
                                     </motion.button>
@@ -775,14 +807,13 @@ export default function Mirror({ onMessageSent, disabled }) {
                         </form>
                     </motion.div>
                     
-                    {/* Footer badge */}
                     <motion.div 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: 0.5 }}
+                        transition={{ delay: 0.8 }}
                         className="flex justify-center mt-4"
                     >
-                        <div className="flex items-center gap-2 text-[10px] text-zinc-600 tracking-wide">
+                        <div className="flex items-center gap-2 text-[10px] text-zinc-600 tracking-wide breathe">
                             <ShieldCheck size={10} strokeWidth={1.5} />
                             <span>Protected by MirrorGate</span>
                             <span className="text-zinc-700">•</span>
