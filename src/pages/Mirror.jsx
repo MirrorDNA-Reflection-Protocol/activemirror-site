@@ -725,11 +725,13 @@ export default function Mirror({ onMessageSent, disabled }) {
                 
                 <div className="max-w-2xl mx-auto">
                     <motion.div 
-                        whileFocus={{ scale: 1.01 }}
-                        className="relative bg-zinc-900/60 backdrop-blur-2xl rounded-2xl border border-white/[0.08] shadow-2xl shadow-black/40 overflow-hidden group hover:border-white/[0.12] transition-colors duration-300"
+                        className="relative bg-zinc-900/60 backdrop-blur-2xl rounded-2xl border border-white/[0.08] shadow-2xl shadow-black/40 overflow-hidden group hover:border-white/[0.12] focus-within:border-violet-500/30 focus-within:shadow-[0_0_30px_rgba(139,92,246,0.15)] transition-all duration-300"
                     >
                         {/* Shimmer effect on hover */}
                         <div className="absolute inset-0 shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                        
+                        {/* Focus glow ring */}
+                        <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-violet-500/0 via-violet-500/20 to-violet-500/0 opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 pointer-events-none blur-sm" />
                         
                         <form onSubmit={handleSend} className="relative flex items-end gap-2 p-3 pl-5">
                             <textarea
