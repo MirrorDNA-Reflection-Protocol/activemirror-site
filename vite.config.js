@@ -3,6 +3,18 @@ import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 import { copyFileSync, mkdirSync, existsSync } from 'fs'
 
+// All React routes that need SPA fallbacks
+const SPA_ROUTES = [
+    'mirror',
+    'preview', 
+    'confessions',
+    'pricing',
+    'demo',
+    'hub',
+    'lab',
+    'mirror-beta'
+];
+
 // Plugin to copy index.html for SPA routing on GitHub Pages
 const spaFallbackPlugin = () => ({
     name: 'spa-fallback',
@@ -12,14 +24,20 @@ const spaFallbackPlugin = () => ({
         // Create 404.html for GitHub Pages SPA fallback
         copyFileSync(distIndex, resolve(__dirname, 'dist/404.html'))
         
-        // Ensure /mirror loads the React app (SPA route)
-        const mirrorDir = resolve(__dirname, 'dist/mirror')
-        if (!existsSync(mirrorDir)) {
-            mkdirSync(mirrorDir, { recursive: true })
+        // Create fallback for each SPA route
+        for (const route of SPA_ROUTES) {
+            const routeDir = resolve(__dirname, `dist/${route}`)
+            if (!existsSync(routeDir)) {
+                mkdirSync(routeDir, { recursive: true })
+            }
+            const targetIndex = resolve(routeDir, 'index.html')
+            // Only copy if doesn't exist (don't override static pages)
+            if (!existsSync(targetIndex)) {
+                copyFileSync(distIndex, targetIndex)
+            }
         }
-        copyFileSync(distIndex, resolve(__dirname, 'dist/mirror/index.html'))
         
-        console.log('✅ SPA fallbacks created: 404.html, mirror/index.html')
+        console.log(`✅ SPA fallbacks created: 404.html, ${SPA_ROUTES.join('/, ')}`)
     }
 })
 
