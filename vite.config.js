@@ -1,9 +1,30 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
+import { copyFileSync, mkdirSync, existsSync } from 'fs'
+
+// Plugin to copy index.html for SPA routing on GitHub Pages
+const spaFallbackPlugin = () => ({
+    name: 'spa-fallback',
+    closeBundle() {
+        const distIndex = resolve(__dirname, 'dist/index.html')
+        
+        // Create 404.html for GitHub Pages SPA fallback
+        copyFileSync(distIndex, resolve(__dirname, 'dist/404.html'))
+        
+        // Ensure /mirror loads the React app (SPA route)
+        const mirrorDir = resolve(__dirname, 'dist/mirror')
+        if (!existsSync(mirrorDir)) {
+            mkdirSync(mirrorDir, { recursive: true })
+        }
+        copyFileSync(distIndex, resolve(__dirname, 'dist/mirror/index.html'))
+        
+        console.log('✅ SPA fallbacks created: 404.html, mirror/index.html')
+    }
+})
 
 export default defineConfig({
-    plugins: [react()],
+    plugins: [react(), spaFallbackPlugin()],
     base: '/',
     build: {
         outDir: 'dist',
