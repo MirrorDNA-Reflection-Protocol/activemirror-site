@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import ConsentGate from '../components/ConsentGate';
 
 /**
  * CONFESSION BOOTH — Public Edition
@@ -24,7 +25,10 @@ const Confessions = () => {
   const [stats, setStats] = useState(null);
   const [isLive, setIsLive] = useState(true);
   const [error, setError] = useState(null);
+  const [hasConsented, setHasConsented] = useState(false);
   const logEndRef = useRef(null);
+
+  if (!hasConsented) return <ConsentGate onConsent={() => setHasConsented(true)} />;
 
   // Fetch data
   const fetchData = async () => {
@@ -34,22 +38,22 @@ const Confessions = () => {
         fetch(`${CONFIG.PROXY_URL}/flight-log?limit=30`),
         fetch(`${CONFIG.PROXY_URL}/superego-status`),
       ]);
-      
+
       if (confRes.ok) {
         const data = await confRes.json();
         setConfessions(data.confessions || []);
       }
-      
+
       if (logRes.ok) {
         const data = await logRes.json();
         setFlightLog(data.events || []);
       }
-      
+
       if (statusRes.ok) {
         const data = await statusRes.json();
         setStats(data);
       }
-      
+
       setError(null);
     } catch (err) {
       setError('Connection lost');
@@ -105,11 +109,10 @@ const Confessions = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsLive(!isLive)}
-              className={`px-3 py-1 rounded text-sm font-medium transition ${
-                isLive 
-                  ? 'bg-red-500/20 text-red-400 border border-red-500/30' 
-                  : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
-              }`}
+              className={`px-3 py-1 rounded text-sm font-medium transition ${isLive
+                ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
+                }`}
             >
               {isLive ? '● LIVE' : '○ PAUSED'}
             </button>
@@ -237,7 +240,7 @@ const Confessions = () => {
                             </div>
                             <div className="flex flex-wrap gap-2">
                               {conf.rules_triggered?.map((rule, j) => (
-                                <span 
+                                <span
                                   key={j}
                                   className="px-2 py-0.5 bg-red-500/10 text-red-400 text-xs rounded border border-red-500/20"
                                 >

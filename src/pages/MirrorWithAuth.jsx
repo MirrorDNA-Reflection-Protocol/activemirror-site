@@ -8,13 +8,14 @@ import { User, LogOut, Sparkles, Crown } from 'lucide-react';
 import Mirror from './Mirror';
 import AuthModal from '../components/AuthModal';
 import UsageLimitBanner from '../components/UsageLimitBanner';
-import { 
-  getUser, 
-  signOut, 
-  upgradeToPro, 
-  canSendMessage, 
+import ConsentGate from '../components/ConsentGate';
+import {
+  getUser,
+  signOut,
+  upgradeToPro,
+  canSendMessage,
   incrementUsage,
-  isProUser 
+  isProUser
 } from '../lib/auth';
 
 const MirrorWithAuth = () => {
@@ -22,6 +23,9 @@ const MirrorWithAuth = () => {
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState('signin');
   const [usageState, setUsageState] = useState({ allowed: true, remaining: 5 });
+  const [hasConsented, setHasConsented] = useState(false);
+
+  if (!hasConsented) return <ConsentGate onConsent={() => setHasConsented(true)} />;
 
   // Load user on mount
   useEffect(() => {
@@ -75,7 +79,7 @@ const MirrorWithAuth = () => {
       const today = new Date().toISOString().split('T')[0];
       anonUsage[today] = (anonUsage[today] || 0) + 1;
       localStorage.setItem('mirror_anon_usage', JSON.stringify(anonUsage));
-      
+
       const remaining = 5 - anonUsage[today];
       setUsageState({
         allowed: remaining > 0,
@@ -163,7 +167,7 @@ const MirrorWithAuth = () => {
       )}
 
       {/* The actual Mirror component */}
-      <Mirror 
+      <Mirror
         onMessageSent={handleMessageSent}
         disabled={!usageState.allowed}
       />

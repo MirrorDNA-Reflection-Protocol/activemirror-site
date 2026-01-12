@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, ArrowLeft, Trash2, StopCircle, Plus, Sparkles, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import ConsentGate from '../components/ConsentGate';
 
 // --- SONIC IDENTITY ENGINE (Procedural Audio) ---
 const SoundEngine = {
@@ -100,6 +101,9 @@ export default function Demo() {
     const [isLoading, setIsLoading] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isZen, setIsZen] = useState(false);
+    const [hasConsented, setHasConsented] = useState(false);
+
+    if (!hasConsented) return <ConsentGate onConsent={() => setHasConsented(true)} />;
 
     const bottomRef = useRef(null);
     const inputRef = useRef(null);

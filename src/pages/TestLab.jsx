@@ -3,6 +3,7 @@ import { CreateWebWorkerMLCEngine } from "@mlc-ai/web-llm";
 import { ArrowLeft, Send, CloudLightning, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import ConsentGate from '../components/ConsentGate';
 
 // ⟡ CONFIG: DUAL ENGINES
 const MODES = {
@@ -61,7 +62,10 @@ export default function TestLab() {
     const [isLoading, setIsLoading] = useState(false);
     const [localEngine, setLocalEngine] = useState(null);
     const [localProgress, setLocalProgress] = useState("");
+    const [hasConsented, setHasConsented] = useState(false);
     const bottomRef = useRef(null);
+
+    if (!hasConsented) return <ConsentGate onConsent={() => setHasConsented(true)} />;
 
     // ⟡ INIT LOCAL ENGINE
     useEffect(() => {
