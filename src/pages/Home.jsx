@@ -60,13 +60,6 @@ export default function Home() {
                             Visit Site
                         </a>
 
-                        {/* 3. DAILY BRIEFING (Intelligence) - NEW */}
-                        <a href="https://brief.activemirror.ai" target="_blank" className="w-full py-3 sm:py-4 rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-500 font-medium hover:bg-amber-500/10 hover:border-amber-500/30 transition-all flex items-center justify-center gap-2 sm:gap-3 shadow-[0_0_20px_rgba(245,158,11,0.1)] hover:shadow-[0_0_30px_rgba(245,158,11,0.2)] group text-sm sm:text-base">
-                            <Zap size={16} className="text-amber-500 fill-amber-500/20 group-hover:fill-amber-500/40 transition-colors" />
-                            Daily Briefing
-                            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform opacity-50" />
-                        </a>
-
                         {/* 4. ECOSYSTEM (Eye-catching) */}
                         <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/ecosystem/" target="_blank" className="w-full py-3 sm:py-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 font-medium hover:bg-cyan-500/10 hover:border-cyan-500/30 transition-all flex items-center justify-center gap-2 sm:gap-3 shadow-[0_0_20px_rgba(34,211,238,0.1)] hover:shadow-[0_0_30px_rgba(34,211,238,0.2)] group text-sm sm:text-base">
                             <span className="text-base sm:text-lg">✦</span>
@@ -98,8 +91,14 @@ export default function Home() {
 
                     {/* FOOTER: LEGALS ONLY */}
                     <div className="pt-4 sm:pt-6 border-t border-purple-500/10 flex justify-center items-center text-[9px] sm:text-[10px] md:text-xs font-mono text-zinc-600 uppercase tracking-widest w-full mt-2 sm:mt-6">
-                        <div className="flex flex-wrap justify-center gap-x-4 sm:gap-x-8 gap-y-2 text-center">
+                        <div className="flex flex-wrap justify-center gap-x-4 sm:gap-x-8 gap-y-2 text-center items-center">
                             <Link to="/terms" className="hover:text-purple-400 transition-colors">Terms</Link>
+
+                            {/* Hidden/Subtle Intelligence Link */}
+                            <a href="https://brief.activemirror.ai" target="_blank" className="hover:text-amber-500 transition-colors opacity-50 hover:opacity-100" aria-label="Intelligence">
+                                <Zap size={10} className="inline-block" />
+                            </a>
+
                             <Link to="/privacy" className="hover:text-purple-400 transition-colors">Privacy</Link>
                         </div>
                     </div>
