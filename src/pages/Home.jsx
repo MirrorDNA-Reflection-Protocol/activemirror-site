@@ -94,9 +94,10 @@ export default function Home() {
                         <div className="flex flex-wrap justify-center gap-x-4 sm:gap-x-8 gap-y-2 text-center items-center">
                             <Link to="/terms" className="hover:text-purple-400 transition-colors">Terms</Link>
 
-                            {/* Hidden/Subtle Intelligence Link */}
-                            <a href="https://brief.activemirror.ai" target="_blank" className="hover:text-amber-500 transition-colors opacity-50 hover:opacity-100" aria-label="Intelligence">
-                                <Zap size={10} className="inline-block" />
+                            {/* Hidden/Subtle Intelligence Link (Mysterious Pulse) */}
+                            <a href="https://brief.activemirror.ai" target="_blank" className="relative group/zap" aria-label="Intelligence">
+                                <div className="absolute inset-0 bg-amber-500/20 blur-lg rounded-full animate-pulse-slow opacity-0 group-hover/zap:opacity-100 transition-opacity duration-1000"></div>
+                                <Zap size={10} className="inline-block text-amber-500/40 animate-pulse-slow group-hover/zap:text-amber-400 group-hover/zap:animate-none group-hover/zap:drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] transition-all duration-500" />
                             </a>
 
                             <Link to="/privacy" className="hover:text-purple-400 transition-colors">Privacy</Link>
