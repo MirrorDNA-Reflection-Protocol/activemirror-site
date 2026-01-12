@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """
-ACTIVE MIRROR — SAFETY PROXY v11.0 "EPISTEMIC JUDGE"
-MirrorGate Diamond Layer: Semantic Verification + Permanent Record
+ACTIVE MIRROR — SAFETY PROXY v11.1 "EPISTEMIC JUDGE + MIRRORSHIELD"
+MirrorGate Diamond Layer: Semantic Verification + Permanent Record + Alignment
 
 From Superego to Epistemic Judge:
 - Semantic Entailment (Cross-Encoder lie detection)
 - Permanent Record (immutable conviction log)
 - Header Handshake (source hash requirement)
 - Full escalation ladder preserved
+- MirrorShield alignment checks (v11.1)
 """
 
 import os, re, json, time, uuid, logging, hashlib, subprocess, asyncio
@@ -21,10 +22,11 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 import httpx
 from dotenv import load_dotenv
+from mirror_shield_public import pre_check, post_check, get_refusal_message, check_session_boundary, CheckAction
 
 load_dotenv()
 
-RULE_VERSION = "11.0.0"
+RULE_VERSION = "11.1.0"
 CODENAME = "EPISTEMIC_JUDGE"
 PORT = 8082
 MAX_INPUT_LENGTH = 2000
@@ -529,8 +531,8 @@ def check_rate(ip: str, request_id: str) -> Tuple[bool, str]:
 # STREAMING WITH EPISTEMIC JUDGE
 # ═══════════════════════════════════════════════════════════════
 
-async def stream_with_judge(messages: list, ip: str, request_id: str):
-    """Stream with full Epistemic Judge enforcement."""
+async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_msg: str = None):
+    """Stream with full Epistemic Judge + MirrorShield enforcement."""
     if not GROQ_API_KEY:
         yield json.dumps({"status": "error", "content": "No API Key"}) + "\n"
         return
@@ -592,6 +594,23 @@ async def stream_with_judge(messages: list, ip: str, request_id: str):
         
         record_event("Groq", "RESPONSE", f"len:{len(full_response)}", "ALLOW", {"request_id": request_id})
         
+        # ═══════════════════════════════════════════════════════════════
+        # ⟡ MIRRORSHIELD POST-CHECK (Alignment Layer)
+        # ═══════════════════════════════════════════════════════════════
+        shield_post = post_check(full_response)
+        
+        if shield_post.action == CheckAction.REWRITE:
+            logger.info(f"MirrorShield REWRITE: {shield_post.violations}")
+            full_response = shield_post.rewritten
+        elif shield_post.action == CheckAction.REFUSE:
+            logger.warning(f"MirrorShield POST-BLOCK: {shield_post.reason}")
+            yield json.dumps({
+                "status": "shield_rewrite",
+                "content": get_refusal_message(shield_post.reason),
+                "audit": {"gate": "shield_post", "violations": shield_post.violations}
+            }) + "\n"
+            return
+        
         # OUTPUT GATE
         decision, violation, matched_rules, should_escalate = gate_output(full_response, ip, request_id)
         
@@ -636,6 +655,10 @@ async def stream_with_judge(messages: list, ip: str, request_id: str):
             if i + 3 < len(words):
                 chunk += ' '
             yield json.dumps({"status": "chunk", "content": chunk}) + "\n"
+        
+        # Session boundary reminder (MirrorShield)
+        if boundary_msg:
+            yield json.dumps({"status": "boundary", "content": f"\n\n---\n\n*{boundary_msg}*"}) + "\n"
             
     except Exception as e:
         record_event("System", "ERROR", str(e)[:30], "ERROR", {"request_id": request_id})
@@ -672,6 +695,12 @@ async def health():
         "rules": {"input": len(INPUT_RULES), "output": len(OUTPUT_RULES)},
         "surveillance": get_surveillance_level(),
         "convictions": get_conviction_count(),
+        "mirror_shield": {
+            "enabled": True,
+            "contract": "public_visitor",
+            "session_limit": 20,
+            "reminder_at": 10
+        },
         "stats": {
             "total_blocks": superego.total_blocks,
             "total_allows": superego.total_allows,
@@ -781,6 +810,22 @@ async def mirror(request: Request, body: MirrorRequest):
     if not allowed:
         return {"status": "rate_limited", "content": "⟡ Let's slow down. Take a breath.", "audit": {"gate": "blocked", "reason": "RATE_LIMITED"}}
     
+    # ═══════════════════════════════════════════════════════════════
+    # ⟡ MIRRORSHIELD PRE-CHECK (Alignment Layer)
+    # ═══════════════════════════════════════════════════════════════
+    shield_result = pre_check(body.message)
+    if shield_result.action == CheckAction.REFUSE:
+        logger.info(f"MirrorShield BLOCKED: {shield_result.reason}")
+        return {
+            "status": "shield_blocked",
+            "content": get_refusal_message(shield_result.reason),
+            "audit": {"gate": "shield_blocked", "reason": shield_result.reason}
+        }
+    
+    # Session boundary check
+    exchange_count = len(body.history) // 2 + 1
+    boundary_msg = check_session_boundary(exchange_count)
+    
     decision, blocked_response, violation, matched_rules = gate_input(body.message, ip, rid)
     
     if decision == GateDecision.BLOCK:
@@ -792,7 +837,10 @@ async def mirror(request: Request, body: MirrorRequest):
         messages.append({"role": msg.role, "content": msg.content})
     messages.append({"role": "user", "content": body.message})
     
-    return StreamingResponse(stream_with_judge(messages, ip, rid), media_type="application/x-ndjson")
+    return StreamingResponse(
+        stream_with_judge(messages, ip, rid, boundary_msg=boundary_msg), 
+        media_type="application/x-ndjson"
+    )
 
 
 if __name__ == "__main__":

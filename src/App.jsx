@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Landing from './pages/Landing';
 import Demo from './pages/Demo';
-import Mirror from './pages/Mirror';
+import MirrorPage from './pages/MirrorPage';
 import MirrorWithAuth from './pages/MirrorWithAuth';
 import Pricing from './pages/Pricing';
 import Legal from './pages/Legal';
@@ -22,7 +22,7 @@ export default function App() {
                 <Route path="/legal" element={<Legal />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
-                <Route path="/mirror" element={<Mirror />} />
+                <Route path="/mirror" element={<MirrorPage />} />
                 <Route path="/mirror-beta" element={<MirrorWithAuth />} />
                 <Route path="/demo" element={<Demo />} />
                 <Route path="/pricing" element={<Pricing />} />
