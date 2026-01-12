@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Github, Book, Globe, FileText } from 'lucide-react';
+import { ArrowRight, Github, Book, Globe, FileText, Zap } from 'lucide-react';
 import SpotlightCard from '../components/SpotlightCard';
 import MirrorLogo from '../components/MirrorLogo';
 import Lenis from '@studio-freight/lenis';
@@ -60,7 +60,14 @@ export default function Home() {
                             Visit Site
                         </a>
 
-                        {/* 3. ECOSYSTEM (Eye-catching) */}
+                        {/* 3. DAILY BRIEFING (Intelligence) - NEW */}
+                        <a href="https://brief.activemirror.ai" target="_blank" className="w-full py-3 sm:py-4 rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-500 font-medium hover:bg-amber-500/10 hover:border-amber-500/30 transition-all flex items-center justify-center gap-2 sm:gap-3 shadow-[0_0_20px_rgba(245,158,11,0.1)] hover:shadow-[0_0_30px_rgba(245,158,11,0.2)] group text-sm sm:text-base">
+                            <Zap size={16} className="text-amber-500 fill-amber-500/20 group-hover:fill-amber-500/40 transition-colors" />
+                            Daily Briefing
+                            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform opacity-50" />
+                        </a>
+
+                        {/* 4. ECOSYSTEM (Eye-catching) */}
                         <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/ecosystem/" target="_blank" className="w-full py-3 sm:py-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 font-medium hover:bg-cyan-500/10 hover:border-cyan-500/30 transition-all flex items-center justify-center gap-2 sm:gap-3 shadow-[0_0_20px_rgba(34,211,238,0.1)] hover:shadow-[0_0_30px_rgba(34,211,238,0.2)] group text-sm sm:text-base">
                             <span className="text-base sm:text-lg">✦</span>
                             Explore Ecosystem
