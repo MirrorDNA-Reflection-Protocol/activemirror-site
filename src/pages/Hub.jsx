@@ -78,6 +78,30 @@ const INITIAL_PROJECTS = [
         tags: ["infrastructure", "tools"]
     },
     {
+        id: "project_veracity",
+        name: "Project Veracity",
+        status: "shipped",
+        priority: "P0",
+        repo: "~/Documents/GitHub/mirrormesh/",
+        remote: "github.com/MirrorDNA-Reflection-Protocol/mirrormesh",
+        owner: "antigravity",
+        next_action: "Monitor scams blocked",
+        blockers: [],
+        tags: ["security", "ai", "truth"]
+    },
+    {
+        id: "ironclad_mesh",
+        name: "Ironclad Security",
+        status: "shipped",
+        priority: "P0",
+        repo: "~/Documents/GitHub/mirrormesh/",
+        remote: "github.com/MirrorDNA-Reflection-Protocol/mirrormesh",
+        owner: "antigravity",
+        next_action: "Maintain Zero Trust",
+        blockers: [],
+        tags: ["security", "protocol"]
+    },
+    {
         id: "orchestrator_model",
         name: "Orchestrator Model",
         status: "shipped",
