@@ -9,6 +9,7 @@ import Pricing from './pages/Pricing';
 import Legal from './pages/Legal';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
+import Trust from './pages/Trust';
 import TestLab from './pages/TestLab';
 import Hub from './pages/Hub';
 import Confessions from './pages/Confessions';
@@ -22,6 +23,7 @@ export default function App() {
                 <Route path="/legal" element={<Legal />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
+                <Route path="/trust" element={<Trust />} />
                 <Route path="/mirror" element={<MirrorPage />} />
                 <Route path="/mirror-beta" element={<MirrorWithAuth />} />
                 <Route path="/demo" element={<Demo />} />

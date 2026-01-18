@@ -5,9 +5,7 @@ import Mirror from './pages/Mirror'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-    <React.StrictMode>
-        <BrowserRouter>
-            <Mirror />
-        </BrowserRouter>
-    </React.StrictMode>,
+    <BrowserRouter>
+        <Mirror />
+    </BrowserRouter>
 )

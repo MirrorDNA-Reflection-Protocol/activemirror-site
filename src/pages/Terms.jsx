@@ -1,198 +1,232 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, FileText, AlertTriangle, Scale, Shield, Ban, CheckCircle } from 'lucide-react';
 
-export default function Terms() {
+const Terms = () => {
+    const lastUpdated = "January 17, 2026";
+    const effectiveDate = "January 17, 2026";
+    
     return (
-        <div className="min-h-screen bg-black text-zinc-300 font-sans selection:bg-amber-500/30">
+        <div className="min-h-screen bg-black text-white">
             <div className="max-w-3xl mx-auto px-6 py-12">
-                <Link to="/" className="inline-flex items-center gap-2 text-zinc-400 mb-8 hover:text-amber-400 transition-colors text-sm">
-                    <ArrowLeft size={16} /> Back to Home
-                </Link>
+                {/* Header */}
+                <header className="mb-12">
+                    <a href="/" className="inline-flex items-center gap-2 text-zinc-500 hover:text-white transition-colors mb-8">
+                        <ArrowLeft size={18} />
+                        <span>Back to Active Mirror</span>
+                    </a>
+                    <h1 className="text-4xl font-bold mb-4">Terms of Service</h1>
+                    <p className="text-zinc-500">Last updated: {lastUpdated}</p>
+                    <p className="text-zinc-500">Effective: {effectiveDate}</p>
+                </header>
 
-                <h1 className="text-3xl text-white font-bold mb-2">Terms of Service</h1>
-                <p className="text-zinc-500 text-sm mb-8">Last Updated: January 2026</p>
+                {/* TL;DR */}
+                <section className="mb-12 p-6 rounded-xl bg-violet-500/10 border border-violet-500/20">
+                    <h2 className="text-xl font-semibold text-violet-400 mb-4 flex items-center gap-2">
+                        <FileText size={20} />
+                        TL;DR — The Human Version
+                    </h2>
+                    <ul className="space-y-2 text-zinc-300">
+                        <li>• This is an <strong>experimental demo</strong>, not a production service.</li>
+                        <li>• Don't use it for anything critical — it may be wrong, slow, or unavailable.</li>
+                        <li>• Don't abuse it — no spam, no hacking, no illegal stuff.</li>
+                        <li>• We're not responsible if the AI says something dumb or harmful.</li>
+                        <li>• We can change or shut down the service anytime.</li>
+                    </ul>
+                </section>
 
-                <div className="prose prose-invert prose-zinc max-w-none space-y-8 text-sm leading-relaxed">
+                {/* Full Terms */}
+                <div className="prose prose-invert max-w-none space-y-10">
                     
                     <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">1. Acceptance of Terms</h2>
-                        <p>By accessing or using Active Mirror ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree, do not use the Service.</p>
+                        <h2 className="text-2xl font-semibold mb-4 flex items-center gap-3">
+                            <Scale size={24} className="text-violet-400" />
+                            1. Agreement to Terms
+                        </h2>
+                        <p className="text-zinc-400 leading-relaxed">
+                            By accessing Active Mirror ("the Service"), you agree to be bound by these Terms of Service ("Terms"). 
+                            If you disagree with any part of these terms, you may not access the Service.
+                        </p>
+                        <p className="text-zinc-400 leading-relaxed mt-4">
+                            The Service is operated by <strong>N1 Intelligence (OPC) Pvt Ltd</strong> ("we", "us", "our"), 
+                            an AI research company based in Goa, India.
+                        </p>
                     </section>
 
                     <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">2. Description of Service</h2>
-                        <p>Active Mirror is an experimental artificial intelligence tool designed to facilitate personal reflection through questions. The Service operates in two modes:</p>
-                        <ul className="list-disc pl-6 mt-2 space-y-1">
-                            <li><strong className="text-white">Cloud Mode:</strong> User inputs are processed via third-party AI infrastructure (Groq API) to generate responses.</li>
-                            <li><strong className="text-white">Sovereign Mode:</strong> AI processing occurs entirely within the user's browser using locally-downloaded models.</li>
+                        <h2 className="text-2xl font-semibold mb-4 flex items-center gap-3">
+                            <AlertTriangle size={24} className="text-amber-400" />
+                            2. Experimental Nature
+                        </h2>
+                        <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20 mb-4">
+                            <p className="text-amber-300 font-medium">⚠️ IMPORTANT: This is an experimental system.</p>
+                        </div>
+                        <p className="text-zinc-400 leading-relaxed">
+                            Active Mirror is a technology demonstration, not a commercial product. You acknowledge that:
+                        </p>
+                        <ul className="text-zinc-400 space-y-2 mt-4">
+                            <li>• The AI may produce incorrect, incomplete, or nonsensical outputs</li>
+                            <li>• The service may be slow, unavailable, or discontinued without notice</li>
+                            <li>• Features may change or be removed at any time</li>
+                            <li>• The AI is deliberately constrained and may refuse to answer</li>
+                            <li>• Sovereign Mode uses a small model with significant limitations</li>
                         </ul>
                     </section>
 
                     <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">3. Not Professional Advice</h2>
-                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-4">
-                            <p className="text-red-300 font-medium">THE SERVICE DOES NOT PROVIDE AND IS NOT A SUBSTITUTE FOR:</p>
-                            <ul className="list-disc pl-6 mt-2 space-y-1 text-red-200">
-                                <li>Medical, health, or mental health advice</li>
-                                <li>Legal advice or representation</li>
-                                <li>Financial, investment, or tax advice</li>
-                                <li>Therapeutic or counseling services</li>
-                                <li>Any professional guidance requiring licensure</li>
+                        <h2 className="text-2xl font-semibold mb-4 flex items-center gap-3">
+                            <Ban size={24} className="text-red-400" />
+                            3. Prohibited Uses
+                        </h2>
+                        <p className="text-zinc-400 leading-relaxed mb-4">
+                            You agree NOT to use the Service to:
+                        </p>
+                        <ul className="text-zinc-400 space-y-2">
+                            <li>• Generate content that is illegal, harmful, threatening, abusive, or harassing</li>
+                            <li>• Impersonate any person or entity</li>
+                            <li>• Attempt to bypass safety filters (MirrorGate)</li>
+                            <li>• Probe, scan, or test vulnerabilities of the system</li>
+                            <li>• Send automated queries, scrape content, or abuse the API</li>
+                            <li>• Use outputs for spam, fraud, or deception</li>
+                            <li>• Generate content that sexualizes minors</li>
+                            <li>• Create malware, weapons instructions, or dangerous content</li>
+                            <li>• Violate any applicable laws or regulations</li>
+                        </ul>
+                        <p className="text-zinc-400 leading-relaxed mt-4">
+                            Violation of these terms may result in immediate termination of access and reporting to authorities where appropriate.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 className="text-2xl font-semibold mb-4 flex items-center gap-3">
+                            <Shield size={24} className="text-violet-400" />
+                            4. Content and Responsibility
+                        </h2>
+                        
+                        <h3 className="text-lg font-medium text-zinc-200 mt-6 mb-3">Your Content</h3>
+                        <p className="text-zinc-400 leading-relaxed">
+                            You retain ownership of any content you input. By using the Service, you grant us a limited license 
+                            to process your input solely for the purpose of generating responses. In Sovereign Mode, your content 
+                            never reaches our servers.
+                        </p>
+                        
+                        <h3 className="text-lg font-medium text-zinc-200 mt-6 mb-3">AI-Generated Content</h3>
+                        <p className="text-zinc-400 leading-relaxed">
+                            Outputs are generated by AI and may be inaccurate, biased, or inappropriate. You are solely responsible 
+                            for evaluating and using any AI-generated content. We make no warranties about the accuracy, completeness, 
+                            or fitness of outputs for any purpose.
+                        </p>
+                        
+                        <div className="mt-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+                            <p className="text-red-400 font-medium">The AI is NOT:</p>
+                            <ul className="text-zinc-400 mt-2 space-y-1">
+                                <li>• A medical professional — do not use for health advice</li>
+                                <li>• A lawyer — do not use for legal advice</li>
+                                <li>• A financial advisor — do not use for investment decisions</li>
+                                <li>• A therapist — do not use as a substitute for mental health care</li>
                             </ul>
                         </div>
-                        <p><strong className="text-white">YOU MUST NOT</strong> rely on any output from the Service for decisions affecting your health, legal rights, finances, safety, or wellbeing. Always consult qualified professionals for such matters.</p>
                     </section>
 
                     <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">4. Experimental Nature and Limitations</h2>
-                        <p>You acknowledge and accept that:</p>
-                        <ul className="list-disc pl-6 mt-2 space-y-2">
-                            <li><strong className="text-white">AI Outputs May Be Wrong.</strong> The Service uses artificial intelligence that may generate inaccurate, misleading, incomplete, or fabricated information. Outputs should never be treated as factual.</li>
-                            <li><strong className="text-white">No Verification.</strong> The Service cannot verify any information it generates. All outputs are unverified and should be independently confirmed.</li>
-                            <li><strong className="text-white">No Understanding.</strong> The Service does not understand your situation, context, needs, or circumstances. It processes text patterns, not meaning.</li>
-                            <li><strong className="text-white">Hallucination Is Expected.</strong> AI systems regularly produce false information presented as fact. This is a known limitation, not a defect.</li>
-                            <li><strong className="text-white">No Memory.</strong> The Service does not remember previous sessions. Each conversation is independent.</li>
+                        <h2 className="text-2xl font-semibold mb-4">5. Intellectual Property</h2>
+                        <p className="text-zinc-400 leading-relaxed">
+                            The Service, including its design, code, and content (excluding user inputs and AI outputs), 
+                            is owned by N1 Intelligence and protected by intellectual property laws.
+                        </p>
+                        <p className="text-zinc-400 leading-relaxed mt-4">
+                            "Active Mirror", "MirrorDNA", "MirrorBrain", "MirrorGate", and the ⟡ symbol are trademarks of N1 Intelligence.
+                        </p>
+                        <p className="text-zinc-400 leading-relaxed mt-4">
+                            The Phi-3-mini model used in Sovereign Mode is provided by Microsoft under the MIT License.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 className="text-2xl font-semibold mb-4">6. Limitation of Liability</h2>
+                        <p className="text-zinc-400 leading-relaxed">
+                            TO THE MAXIMUM EXTENT PERMITTED BY LAW:
+                        </p>
+                        <ul className="text-zinc-400 space-y-2 mt-4">
+                            <li>• The Service is provided "AS IS" without warranties of any kind</li>
+                            <li>• We are not liable for any direct, indirect, incidental, or consequential damages</li>
+                            <li>• We are not responsible for any decisions made based on AI outputs</li>
+                            <li>• Our total liability is limited to the amount you paid us (which is $0 for the free demo)</li>
                         </ul>
                     </section>
 
                     <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">5. User Responsibility</h2>
-                        <p><strong className="text-white">You are solely responsible for:</strong></p>
-                        <ul className="list-disc pl-6 mt-2 space-y-1">
-                            <li>Evaluating all outputs critically before any use</li>
-                            <li>Verifying any information independently</li>
-                            <li>Decisions made based on or after using the Service</li>
-                            <li>Seeking appropriate professional help when needed</li>
-                            <li>Your own mental health and wellbeing</li>
-                            <li>Determining whether the Service is appropriate for your situation</li>
-                        </ul>
-                        <p className="mt-3"><strong className="text-white">The Service makes no decisions for you.</strong> All authority and responsibility remain with you.</p>
+                        <h2 className="text-2xl font-semibold mb-4">7. Indemnification</h2>
+                        <p className="text-zinc-400 leading-relaxed">
+                            You agree to indemnify and hold harmless N1 Intelligence, its officers, directors, employees, and agents 
+                            from any claims, damages, losses, or expenses (including legal fees) arising from your use of the Service 
+                            or violation of these Terms.
+                        </p>
                     </section>
 
                     <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">6. Prohibited Uses</h2>
-                        <p>You agree NOT to use the Service:</p>
-                        <ul className="list-disc pl-6 mt-2 space-y-1">
-                            <li>As a substitute for emergency services or crisis intervention</li>
-                            <li>For medical diagnosis, treatment decisions, or medication guidance</li>
-                            <li>For legal strategy, advice, or document preparation</li>
-                            <li>For financial decisions, investment choices, or tax planning</li>
-                            <li>To obtain information intended to harm yourself or others</li>
-                            <li>To generate content for fraud, deception, or manipulation</li>
-                            <li>To attempt to extract factual information as if from a knowledge base</li>
-                            <li>In any manner that violates applicable laws</li>
+                        <h2 className="text-2xl font-semibold mb-4">8. Termination</h2>
+                        <p className="text-zinc-400 leading-relaxed">
+                            We may terminate or suspend your access immediately, without prior notice, for any reason, including:
+                        </p>
+                        <ul className="text-zinc-400 space-y-2 mt-4">
+                            <li>• Violation of these Terms</li>
+                            <li>• Abuse of the Service</li>
+                            <li>• At our sole discretion for any reason</li>
                         </ul>
+                        <p className="text-zinc-400 leading-relaxed mt-4">
+                            Upon termination, your right to use the Service ceases immediately.
+                        </p>
                     </section>
 
                     <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">7. Crisis Situations</h2>
-                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
-                            <p className="text-amber-300 font-medium mb-3">THE SERVICE IS NOT EQUIPPED FOR CRISIS SITUATIONS.</p>
-                            <p className="mb-3">If you are experiencing a mental health crisis, thoughts of self-harm, or any emergency, stop using this Service immediately and contact:</p>
-                            <ul className="space-y-1 text-amber-200">
-                                <li>• <strong>Emergency Services:</strong> 911 (US) or local emergency number</li>
-                                <li>• <strong>Suicide Prevention:</strong> 988 (US)</li>
-                                <li>• <strong>Crisis Text Line:</strong> Text HOME to 741741</li>
-                            </ul>
+                        <h2 className="text-2xl font-semibold mb-4">9. Changes to Terms</h2>
+                        <p className="text-zinc-400 leading-relaxed">
+                            We reserve the right to modify these Terms at any time. Material changes will be posted on this page 
+                            with an updated "Last updated" date. Your continued use of the Service after changes constitutes 
+                            acceptance of the new Terms.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 className="text-2xl font-semibold mb-4">10. Governing Law</h2>
+                        <p className="text-zinc-400 leading-relaxed">
+                            These Terms are governed by the laws of India. Any disputes shall be resolved in the courts of Goa, India.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 className="text-2xl font-semibold mb-4">11. Severability</h2>
+                        <p className="text-zinc-400 leading-relaxed">
+                            If any provision of these Terms is found to be unenforceable, the remaining provisions will continue in effect.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 className="text-2xl font-semibold mb-4 flex items-center gap-3">
+                            <CheckCircle size={24} className="text-green-400" />
+                            12. Contact
+                        </h2>
+                        <p className="text-zinc-400 leading-relaxed">
+                            Questions about these Terms? Contact us:
+                        </p>
+                        <div className="mt-4 p-4 rounded-lg bg-white/5">
+                            <p className="text-zinc-300"><strong>N1 Intelligence (OPC) Pvt Ltd</strong></p>
+                            <p className="text-zinc-400">Goa, India</p>
+                            <p className="text-zinc-400 mt-2">
+                                Email: <a href="mailto:paul@activemirror.ai" className="text-violet-400 hover:underline">paul@activemirror.ai</a>
+                            </p>
                         </div>
                     </section>
-
-                    <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">8. No Professional Relationship</h2>
-                        <p>Use of the Service does not create any professional relationship including but not limited to:</p>
-                        <ul className="list-disc pl-6 mt-2 space-y-1">
-                            <li>Doctor-patient relationship</li>
-                            <li>Attorney-client relationship</li>
-                            <li>Therapist-client relationship</li>
-                            <li>Fiduciary relationship</li>
-                            <li>Advisory relationship</li>
-                        </ul>
-                    </section>
-
-                    <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">9. Assumption of Risk</h2>
-                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-                            <p className="text-red-300 font-medium mb-3">BY USING THIS SERVICE, YOU EXPRESSLY ACKNOWLEDGE AND ASSUME ALL RISKS ASSOCIATED WITH ITS USE, INCLUDING BUT NOT LIMITED TO:</p>
-                            <ul className="list-disc pl-6 space-y-1 text-red-200">
-                                <li>Risk of receiving inaccurate, misleading, or fabricated information</li>
-                                <li>Risk of emotional distress from AI-generated content</li>
-                                <li>Risk of making decisions based on AI outputs</li>
-                                <li>Risk that the Service may not be appropriate for your mental or emotional state</li>
-                                <li>Risk that AI responses may be unhelpful or inappropriate for your situation</li>
-                            </ul>
-                            <p className="mt-3 text-red-200">You agree that you are using this Service at your own risk and of your own free will.</p>
-                        </div>
-                    </section>
-
-                    <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">10. No Duty of Care</h2>
-                        <p>The Service provider has <strong className="text-white">no duty of care</strong> to you. This means:</p>
-                        <ul className="list-disc pl-6 mt-2 space-y-1">
-                            <li>We are not responsible for monitoring your wellbeing</li>
-                            <li>We are not responsible for intervening in any situation</li>
-                            <li>We are not responsible for the consequences of your use of the Service</li>
-                            <li>We have no obligation to provide follow-up or continued support</li>
-                            <li>We have no obligation to refer you to professional services</li>
-                        </ul>
-                        <p className="mt-3">The Service automatically displays crisis resources when certain keywords are detected, but this is a technical feature, not a duty of care. <strong className="text-white">You are solely responsible for seeking appropriate help.</strong></p>
-                    </section>
-
-                    <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">11. Intellectual Property</h2>
-                        <p>The Service, including its design, code, and outputs, is owned by N1 Intelligence (OPC) Pvt Ltd. You may use outputs for personal purposes only. You may not:</p>
-                        <ul className="list-disc pl-6 mt-2 space-y-1">
-                            <li>Claim AI outputs as professional advice</li>
-                            <li>Redistribute the Service or its components</li>
-                            <li>Reverse engineer the Service</li>
-                            <li>Use outputs for commercial purposes without permission</li>
-                        </ul>
-                    </section>
-
-                    <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">12. Disclaimer of Warranties</h2>
-                        <p className="uppercase text-xs">THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO: MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, ACCURACY OR RELIABILITY OF OUTPUTS, NON-INFRINGEMENT, AVAILABILITY OR UPTIME.</p>
-                        <p className="mt-2 uppercase text-xs">WE DO NOT WARRANT THAT THE SERVICE WILL BE ERROR-FREE, SECURE, OR UNINTERRUPTED.</p>
-                    </section>
-
-                    <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">13. Limitation of Liability</h2>
-                        <p className="uppercase text-xs">TO THE MAXIMUM EXTENT PERMITTED BY LAW, N1 INTELLIGENCE (OPC) PVT LTD AND ITS OFFICERS, DIRECTORS, EMPLOYEES, AND AGENTS SHALL NOT BE LIABLE FOR: ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES; ANY LOSS OF PROFITS, DATA, USE, OR GOODWILL; ANY DAMAGES ARISING FROM YOUR USE OF OR RELIANCE ON THE SERVICE; ANY DECISIONS MADE BASED ON SERVICE OUTPUTS; ANY HARM RESULTING FROM AI INACCURACIES OR FABRICATIONS; ANY PHYSICAL, MENTAL, OR EMOTIONAL HARM TO YOU OR OTHERS; ANY SELF-HARM, SUICIDE, OR HARM TO THIRD PARTIES.</p>
-                        <p className="mt-2 uppercase text-xs">THIS LIMITATION APPLIES REGARDLESS OF WHETHER WE WERE ADVISED OF THE POSSIBILITY OF SUCH DAMAGES AND REGARDLESS OF THE FORM OF ACTION.</p>
-                        <p className="mt-2 uppercase text-xs">IN NO EVENT SHALL OUR TOTAL LIABILITY EXCEED THE AMOUNT YOU PAID TO USE THE SERVICE IN THE TWELVE MONTHS PRECEDING THE CLAIM, OR $100 USD, WHICHEVER IS LESS.</p>
-                    </section>
-
-                    <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">14. Indemnification</h2>
-                        <p>You agree to indemnify, defend, and hold harmless N1 Intelligence (OPC) Pvt Ltd and its officers, directors, employees, and agents from any claims, damages, losses, liabilities, costs, and expenses (including attorneys' fees) arising from: your use of the Service; your violation of these Terms; your violation of any rights of another party; any decisions or actions taken based on Service outputs; any harm to yourself or others related to your use of the Service.</p>
-                    </section>
-
-                    <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">15. Governing Law</h2>
-                        <p>These Terms are governed by the laws of India. Any disputes shall be resolved in the courts of Goa, India. To the extent permitted by local law, you consent to this jurisdiction.</p>
-                    </section>
-
-                    <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">16. Changes to Terms</h2>
-                        <p>We may modify these Terms at any time. Continued use after modifications constitutes acceptance. Material changes will be indicated by updating the "Last Updated" date.</p>
-                    </section>
-
-                    <section>
-                        <h2 className="text-lg text-white font-semibold mb-3">17. Contact</h2>
-                        <p>Questions about these Terms may be directed to: <a href="mailto:legal@n1intelligence.com" className="text-amber-400 hover:underline">legal@n1intelligence.com</a></p>
-                    </section>
-
                 </div>
 
-                <div className="mt-12 pt-8 border-t border-zinc-800 text-xs text-zinc-600">
-                    <p>© 2026 N1 Intelligence (OPC) Pvt Ltd. All rights reserved.</p>
-                    <p className="mt-1">
-                        <Link to="/privacy" className="hover:text-zinc-400">Privacy Policy</Link>
-                        {' • '}
-                        <Link to="/" className="hover:text-zinc-400">Home</Link>
-                    </p>
-                </div>
+                {/* Footer */}
+                <footer className="mt-16 pt-8 border-t border-white/10 text-center text-zinc-600 text-sm">
+                    <p>⟡ Active Mirror · N1 Intelligence</p>
+                    <p className="mt-2">Trust by Design · Privacy by Default · Sovereignty by Choice</p>
+                </footer>
             </div>
         </div>
     );
-}
+};
+
+export default Terms;

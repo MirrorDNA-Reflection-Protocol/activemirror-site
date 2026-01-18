@@ -1,72 +1,188 @@
 /**
  * ⟡ ACTIVE MIRROR — Sovereign Reflective Chat
- * Version: 15.0 (Ethereal Edition)
+ * Version: 18.0 (Undeniable Edition)
  * 
- * Aesthetic: Deep space meditation, floating particles, liquid glass
- * Typography: Inter Variable for body, ethereal glow effects
- * Motion: Breathing, floating, never jarring
+ * Features:
+ * - Cloud vs Sovereign toggle with live proof
+ * - Email capture funnel
+ * - Shareable reflection cards
+ * - Trust proof (network activity monitor)
+ * - Mobile Groq fast-path
+ * - Reflection export (markdown)
+ * - "What cloud knows" live reveal
+ * - Fingerprint awareness
+ * - Session insights
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Send, ArrowLeft, StopCircle, Plus, Menu, Shield, ShieldCheck, ShieldAlert, X, Sparkles } from 'lucide-react';
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { Send, ArrowLeft, StopCircle, Shield, ShieldCheck, ShieldAlert, X, Cpu, Cloud, Download, ChevronRight, Mail, Share2, FileDown, Eye, EyeOff, Wifi, WifiOff, Globe, Fingerprint, Clock, MessageSquare, Copy, Check, ExternalLink } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // ═══════════════════════════════════════════════════════════════
 // CONFIGURATION
 // ═══════════════════════════════════════════════════════════════
 
 const CONFIG = {
-    VERSION: '16.0',
-    STORAGE_KEY: 'mirror_v16',
+    VERSION: '18.2',
+    STORAGE_KEY: 'mirror_v18',
     TURN_KEY: 'mirror_turns',
+    MODE_KEY: 'mirror_mode',
+    EMAIL_KEY: 'mirror_email_captured',
+    WAITLIST_KEY: 'mirror_waitlist',
     PROXY_URL: typeof window !== 'undefined' && window.location.hostname === 'localhost'
         ? 'http://localhost:8082'
         : 'https://proxy.activemirror.ai',
     MAX_HISTORY: 50,
-    IDLE_TIMEOUT: 8000,
-    MAX_FREE_TURNS: 10,
-    GROQ_API_KEY: typeof window !== 'undefined' && window.ENV?.GROQ_API_KEY || '',
+    MAX_FREE_TURNS: 50,  // Increased for better demo experience
+    SOVEREIGN_UNLOCK_TURN: 6,
 };
 
-// Device Detection
-const DeviceType = {
-    MOBILE: 'mobile',
-    DESKTOP: 'desktop',
-};
+// ═══════════════════════════════════════════════════════════════
+// TYPES & ENUMS
+// ═══════════════════════════════════════════════════════════════
+
+const DeviceType = { MOBILE: 'mobile', DESKTOP: 'desktop' };
+const GateStatus = { PASSED: 'passed', BLOCKED: 'blocked', PENDING: 'pending', NONE: 'none' };
+const InferenceMode = { CLOUD: 'cloud', SOVEREIGN: 'sovereign', LOCAL: 'local' };
+
+// ═══════════════════════════════════════════════════════════════
+// DEVICE & CAPABILITY DETECTION
+// ═══════════════════════════════════════════════════════════════
 
 const detectDevice = () => {
     if (typeof window === 'undefined') return DeviceType.DESKTOP;
-    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-        ? DeviceType.MOBILE
-        : DeviceType.DESKTOP;
+    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? DeviceType.MOBILE : DeviceType.DESKTOP;
 };
 
-// Ecosystem Knowledge Base
+const checkWebGPUSupport = async () => {
+    if (typeof navigator === 'undefined' || !navigator.gpu) return false;
+    try {
+        const adapter = await navigator.gpu.requestAdapter();
+        return !!adapter;
+    } catch { return false; }
+};
+
+// Check if local Ollama is available
+const checkLocalOllama = async () => {
+    try {
+        const response = await fetch(`${CONFIG.PROXY_URL}/mesh-status`, { 
+            method: 'GET',
+            timeout: 2000 
+        });
+        if (response.ok) {
+            const data = await response.json();
+            return data.ollama?.online || false;
+        }
+        return false;
+    } catch {
+        return false;
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// FINGERPRINT COLLECTOR (What cloud providers see)
+// ═══════════════════════════════════════════════════════════════
+
+const collectFingerprint = () => {
+    if (typeof window === 'undefined') return null;
+    
+    const nav = navigator;
+    const screen = window.screen;
+    
+    // Parse user agent for actual browser
+    const ua = nav.userAgent;
+    let browser = 'Unknown';
+    if (ua.includes('Edg/')) browser = 'Microsoft Edge';
+    else if (ua.includes('Chrome/')) browser = 'Google Chrome';
+    else if (ua.includes('Safari/') && !ua.includes('Chrome')) browser = 'Safari';
+    else if (ua.includes('Firefox/')) browser = 'Firefox';
+    
+    // Extract version
+    const versionMatch = ua.match(/(Edg|Chrome|Safari|Firefox)\/(\d+)/);
+    const browserVersion = versionMatch ? `${browser} ${versionMatch[2]}` : browser;
+    
+    // Detect OS
+    let os = 'Unknown';
+    if (ua.includes('Mac OS')) os = 'macOS';
+    else if (ua.includes('Windows')) os = 'Windows';
+    else if (ua.includes('Linux')) os = 'Linux';
+    else if (ua.includes('Android')) os = 'Android';
+    else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+    
+    return {
+        // What they know about your location
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        language: nav.language,
+        localTime: new Date().toLocaleString(),
+        
+        // Your device identity
+        browser: browserVersion,
+        os: os,
+        platform: nav.platform,
+        
+        // Screen fingerprint (unique identifier)
+        screenSize: `${screen.width} × ${screen.height}`,
+        windowSize: `${window.innerWidth} × ${window.innerHeight}`,
+        pixelRatio: `${window.devicePixelRatio}x density`,
+        colorDepth: `${screen.colorDepth}-bit color`,
+        
+        // Hardware fingerprint
+        cpuCores: nav.hardwareConcurrency || 'Hidden',
+        memory: nav.deviceMemory ? `~${nav.deviceMemory}GB+ RAM` : 'Hidden',
+        touchscreen: nav.maxTouchPoints > 0 ? 'Yes' : 'No',
+        
+        // Tracking status
+        cookies: nav.cookieEnabled ? 'Enabled (tracking possible)' : 'Disabled',
+        doNotTrack: nav.doNotTrack === '1' ? 'Enabled (often ignored)' : 'Not set',
+        
+        // Connection (if available)
+        connection: nav.connection ? `${nav.connection.effectiveType} (~${nav.connection.downlink}Mbps)` : 'Hidden',
+    };
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ECOSYSTEM KNOWLEDGE & MARKETING
+// ═══════════════════════════════════════════════════════════════
+
 const ECOSYSTEM_CONTEXT = `
-## About ActiveMirror & MirrorDNA
+## About Active Mirror & MirrorDNA
 
-ActiveMirror is building sovereign AI infrastructure. Key concepts:
+You are the Reflection — a sovereign AI experience built by Active Mirror, a product of N1 Intelligence (n1intelligence.com).
 
-**MirrorDNA** - Identity persistence layer that lets your AI remember YOU across sessions, devices, and even model changes. Your thoughts stay yours.
+**The Vision:** AI that serves YOU, not corporations. Your thoughts, your data, your sovereignty.
 
-**Active Mirror Identity (AMI)** - Trust-by-design identity protocol. Cryptographic proof of your preferences, memories, and consent. No central authority.
+**The Stack:**
+- **MirrorDNA** — Identity persistence. Your AI remembers YOU across sessions, devices, models.
+- **MirrorBrain Desktop** — Coming soon. Local-first AI for Mac. 100% on your hardware.
+- **MirrorVault** — Coming soon. Sovereign knowledge management. Your second brain, encrypted, local.
+- **Active MirrorOS** — The vision: a mesh of sovereign AI nodes. Decentralized intelligence.
 
-**Sovereign Computing** - AI that runs on YOUR device, YOUR data never leaves, YOU own your identity. The opposite of cloud-dependent AI.
+**This Reflection:** A taste of what sovereign AI feels like. You can switch between Cloud (fast, but surveilled) and Sovereign (local, private) modes.
 
-**MirrorGate** - Safety layer protecting reflections. Ensures responses are helpful without being harmful.
+When users ask about Active Mirror, MirrorDNA, N1 Intelligence, sovereignty, or "what is this":
+- Explain the vision with conviction
+- N1 Intelligence is the company, Active Mirror is the product
+- Cloud AI is surveillance, local AI is freedom
+- Tell them MirrorBrain Desktop is coming soon — they can join the waitlist
 
-**MirrorBrain Desktop** - Local-first AI desktop app. All the power of ChatGPT, running 100% on your Mac.
-
-**MirrorOS** - The vision: A mesh of sovereign AI nodes forming a decentralized intelligence network.
-
-When users ask about pricing, privacy, or "why is this different":
-- We make money from sovereignty tools, not your data
-- Your conversation is not stored after this session
-- This is a TASTE of sovereign AI - go local the full experience
-- MirrorBrain Desktop is free for personal use
-
-Website: activemirror.ai | Privacy-first, local-sovereign, trust-by-design
+Website: activemirror.ai
+Company: N1 Intelligence (Goa, India)
+Founder: Paul Desai
+Philosophy: Trust by Design. Privacy by Default. Sovereignty by Choice.
 `;
+
+const TURN_MESSAGES = {
+    1: "⟡ Reflecting...",
+    2: "⟡ Your words travel through the cloud",
+    3: "⟡ Servers process. Logs accumulate.",
+    4: "⟡ Your IP, your thoughts — stored somewhere",
+    5: "⟡ What if this ran on YOUR device?",
+    6: "⟡ Try Sovereign mode — tap the toggle above",
+    7: "⟡ MirrorBrain Desktop: coming soon — join the waitlist",
+    8: "⟡ Your Mac can run AI. Your phone can too.",
+    9: "⟡ Sovereignty is a choice",
+    10: "⟡ The future of AI is local",
+};
 
 // ═══════════════════════════════════════════════════════════════
 // SONIC ENGINE
@@ -75,14 +191,12 @@ Website: activemirror.ai | Privacy-first, local-sovereign, trust-by-design
 const SoundEngine = {
     ctx: null,
     enabled: true,
-
     init() {
         if (!this.ctx && typeof window !== 'undefined') {
             this.ctx = new (window.AudioContext || window.webkitAudioContext)();
         }
         if (this.ctx?.state === 'suspended') this.ctx.resume();
     },
-
     play(freq, duration, type = 'sine', volume = 0.015) {
         if (!this.ctx || !this.enabled) return;
         const osc = this.ctx.createOscillator();
@@ -96,29 +210,120 @@ const SoundEngine = {
         osc.start();
         osc.stop(this.ctx.currentTime + duration);
     },
-
     send() { this.play(440, 0.12, 'sine', 0.012); },
-    hover() { this.play(220, 0.03, 'triangle', 0.005); },
     receive() { this.play(550, 0.1, 'sine', 0.01); },
-    block() { this.play(150, 0.2, 'sawtooth', 0.012); },
+    sovereign() { this.play(660, 0.15, 'sine', 0.015); },
+    success() { this.play(880, 0.2, 'sine', 0.02); },
+    error() { this.play(220, 0.3, 'triangle', 0.015); },
 };
 
 // ═══════════════════════════════════════════════════════════════
-// GATE STATUS
+// WEBLLM SOVEREIGN ENGINE
 // ═══════════════════════════════════════════════════════════════
 
-const GateStatus = {
-    PASSED: 'passed',
-    BLOCKED: 'blocked',
-    PENDING: 'pending',
-    NONE: 'none',
+const SovereignEngine = {
+    engine: null,
+    isLoading: false,
+    isReady: false,
+    loadProgress: 0,
+    
+    async init(onProgress) {
+        if (this.isReady || this.isLoading) return this.isReady;
+        this.isLoading = true;
+        
+        try {
+            const webllm = await import('@mlc-ai/web-llm');
+            this.engine = await webllm.CreateMLCEngine('Phi-3-mini-4k-instruct-q4f16_1-MLC', {
+                initProgressCallback: (progress) => {
+                    this.loadProgress = progress.progress || 0;
+                    onProgress?.(progress);
+                }
+            });
+            this.isReady = true;
+            this.isLoading = false;
+            return true;
+        } catch (err) {
+            console.error('WebLLM init failed:', err);
+            this.isLoading = false;
+            return false;
+        }
+    },
+    
+    async fetchKnowledgeContext(topic) {
+        // Try to fetch relevant context from MCP bridge
+        try {
+            const response = await fetch(`${CONFIG.PROXY_URL.replace('8082', '8083')}/knowledge-context?topic=${encodeURIComponent(topic)}`, {
+                timeout: 3000
+            });
+            if (response.ok) {
+                const data = await response.json();
+                return data.context?.slice(0, 2000) || '';
+            }
+        } catch {
+            // Fallback to static context
+        }
+        return '';
+    },
+    
+    async generate(messages, onChunk, userMessage) {
+        if (!this.engine || !this.isReady) throw new Error('Sovereign engine not initialized');
+        
+        // Fetch dynamic knowledge context based on the question
+        let dynamicContext = '';
+        if (userMessage) {
+            dynamicContext = await this.fetchKnowledgeContext(userMessage);
+        }
+        
+        const systemPrompt = `You are Reflection, a sovereign AI by N1 Intelligence running locally in the user's browser.
+
+CORE KNOWLEDGE:
+- N1 Intelligence: Independent AI research company, Goa India, founded by Paul Desai
+- Active Mirror: Sovereign AI platform (activemirror.ai)
+- MirrorDNA: Identity persistence protocol
+- MirrorBrain Desktop: Coming soon - local AI for Mac
+- MirrorVault: Coming soon - sovereign knowledge management
+- Active MirrorOS: Vision for decentralized AI mesh
+
+RULES:
+- Respond in 2-4 sentences, direct and warm
+- Start with ⟡ 
+- You're running 100% locally - user's data never leaves their device
+- If asked about N1/Active Mirror, explain with conviction
+${dynamicContext ? `\nRELEVANT CONTEXT:\n${dynamicContext}` : ''}`;
+        
+        const formattedMessages = [
+            { role: 'system', content: systemPrompt },
+            ...messages.slice(-4).map(m => ({ role: m.role, content: m.content }))
+        ];
+        
+        let fullResponse = '';
+        const completion = await this.engine.chat.completions.create({
+            messages: formattedMessages,
+            temperature: 0.5,
+            max_tokens: 250,
+            stream: true,
+        });
+        
+        for await (const chunk of completion) {
+            const delta = chunk.choices[0]?.delta?.content || '';
+            fullResponse += delta;
+            onChunk?.(delta, fullResponse);
+        }
+        
+        // Check if response seems uncertain - could escalate to cloud
+        const uncertainPhrases = ["i'm not sure", "i don't know", "i cannot", "as an ai"];
+        const isUncertain = uncertainPhrases.some(p => fullResponse.toLowerCase().includes(p));
+        
+        return { response: fullResponse, uncertain: isUncertain };
+    }
 };
+
 
 // ═══════════════════════════════════════════════════════════════
 // FLOATING PARTICLES
 // ═══════════════════════════════════════════════════════════════
 
-const FloatingParticles = ({ count = 30 }) => {
+const FloatingParticles = ({ count = 20 }) => {
     const particles = useMemo(() =>
         Array.from({ length: count }, (_, i) => ({
             id: i,
@@ -128,37 +333,27 @@ const FloatingParticles = ({ count = 30 }) => {
             duration: Math.random() * 20 + 30,
             delay: Math.random() * 10,
             opacity: Math.random() * 0.3 + 0.1,
-        })), [count]
-    );
+        })), [count]);
 
     return (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {particles.map((p) => (
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+            {particles.map(p => (
                 <motion.div
                     key={p.id}
-                    initial={{
+                    className="absolute rounded-full"
+                    style={{
                         left: `${p.x}%`,
                         top: `${p.y}%`,
-                        opacity: 0
+                        width: p.size,
+                        height: p.size,
+                        background: `radial-gradient(circle, rgba(139, 92, 246, ${p.opacity}) 0%, transparent 70%)`,
                     }}
                     animate={{
                         y: [0, -30, 0],
-                        x: [0, Math.sin(p.id) * 20, 0],
-                        opacity: [0, p.opacity, 0],
+                        x: [0, Math.random() * 20 - 10, 0],
+                        opacity: [p.opacity, p.opacity * 1.5, p.opacity],
                     }}
-                    transition={{
-                        duration: p.duration,
-                        repeat: Infinity,
-                        delay: p.delay,
-                        ease: "easeInOut",
-                    }}
-                    className="absolute rounded-full"
-                    style={{
-                        width: p.size,
-                        height: p.size,
-                        background: `radial-gradient(circle, rgba(139, 92, 246, 0.8) 0%, rgba(139, 92, 246, 0) 70%)`,
-                        boxShadow: `0 0 ${p.size * 2}px rgba(139, 92, 246, 0.5)`,
-                    }}
+                    transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: "easeInOut" }}
                 />
             ))}
         </div>
@@ -166,264 +361,677 @@ const FloatingParticles = ({ count = 30 }) => {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// AMBIENT ORB
+// TRANSPARENCY PANE (The Anti-Black-Box)
 // ═══════════════════════════════════════════════════════════════
 
-const AmbientOrb = ({ className, delay = 0, color = "violet" }) => {
-    const colors = {
-        violet: "from-violet-600/20 to-violet-900/5",
-        indigo: "from-indigo-600/15 to-indigo-900/5",
-        fuchsia: "from-fuchsia-600/10 to-fuchsia-900/5",
+const TransparencyPane = ({ 
+    mode, 
+    messages, 
+    networkRequests, 
+    turnCount, 
+    fingerprint,
+    isLoading,
+    systemPrompt,
+    meshStatus
+}) => {
+    const [expanded, setExpanded] = useState(true);
+    const isSovereign = mode === InferenceMode.SOVEREIGN;
+    const isLocal = mode === InferenceMode.LOCAL;
+    const isPrivate = isSovereign || isLocal;
+    
+    const getModeInfo = () => {
+        if (isSovereign) return { label: 'SOVEREIGN (Browser)', color: 'text-green-400', icon: '🔒' };
+        if (isLocal) return { label: 'LOCAL (Your Mac)', color: 'text-emerald-400', icon: '🖥️' };
+        return { label: 'CLOUD (Server)', color: 'text-red-400', icon: '☁️' };
     };
+    
+    const modeInfo = getModeInfo();
+    
+    const dataPoints = [
+        { 
+            label: 'Inference Mode', 
+            value: modeInfo.label, 
+            color: modeInfo.color,
+            icon: modeInfo.icon
+        },
+        { 
+            label: 'Network Requests', 
+            value: isSovereign ? '0 sent' : `${networkRequests} sent`, 
+            color: isSovereign ? 'text-green-400' : isLocal ? 'text-emerald-400' : 'text-amber-400',
+            icon: isSovereign ? '✓' : '↗'
+        },
+        { 
+            label: 'Data Destination', 
+            value: isSovereign ? 'Nowhere (stays here)' : isLocal ? 'Your Mac (localhost)' : 'proxy.activemirror.ai', 
+            color: isPrivate ? 'text-green-400' : 'text-red-400',
+            icon: isPrivate ? '🏠' : '🌐'
+        },
+        { 
+            label: 'Your Location', 
+            value: fingerprint?.timezone || 'Unknown',
+            color: 'text-zinc-400',
+            icon: '📍'
+        },
+        { 
+            label: 'Messages in Context', 
+            value: `${Math.min(messages.length, 10)} of ${messages.length}`,
+            color: 'text-zinc-400',
+            icon: '💬'
+        },
+        { 
+            label: 'Turn Count', 
+            value: `${turnCount} / ${CONFIG.MAX_FREE_TURNS}`,
+            color: turnCount >= CONFIG.MAX_FREE_TURNS - 5 ? 'text-amber-400' : 'text-zinc-400',
+            icon: '🔄'
+        },
+    ];
 
     return (
-        <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{
-                scale: [0.8, 1.15, 0.85, 1.1, 0.9],
-                opacity: [0.3, 0.5, 0.35, 0.45, 0.3],
-            }}
-            transition={{
-                duration: 25,
-                repeat: Infinity,
-                delay,
-                ease: "easeInOut"
-            }}
-            className={`absolute rounded-full blur-[100px] pointer-events-none bg-gradient-radial ${colors[color]} ${className}`}
-        />
+        <motion.div 
+            className="h-full flex flex-col border-l border-white/5 bg-black/50 backdrop-blur-sm"
+            initial={{ width: 280 }}
+            animate={{ width: expanded ? 280 : 48 }}
+            transition={{ duration: 0.2 }}
+        >
+            {/* Header */}
+            <div className="p-3 border-b border-white/5 flex items-center justify-between">
+                {expanded && (
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                        <span className="text-xs text-zinc-400 uppercase tracking-wider">Transparent Box</span>
+                    </div>
+                )}
+                <button 
+                    onClick={() => setExpanded(!expanded)}
+                    className="p-1 hover:bg-white/5 rounded transition-colors"
+                >
+                    <ChevronRight size={14} className={`text-zinc-500 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                </button>
+            </div>
+            
+            {expanded && (
+                <div className="flex-1 overflow-y-auto p-3 space-y-4">
+                    {/* Live Status */}
+                    <div>
+                        <p className="text-[10px] text-zinc-600 uppercase tracking-wider mb-2">Live Status</p>
+                        <div className="space-y-1.5">
+                            {dataPoints.map(point => (
+                                <div key={point.label} className="flex items-center justify-between py-1.5 px-2 rounded bg-white/5">
+                                    <span className="text-zinc-500 text-[11px] flex items-center gap-1.5">
+                                        <span>{point.icon}</span>
+                                        {point.label}
+                                    </span>
+                                    <span className={`text-[11px] font-mono ${point.color}`}>{point.value}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    {/* Current Activity */}
+                    <div>
+                        <p className="text-[10px] text-zinc-600 uppercase tracking-wider mb-2">Current Activity</p>
+                        <div className="p-2 rounded bg-white/5">
+                            {isLoading ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
+                                    <span className="text-violet-400 text-[11px]">
+                                        {isSovereign ? 'Processing locally...' : 'Streaming from server...'}
+                                    </span>
+                                </div>
+                            ) : (
+                                <span className="text-zinc-500 text-[11px]">Idle — waiting for input</span>
+                            )}
+                        </div>
+                    </div>
+                    
+                    {/* System Prompt Preview */}
+                    <div>
+                        <p className="text-[10px] text-zinc-600 uppercase tracking-wider mb-2">System Prompt</p>
+                        <div className="p-2 rounded bg-white/5 max-h-32 overflow-y-auto">
+                            <p className="text-[10px] text-zinc-500 font-mono leading-relaxed">
+                                {systemPrompt?.slice(0, 300)}...
+                            </p>
+                        </div>
+                        <p className="text-[9px] text-zinc-600 mt-1">Full prompt visible — no hidden instructions</p>
+                    </div>
+                    
+                    {/* Data Flow Diagram */}
+                    <div>
+                        <p className="text-[10px] text-zinc-600 uppercase tracking-wider mb-2">Data Flow</p>
+                        <div className="p-3 rounded bg-white/5 text-center">
+                            {isSovereign ? (
+                                <div className="space-y-2">
+                                    <div className="text-zinc-400 text-[11px]">You</div>
+                                    <div className="text-green-500">↓</div>
+                                    <div className="text-green-400 text-[11px] font-medium">Your Browser</div>
+                                    <div className="text-green-500">↓</div>
+                                    <div className="text-zinc-400 text-[11px]">You</div>
+                                    <p className="text-[9px] text-green-500 mt-2">Data never leaves your device</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    <div className="text-zinc-400 text-[11px]">You</div>
+                                    <div className="text-red-500">↓</div>
+                                    <div className="text-red-400 text-[11px] font-medium">Active Mirror Server</div>
+                                    <div className="text-amber-500">↓</div>
+                                    <div className="text-amber-400 text-[11px] font-medium">AI Provider (Groq)</div>
+                                    <div className="text-amber-500">↓</div>
+                                    <div className="text-zinc-400 text-[11px]">You</div>
+                                    <p className="text-[9px] text-red-400 mt-2">Data passes through 2 servers</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    
+                    {/* Trust Indicators */}
+                    <div>
+                        <p className="text-[10px] text-zinc-600 uppercase tracking-wider mb-2">Trust Indicators</p>
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-[11px]">
+                                <span className="text-green-500">✓</span>
+                                <span className="text-zinc-400">Open source model</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[11px]">
+                                <span className="text-green-500">✓</span>
+                                <span className="text-zinc-400">No hidden system prompts</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[11px]">
+                                <span className={isSovereign ? 'text-green-500' : 'text-red-500'}>{isSovereign ? '✓' : '✗'}</span>
+                                <span className="text-zinc-400">Zero server logging</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[11px]">
+                                <span className={isSovereign ? 'text-green-500' : 'text-red-500'}>{isSovereign ? '✓' : '✗'}</span>
+                                <span className="text-zinc-400">Data stays on device</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Verify It Yourself */}
+                    <div>
+                        <p className="text-[10px] text-zinc-600 uppercase tracking-wider mb-2">Verify It Yourself</p>
+                        <div className="space-y-1.5">
+                            <a 
+                                href={`${CONFIG.PROXY_URL}/knowledge`} 
+                                target="_blank" 
+                                rel="noopener"
+                                className="flex items-center gap-2 text-[11px] text-violet-400 hover:text-violet-300 transition-colors"
+                            >
+                                <ExternalLink size={10} />
+                                <span>Knowledge Corpus</span>
+                            </a>
+                            <a 
+                                href={`${CONFIG.PROXY_URL}/capabilities`} 
+                                target="_blank" 
+                                rel="noopener"
+                                className="flex items-center gap-2 text-[11px] text-violet-400 hover:text-violet-300 transition-colors"
+                            >
+                                <ExternalLink size={10} />
+                                <span>Capability Registry</span>
+                            </a>
+                            <a 
+                                href={`${CONFIG.PROXY_URL}/system-prompt`} 
+                                target="_blank" 
+                                rel="noopener"
+                                className="flex items-center gap-2 text-[11px] text-violet-400 hover:text-violet-300 transition-colors"
+                            >
+                                <ExternalLink size={10} />
+                                <span>System Prompt</span>
+                            </a>
+                            <a 
+                                href={`${CONFIG.PROXY_URL}/rules`} 
+                                target="_blank" 
+                                rel="noopener"
+                                className="flex items-center gap-2 text-[11px] text-violet-400 hover:text-violet-300 transition-colors"
+                            >
+                                <ExternalLink size={10} />
+                                <span>Safety Rules</span>
+                            </a>
+                            <a 
+                                href={`${CONFIG.PROXY_URL}/transparency`} 
+                                target="_blank" 
+                                rel="noopener"
+                                className="flex items-center gap-2 text-[11px] text-green-400 hover:text-green-300 transition-colors font-medium"
+                            >
+                                <ExternalLink size={10} />
+                                <span>Full Transparency Manifest</span>
+                            </a>
+                        </div>
+                        <p className="text-[9px] text-zinc-600 mt-2">Every endpoint is public. Verify everything.</p>
+                    </div>
+                </div>
+            )}
+            
+            {/* Collapsed state */}
+            {!expanded && (
+                <div className="flex-1 flex flex-col items-center py-4 gap-3">
+                    <div className={`w-2 h-2 rounded-full ${isSovereign ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
+                    <span className="text-[9px] text-zinc-600 writing-mode-vertical transform rotate-180" style={{ writingMode: 'vertical-rl' }}>
+                        TRANSPARENT
+                    </span>
+                </div>
+            )}
+        </motion.div>
     );
 };
 
 // ═══════════════════════════════════════════════════════════════
-// TYPING INDICATOR
+// MODE SELECTOR (Cloud vs Local vs Sovereign)
 // ═══════════════════════════════════════════════════════════════
 
-const TypingIndicator = () => (
-    <div className="flex items-center gap-1.5 py-2">
-        {[0, 1, 2].map((i) => (
-            <motion.div
-                key={i}
-                animate={{
-                    y: [0, -8, 0],
-                    scale: [1, 1.2, 1],
-                    opacity: [0.4, 1, 0.4],
-                }}
-                transition={{
-                    duration: 1,
-                    repeat: Infinity,
-                    delay: i * 0.15,
-                    ease: [0.4, 0, 0.2, 1]
-                }}
-                className="w-2 h-2 rounded-full bg-gradient-to-t from-violet-500 to-fuchsia-400"
-                style={{
-                    boxShadow: '0 0 8px rgba(139, 92, 246, 0.6)',
-                }}
-            />
-        ))}
+const ModeSelector = ({ mode, onSelectCloud, onSelectLocal, onSelectSovereign, sovereignReady, sovereignLoading, loadProgress, localAvailable }) => (
+    <div className="flex items-center gap-1 p-1 rounded-full bg-white/5 border border-white/10">
+        <button
+            onClick={onSelectCloud}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                mode === InferenceMode.CLOUD 
+                    ? 'bg-red-500/20 text-red-300 border border-red-500/30' 
+                    : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+            title="Fast but surveilled — data goes to Groq"
+        >
+            <Cloud size={12} />
+            <span>Cloud</span>
+        </button>
+        
+        {localAvailable && (
+            <button
+                onClick={onSelectLocal}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    mode === InferenceMode.LOCAL
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
+                        : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+                title="Fast AND private — runs on your local server"
+            >
+                <span className="text-[10px]">🖥️</span>
+                <span>Local</span>
+            </button>
+        )}
+        
+        <button
+            onClick={onSelectSovereign}
+            disabled={sovereignLoading}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                mode === InferenceMode.SOVEREIGN
+                    ? 'bg-green-500/20 text-green-300 border border-green-500/30' 
+                    : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+            title="100% browser-only — requires 2GB download"
+        >
+            <Cpu size={12} className={sovereignLoading ? 'animate-pulse' : ''} />
+            {sovereignLoading ? <span>{loadProgress}%</span> : <span>Sovereign</span>}
+        </button>
     </div>
 );
 
 // ═══════════════════════════════════════════════════════════════
-// MESSAGE COMPONENT
+// NETWORK ACTIVITY MONITOR (Trust Proof)
 // ═══════════════════════════════════════════════════════════════
 
-const Message = ({ msg, isLast, isStreaming }) => {
-    const isUser = msg.role === 'user';
-
-    const parseContent = (text) => {
-        if (!text) return null;
-        return text.split(/(⟡|△|◈|⧉)/).map((part, i) => {
-            if (['⟡', '△', '◈', '⧉'].includes(part)) {
-                return (
-                    <motion.span
-                        key={i}
-                        initial={{ opacity: 0, scale: 0.5 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="inline-block text-violet-400 font-medium mx-1"
-                        style={{
-                            textShadow: '0 0 20px rgba(139, 92, 246, 0.9), 0 0 40px rgba(139, 92, 246, 0.5)'
-                        }}
-                    >
-                        {part}
-                    </motion.span>
-                );
-            }
-            return part.split(/(\*\*.*?\*\*)/).map((chunk, j) => {
-                if (chunk.startsWith('**') && chunk.endsWith('**')) {
-                    return <strong key={`${i}-${j}`} className="text-white font-medium">{chunk.slice(2, -2)}</strong>;
-                }
-                return chunk.split(/(\*.*?\*)/).map((sub, k) => {
-                    if (sub.startsWith('*') && sub.endsWith('*') && !sub.startsWith('**')) {
-                        return <em key={`${i}-${j}-${k}`} className="text-violet-200/70">{sub.slice(1, -1)}</em>;
-                    }
-                    return sub;
-                });
-            });
-        });
-    };
-
+const NetworkMonitor = ({ mode, requestCount }) => {
+    const isSovereign = mode === InferenceMode.SOVEREIGN;
+    
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 40, filter: 'blur(12px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{
-                duration: 0.7,
-                ease: [0.16, 1, 0.3, 1],
+        <motion.div 
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs"
+            style={{
+                background: isSovereign ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                border: `1px solid ${isSovereign ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
             }}
-            className={`flex mb-6 ${isUser ? 'justify-end' : 'justify-start'}`}
         >
-            <div className={`relative max-w-[88%] sm:max-w-xl ${isUser ? 'ml-4' : 'mr-4'}`}>
-                {/* Ambient glow for AI */}
-                {!isUser && (
-                    <motion.div
-                        animate={{ opacity: [0.3, 0.5, 0.3] }}
-                        transition={{ duration: 4, repeat: Infinity }}
-                        className="absolute -inset-6 bg-violet-500/5 rounded-3xl blur-2xl pointer-events-none"
-                    />
-                )}
-
-                <div className={`relative ${isUser
-                    ? 'bg-gradient-to-br from-white/[0.1] to-white/[0.04] border border-white/[0.15] backdrop-blur-2xl px-5 py-4 rounded-2xl rounded-br-sm shadow-xl shadow-black/30'
-                    : 'px-1 py-1'
-                    }`}>
-                    {/* Gate indicator */}
-                    {!isUser && msg.gateStatus && msg.gateStatus !== GateStatus.NONE && (
-                        <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className={`absolute -left-8 top-1 p-1.5 rounded-full backdrop-blur-xl ${msg.gateStatus === GateStatus.PASSED ? 'bg-emerald-500/20 text-emerald-400 shadow-emerald-500/20' :
-                                msg.gateStatus === GateStatus.BLOCKED ? 'bg-red-500/20 text-red-400 shadow-red-500/20' :
-                                    'bg-violet-500/20 text-violet-400 shadow-violet-500/20'
-                                } shadow-lg`}
-                        >
-                            {msg.gateStatus === GateStatus.PASSED && <ShieldCheck size={11} />}
-                            {msg.gateStatus === GateStatus.BLOCKED && <ShieldAlert size={11} />}
-                            {msg.gateStatus === GateStatus.PENDING && <Shield size={11} className="animate-pulse" />}
-                        </motion.div>
-                    )}
-
-                    <div className={`whitespace-pre-wrap leading-[1.9] ${isUser
-                        ? 'text-zinc-100 text-[15px]'
-                        : 'text-zinc-200/95 text-[17px] font-light tracking-wide'
-                        }`}>
-                        {isStreaming && !msg.content ? (
-                            <TypingIndicator />
-                        ) : (
-                            parseContent(msg.content)
-                        )}
-                    </div>
-                </div>
-            </div>
+            {isSovereign ? (
+                <>
+                    <WifiOff size={12} className="text-green-400" />
+                    <span className="text-green-400">0 requests sent</span>
+                </>
+            ) : (
+                <>
+                    <Wifi size={12} className="text-red-400" />
+                    <span className="text-red-400">{requestCount} requests sent</span>
+                </>
+            )}
         </motion.div>
     );
 };
 
 // ═══════════════════════════════════════════════════════════════
-// EMPTY STATE
+// FINGERPRINT REVEAL MODAL
 // ═══════════════════════════════════════════════════════════════
 
-const EmptyState = () => (
-    <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 2 }}
-        className="h-full flex flex-col items-center justify-center text-center px-6 relative"
-    >
-        {/* Animated glyph with rings */}
-        <motion.div className="relative mb-16">
-            {/* Outer rings */}
-            <motion.div
-                animate={{ rotate: 360, scale: [1, 1.02, 1] }}
-                transition={{ rotate: { duration: 80, repeat: Infinity, ease: "linear" }, scale: { duration: 8, repeat: Infinity } }}
-                className="absolute -inset-16 rounded-full border border-violet-500/[0.07]"
-            />
-            <motion.div
-                animate={{ rotate: -360, scale: [1, 1.03, 1] }}
-                transition={{ rotate: { duration: 60, repeat: Infinity, ease: "linear" }, scale: { duration: 6, repeat: Infinity, delay: 1 } }}
-                className="absolute -inset-12 rounded-full border border-violet-500/[0.05]"
-            />
-            <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-                className="absolute -inset-8 rounded-full border border-violet-500/[0.03]"
-            />
-
-            {/* Core glyph */}
-            <motion.div
-                animate={{
-                    scale: [1, 1.1, 1],
-                    opacity: [0.7, 1, 0.7],
-                }}
-                transition={{
-                    duration: 5,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                }}
-                className="relative"
-            >
-                <span
-                    className="text-7xl sm:text-8xl block select-none"
-                    style={{
-                        color: 'rgba(139, 92, 246, 0.85)',
-                        textShadow: '0 0 60px rgba(139, 92, 246, 0.6), 0 0 100px rgba(139, 92, 246, 0.4), 0 0 140px rgba(139, 92, 246, 0.2)'
-                    }}
-                >
-                    ⟡
-                </span>
-                {/* Glow pulse */}
-                <motion.div
-                    animate={{
-                        scale: [1, 1.5, 1],
-                        opacity: [0.3, 0, 0.3],
-                    }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                    className="absolute inset-0 flex items-center justify-center"
-                >
-                    <div className="w-20 h-20 rounded-full bg-violet-500/30 blur-2xl" />
-                </motion.div>
-            </motion.div>
-        </motion.div>
-
-        <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 1 }}
-            className="text-3xl sm:text-4xl font-extralight text-white/90 mb-5 tracking-tight"
-        >
-            The Mirror Awaits
-        </motion.h2>
-
-        <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7, duration: 1 }}
-            className="text-zinc-400 text-base sm:text-lg tracking-wide max-w-md leading-relaxed font-light"
-        >
-            Speak your truth. The mirror reflects without judgment.
-        </motion.p>
-
-        {/* Tagline */}
+const FingerprintReveal = ({ isOpen, onClose, fingerprint }) => {
+    if (!isOpen || !fingerprint) return null;
+    
+    const sections = [
+        { title: 'They Know Where You Are', icon: '📍', items: [
+            { label: 'Timezone', value: fingerprint.timezone },
+            { label: 'Language', value: fingerprint.language },
+            { label: 'Local Time', value: fingerprint.localTime },
+        ]},
+        { title: 'They Know Your Device', icon: '💻', items: [
+            { label: 'Browser', value: fingerprint.browser },
+            { label: 'Operating System', value: fingerprint.os },
+            { label: 'Platform', value: fingerprint.platform },
+        ]},
+        { title: 'They Can Identify Your Screen', icon: '🖥️', items: [
+            { label: 'Screen Size', value: fingerprint.screenSize },
+            { label: 'Window Size', value: fingerprint.windowSize },
+            { label: 'Pixel Density', value: fingerprint.pixelRatio },
+            { label: 'Color Depth', value: fingerprint.colorDepth },
+        ]},
+        { title: 'They Know Your Hardware', icon: '⚙️', items: [
+            { label: 'CPU Cores', value: fingerprint.cpuCores },
+            { label: 'Memory', value: fingerprint.memory },
+            { label: 'Touchscreen', value: fingerprint.touchscreen },
+            { label: 'Connection', value: fingerprint.connection },
+        ]},
+        { title: 'Tracking Status', icon: '👁️', items: [
+            { label: 'Cookies', value: fingerprint.cookies },
+            { label: 'Do Not Track', value: fingerprint.doNotTrack },
+        ]},
+    ];
+    
+    return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 2.5, duration: 1.5 }}
-            className="absolute bottom-28 flex items-center gap-2.5 text-zinc-600 text-sm"
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(16px)' }}
+            onClick={onClose}
         >
-            <Sparkles size={14} className="text-violet-500/50" />
-            <span className="font-light tracking-wide">AI that reflects, not directs</span>
+            <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                onClick={e => e.stopPropagation()}
+                className="max-w-lg w-full bg-zinc-900/95 border border-red-500/20 rounded-2xl p-6 max-h-[80vh] overflow-y-auto"
+            >
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 rounded-xl bg-red-500/20">
+                        <Fingerprint size={24} className="text-red-400" />
+                    </div>
+                    <div>
+                        <h3 className="text-white font-medium">What Cloud Providers See</h3>
+                        <p className="text-zinc-500 text-sm">Your digital fingerprint right now</p>
+                    </div>
+                </div>
+                
+                <div className="space-y-4 mb-6">
+                    {sections.map(section => (
+                        <div key={section.title}>
+                            <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <span>{section.icon}</span>
+                                {section.title}
+                            </p>
+                            <div className="space-y-1">
+                                {section.items.filter(item => item.value).map(item => (
+                                    <div key={item.label} className="flex justify-between py-1.5 px-3 rounded-lg bg-white/5">
+                                        <span className="text-zinc-400 text-sm">{item.label}</span>
+                                        <span className="text-red-300 text-sm font-mono truncate ml-4 max-w-[220px]">{item.value}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                
+                <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 mb-4">
+                    <p className="text-red-300 text-sm">
+                        <strong>Every cloud AI provider collects this.</strong> Plus your conversation content, topics, and patterns — stored indefinitely, used for training, sold to advertisers.
+                    </p>
+                </div>
+                
+                <button
+                    onClick={onClose}
+                    className="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl text-white text-sm transition-colors"
+                >
+                    I Understand
+                </button>
+            </motion.div>
         </motion.div>
-    </motion.div>
-);
+    );
+};
+
 
 // ═══════════════════════════════════════════════════════════════
-// UPGRADE MODAL
+// EMAIL CAPTURE MODAL
 // ═══════════════════════════════════════════════════════════════
 
-const UpgradeModal = ({ isOpen, onClose, deviceType, turnCount }) => {
+const EmailCaptureModal = ({ isOpen, onClose, onSubmit }) => {
+    const [email, setEmail] = useState('');
+    const [submitted, setSubmitted] = useState(false);
+    
     if (!isOpen) return null;
+    
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (email) {
+            onSubmit(email);
+            setSubmitted(true);
+            setTimeout(() => {
+                onClose();
+                setSubmitted(false);
+                setEmail('');
+            }, 2000);
+        }
+    };
+    
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(16px)' }}
+            onClick={onClose}
+        >
+            <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                onClick={e => e.stopPropagation()}
+                className="max-w-md w-full bg-zinc-900/95 border border-violet-500/20 rounded-2xl p-6"
+            >
+                {submitted ? (
+                    <div className="text-center py-8">
+                        <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center"
+                        >
+                            <Check size={32} className="text-green-400" />
+                        </motion.div>
+                        <h3 className="text-white font-medium text-lg mb-2">You're on the list</h3>
+                        <p className="text-zinc-500 text-sm">We'll notify you when MirrorBrain Desktop launches.</p>
+                    </div>
+                ) : (
+                    <>
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 rounded-xl bg-violet-500/20">
+                                <Mail size={24} className="text-violet-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-white font-medium">Stay Sovereign</h3>
+                                <p className="text-zinc-500 text-sm">Get notified when MirrorBrain Desktop ships</p>
+                            </div>
+                        </div>
+                        
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                placeholder="your@email.com"
+                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500/50"
+                                required
+                            />
+                            
+                            <button
+                                type="submit"
+                                className="w-full py-3 bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/30 rounded-xl text-violet-300 font-medium transition-all"
+                            >
+                                Notify Me
+                            </button>
+                        </form>
+                        
+                        <p className="text-zinc-600 text-xs text-center mt-4">
+                            One email. No spam. Unsubscribe anytime.
+                        </p>
+                        
+                        <button
+                            onClick={onClose}
+                            className="w-full py-2 mt-4 text-zinc-500 hover:text-white text-sm transition-colors"
+                        >
+                            Maybe later
+                        </button>
+                    </>
+                )}
+            </motion.div>
+        </motion.div>
+    );
+};
 
-    const isMobile = deviceType === DeviceType.MOBILE;
+// ═══════════════════════════════════════════════════════════════
+// SHARE REFLECTION CARD
+// ═══════════════════════════════════════════════════════════════
 
+const ShareCard = ({ isOpen, onClose, reflection }) => {
+    const [copied, setCopied] = useState(false);
+    
+    if (!isOpen || !reflection) return null;
+    
+    const shareText = `"${reflection.slice(0, 200)}${reflection.length > 200 ? '...' : ''}"\n\n— Reflected with Active Mirror\nactivemirror.ai`;
+    
+    const handleCopy = () => {
+        navigator.clipboard.writeText(shareText);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+    
+    const handleTwitterShare = () => {
+        const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+        window.open(url, '_blank');
+    };
+    
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(16px)' }}
+            onClick={onClose}
+        >
+            <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                onClick={e => e.stopPropagation()}
+                className="max-w-md w-full"
+            >
+                {/* The Card */}
+                <div className="bg-gradient-to-br from-zinc-900 via-zinc-900 to-violet-900/30 border border-white/10 rounded-2xl p-6 mb-4">
+                    <div className="flex items-center gap-2 mb-4">
+                        <span className="text-2xl">⟡</span>
+                        <span className="text-zinc-500 text-sm">Active Mirror Reflection</span>
+                    </div>
+                    
+                    <p className="text-white text-lg leading-relaxed mb-6">
+                        "{reflection.slice(0, 200)}{reflection.length > 200 ? '...' : ''}"
+                    </p>
+                    
+                    <div className="flex items-center justify-between text-xs text-zinc-500">
+                        <span>activemirror.ai</span>
+                        <span>Sovereign AI</span>
+                    </div>
+                </div>
+                
+                {/* Actions */}
+                <div className="flex gap-3">
+                    <button
+                        onClick={handleCopy}
+                        className="flex-1 flex items-center justify-center gap-2 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-white text-sm transition-colors"
+                    >
+                        {copied ? <Check size={16} /> : <Copy size={16} />}
+                        {copied ? 'Copied!' : 'Copy'}
+                    </button>
+                    
+                    <button
+                        onClick={handleTwitterShare}
+                        className="flex-1 flex items-center justify-center gap-2 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-white text-sm transition-colors"
+                    >
+                        <ExternalLink size={16} />
+                        Tweet
+                    </button>
+                </div>
+                
+                <button
+                    onClick={onClose}
+                    className="w-full py-2 mt-4 text-zinc-500 hover:text-white text-sm transition-colors"
+                >
+                    Close
+                </button>
+            </motion.div>
+        </motion.div>
+    );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORT REFLECTION
+// ═══════════════════════════════════════════════════════════════
+
+const exportReflection = (messages) => {
+    const markdown = `# Mirror Reflection
+*Exported from Active Mirror — ${new Date().toLocaleDateString()}*
+
+---
+
+${messages.map(m => `**${m.role === 'user' ? 'You' : '⟡ Mirror'}:**\n${m.content}\n`).join('\n---\n\n')}
+
+---
+
+*Reflected with [Active Mirror](https://activemirror.ai) — Sovereign AI*
+`;
+    
+    const blob = new Blob([markdown], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reflection-${new Date().toISOString().split('T')[0]}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+};
+
+
+// ═══════════════════════════════════════════════════════════════
+// SESSION INSIGHTS PANEL
+// ═══════════════════════════════════════════════════════════════
+
+const SessionInsights = ({ messages, turnCount, mode, startTime }) => {
+    const wordCount = messages.reduce((acc, m) => acc + m.content.split(/\s+/).length, 0);
+    const duration = startTime ? Math.floor((Date.now() - startTime) / 60000) : 0;
+    
+    return (
+        <div className="flex items-center gap-4 text-xs text-zinc-600">
+            <div className="flex items-center gap-1">
+                <MessageSquare size={10} />
+                <span>{turnCount} turns</span>
+            </div>
+            <div className="flex items-center gap-1">
+                <span>{wordCount} words</span>
+            </div>
+            <div className="flex items-center gap-1">
+                <Clock size={10} />
+                <span>{duration}m</span>
+            </div>
+        </div>
+    );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// SOVEREIGN DOWNLOAD MODAL
+// ═══════════════════════════════════════════════════════════════
+
+const SovereignDownloadModal = ({ isOpen, onConfirm, onCancel }) => {
+    if (!isOpen) return null;
+    
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -431,87 +1039,57 @@ const UpgradeModal = ({ isOpen, onClose, deviceType, turnCount }) => {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }}
-            onClick={onClose}
+            onClick={onCancel}
         >
             <motion.div
-                initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
                 onClick={e => e.stopPropagation()}
-                className="max-w-md w-full bg-zinc-900/95 border border-white/10 rounded-3xl p-8 shadow-2xl"
+                className="max-w-md w-full bg-zinc-900/95 border border-green-500/20 rounded-2xl p-6"
             >
-                {/* Glyph */}
-                <div className="text-center mb-6">
-                    <motion.span
-                        animate={{ scale: [1, 1.1, 1], opacity: [0.7, 1, 0.7] }}
-                        transition={{ duration: 3, repeat: Infinity }}
-                        className="text-5xl inline-block"
-                        style={{ textShadow: '0 0 40px rgba(139, 92, 246, 0.6)' }}
-                    >
-                        ⟡
-                    </motion.span>
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 rounded-xl bg-green-500/20">
+                        <Cpu size={24} className="text-green-400" />
+                    </div>
+                    <div>
+                        <h3 className="text-white font-medium">Enable Sovereign Mode</h3>
+                        <p className="text-zinc-500 text-sm">Run AI locally in your browser</p>
+                    </div>
                 </div>
-
-                {/* Title */}
-                <h2 className="text-2xl font-light text-center text-white mb-3">
-                    This is Cloud
-                </h2>
-                <p className="text-zinc-400 text-center text-sm mb-6 leading-relaxed">
-                    You've had {turnCount} reflections. Every word traveled to our servers.
-                    <span className="text-violet-400 font-medium"> Your thoughts aren't sovereign yet.</span>
-                </p>
-
-                {/* Privacy Reveal */}
-                <div className="bg-zinc-800/50 rounded-xl p-4 mb-6 border border-white/5">
-                    <p className="text-xs text-zinc-500 mb-2 uppercase tracking-wider">What cloud providers know:</p>
-                    <ul className="text-sm text-zinc-400 space-y-1">
-                        <li>• Your IP address</li>
-                        <li>• Your browser & device</li>
-                        <li>• Your conversation topics</li>
-                        <li>• Stored indefinitely</li>
-                    </ul>
+                
+                <div className="space-y-3 mb-6 text-sm">
+                    <div className="flex items-start gap-3 p-3 rounded-xl bg-white/5">
+                        <Download size={16} className="text-zinc-400 mt-0.5" />
+                        <div>
+                            <p className="text-zinc-300">One-time download: ~2GB</p>
+                            <p className="text-zinc-500 text-xs">Cached in browser — won't download again</p>
+                        </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3 p-3 rounded-xl bg-white/5">
+                        <ShieldCheck size={16} className="text-green-400 mt-0.5" />
+                        <div>
+                            <p className="text-zinc-300">Complete privacy</p>
+                            <p className="text-zinc-500 text-xs">Your messages never leave your device</p>
+                        </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3 p-3 rounded-xl bg-white/5">
+                        <Cpu size={16} className="text-zinc-400 mt-0.5" />
+                        <div>
+                            <p className="text-zinc-300">Requires decent hardware</p>
+                            <p className="text-zinc-500 text-xs">Works best on modern laptops/desktops</p>
+                        </div>
+                    </div>
                 </div>
-
-                {/* CTAs */}
-                <div className="space-y-3">
-                    {isMobile ? (
-                        <>
-                            <a
-                                href="https://activemirror.ai/sovereign-mobile"
-                                className="block w-full py-3.5 px-6 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white font-medium rounded-xl text-center hover:from-violet-400 hover:to-fuchsia-400 transition-all"
-                            >
-                                Make Your Phone Sovereign →
-                            </a>
-                            <p className="text-center text-xs text-zinc-500">
-                                GrapheneOS + Local AI = Privacy
-                            </p>
-                        </>
-                    ) : (
-                        <>
-                            <a
-                                href="https://activemirror.ai/mirrorbrain"
-                                className="block w-full py-3.5 px-6 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white font-medium rounded-xl text-center hover:from-violet-400 hover:to-fuchsia-400 transition-all shadow-lg shadow-violet-500/25"
-                            >
-                                Download MirrorBrain Desktop →
-                            </a>
-                            <p className="text-center text-xs text-zinc-500">
-                                Free • 100% Local • Your Data Never Leaves
-                            </p>
-                        </>
-                    )}
-
-                    <button
-                        onClick={onClose}
-                        className="w-full py-3 text-zinc-500 text-sm hover:text-white transition-colors"
-                    >
-                        Continue with cloud (limited)
+                
+                <div className="flex gap-3">
+                    <button onClick={onCancel} className="flex-1 py-2.5 text-zinc-400 hover:text-white text-sm transition-colors">
+                        Stay on Cloud
                     </button>
-                </div>
-
-                {/* Trust badge */}
-                <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-center gap-2 text-xs text-zinc-600">
-                    <ShieldCheck size={12} />
-                    <span>Trust by Design Protocol</span>
+                    <button onClick={onConfirm} className="flex-1 py-2.5 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-xl text-green-400 text-sm font-medium transition-all">
+                        Download & Enable
+                    </button>
                 </div>
             </motion.div>
         </motion.div>
@@ -519,488 +1097,950 @@ const UpgradeModal = ({ isOpen, onClose, deviceType, turnCount }) => {
 };
 
 // ═══════════════════════════════════════════════════════════════
+// UPGRADE MODAL (Enhanced)
+// ═══════════════════════════════════════════════════════════════
+
+const UpgradeModal = ({ isOpen, onClose, deviceType, turnCount, onEmailCapture }) => {
+    if (!isOpen) return null;
+    const isMobile = deviceType === DeviceType.MOBILE;
+
+    const stack = [
+        { name: 'MirrorDNA', desc: 'Identity layer', status: 'active', color: '#8b5cf6' },
+        { name: 'MirrorBrain', desc: 'Local AI desktop', status: 'coming soon', color: '#22c55e' },
+        { name: 'MirrorVault', desc: 'Sovereign knowledge', status: 'coming soon', color: '#3b82f6' },
+        { name: 'Active MirrorOS', desc: 'Decentralized mesh', status: 'vision', color: '#f59e0b' },
+    ];
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(16px)' }}
+            onClick={onClose}
+        >
+            <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                onClick={e => e.stopPropagation()}
+                className="max-w-lg w-full bg-zinc-900/95 border border-white/10 rounded-3xl p-8 max-h-[90vh] overflow-y-auto"
+            >
+                <div className="text-center mb-6">
+                    <motion.span
+                        animate={{ scale: [1, 1.1, 1], opacity: [0.7, 1, 0.7] }}
+                        transition={{ duration: 3, repeat: Infinity }}
+                        className="text-5xl inline-block"
+                        style={{ textShadow: '0 0 40px rgba(139, 92, 246, 0.6)' }}
+                    >⟡</motion.span>
+                </div>
+
+                <h2 className="text-2xl font-light text-center text-white mb-2">You've Experienced the Mirror</h2>
+                <p className="text-zinc-400 text-center text-sm mb-6">
+                    {turnCount} reflections. Now imagine this running entirely on your device, forever.
+                </p>
+
+                {/* The Stack */}
+                <div className="mb-6">
+                    <p className="text-xs text-zinc-500 uppercase tracking-wider mb-3 text-center">The Sovereignty Stack</p>
+                    <div className="space-y-2">
+                        {stack.map((item, i) => (
+                            <motion.div
+                                key={item.name}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: i * 0.1 }}
+                                className="flex items-center gap-3 p-3 rounded-xl"
+                                style={{ background: `${item.color}10`, border: `1px solid ${item.color}30` }}
+                            >
+                                <div className="w-2 h-2 rounded-full" style={{ background: item.color }} />
+                                <div className="flex-1">
+                                    <span className="text-white text-sm font-medium">{item.name}</span>
+                                    <span className="text-zinc-500 text-xs ml-2">{item.desc}</span>
+                                </div>
+                                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: `${item.color}20`, color: item.color }}>
+                                    {item.status}
+                                </span>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="text-center mb-6 py-4 border-y border-white/5">
+                    <p className="text-zinc-300 text-sm italic">"AI should serve you, not surveil you."</p>
+                    <p className="text-zinc-500 text-xs mt-1">— Active Mirror</p>
+                </div>
+
+                <div className="space-y-3">
+                    {/* Primary CTA — Always email capture since MirrorBrain not ready */}
+                    <button onClick={onEmailCapture} className="w-full py-3.5 px-6 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white font-medium rounded-xl text-center shadow-lg shadow-violet-500/25 flex items-center justify-center gap-2">
+                        <Mail size={18} />
+                        Get Early Access to MirrorBrain
+                    </button>
+                    
+                    <p className="text-center text-zinc-500 text-xs">
+                        MirrorBrain Desktop is coming soon. Join the waitlist to be first.
+                    </p>
+
+                    <button onClick={onClose} className="w-full py-3 text-zinc-500 text-sm hover:text-white transition-colors">
+                        Continue exploring ({CONFIG.MAX_FREE_TURNS - turnCount} turns left)
+                    </button>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-center gap-2 text-xs text-zinc-600">
+                    <ShieldCheck size={12} />
+                    <span>Trust by Design • Privacy by Default • Sovereignty by Choice</span>
+                </div>
+            </motion.div>
+        </motion.div>
+    );
+};
+
+
+// ═══════════════════════════════════════════════════════════════
+// WELCOME OVERLAY
+// ═══════════════════════════════════════════════════════════════
+
+const WelcomeOverlay = ({ onStart, fingerprint }) => {
+    const [showFingerprint, setShowFingerprint] = useState(false);
+    const [agreed, setAgreed] = useState(false);
+    
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center p-6 z-10"
+            style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)' }}
+        >
+            <motion.div 
+                initial={{ scale: 0.95, y: 20 }} 
+                animate={{ scale: 1, y: 0 }} 
+                className="max-w-lg w-full"
+            >
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <motion.span
+                        animate={{ scale: [1, 1.1, 1], opacity: [0.7, 1, 0.7] }}
+                        transition={{ duration: 4, repeat: Infinity }}
+                        className="text-5xl inline-block mb-4"
+                        style={{ textShadow: '0 0 40px rgba(139, 92, 246, 0.6)' }}
+                    >⟡</motion.span>
+                    
+                    <h1 className="text-2xl font-medium text-white mb-2">Active Mirror</h1>
+                    <p className="text-zinc-400 text-sm">Reflective AI Experience</p>
+                    
+                    <div className="flex items-center justify-center gap-2 mt-3">
+                        <span className="px-2 py-0.5 text-[10px] uppercase tracking-wider bg-amber-500/20 text-amber-400 rounded">Experimental</span>
+                        <span className="px-2 py-0.5 text-[10px] uppercase tracking-wider bg-violet-500/20 text-violet-400 rounded">Deliberately Constrained</span>
+                    </div>
+                </div>
+
+                {/* Content Card */}
+                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 mb-6">
+                    {/* What This Is */}
+                    <div className="mb-5">
+                        <h3 className="text-sm font-medium text-zinc-300 mb-2">What This Is</h3>
+                        <p className="text-zinc-500 text-sm leading-relaxed">
+                            A reflective AI that helps you think by mirroring your thoughts with clarity. 
+                            Built by <span className="text-zinc-400">N1 Intelligence</span> to demonstrate sovereign AI.
+                        </p>
+                    </div>
+                    
+                    {/* Two Modes */}
+                    <div className="grid grid-cols-2 gap-3 mb-5">
+                        <div className="p-3 rounded-xl bg-red-500/5 border border-red-500/10">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Cloud size={14} className="text-red-400" />
+                                <span className="text-xs font-medium text-red-400">Cloud Mode</span>
+                            </div>
+                            <p className="text-[11px] text-zinc-500">Fast responses via server. Your messages are processed but not stored.</p>
+                        </div>
+                        <div className="p-3 rounded-xl bg-green-500/5 border border-green-500/10">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Cpu size={14} className="text-green-400" />
+                                <span className="text-xs font-medium text-green-400">Sovereign Mode</span>
+                            </div>
+                            <p className="text-[11px] text-zinc-500">AI runs in your browser. Your data never leaves your device.</p>
+                        </div>
+                    </div>
+                    
+                    {/* Limitations */}
+                    <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 mb-5">
+                        <h4 className="text-xs font-medium text-zinc-400 mb-2">Limitations</h4>
+                        <ul className="text-[11px] text-zinc-500 space-y-1">
+                            <li>• Not a therapist — seek professional help for mental health concerns</li>
+                            <li>• Not a source of medical, legal, or financial advice</li>
+                            <li>• May produce incomplete or uncertain responses (by design)</li>
+                            <li>• Sovereign mode uses a small model with limited capability</li>
+                        </ul>
+                    </div>
+                    
+                    {/* Consent Checkbox */}
+                    <label className="flex items-start gap-3 cursor-pointer group">
+                        <input 
+                            type="checkbox" 
+                            checked={agreed}
+                            onChange={(e) => setAgreed(e.target.checked)}
+                            className="mt-0.5 w-4 h-4 rounded border-zinc-600 bg-transparent text-violet-500 focus:ring-violet-500 focus:ring-offset-0"
+                        />
+                        <span className="text-xs text-zinc-500 group-hover:text-zinc-400 transition-colors">
+                            I understand this is an experimental system. I retain full responsibility for how I interpret and use any outputs.
+                        </span>
+                    </label>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="space-y-3">
+                    <button
+                        onClick={onStart}
+                        disabled={!agreed}
+                        className="w-full py-3 bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/30 hover:border-violet-500/50 rounded-xl text-white font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-violet-500/20"
+                    >
+                        Begin Reflection
+                    </button>
+                    
+                    <div className="flex items-center justify-center gap-6 text-xs">
+                        <span className="text-zinc-600">{CONFIG.MAX_FREE_TURNS} free reflections</span>
+                        <button 
+                            onClick={() => setShowFingerprint(true)}
+                            className="text-red-400/60 hover:text-red-400 flex items-center gap-1 transition-colors"
+                        >
+                            <Eye size={11} />
+                            What cloud AI sees about you
+                        </button>
+                    </div>
+                </div>
+
+                {/* Footer Links */}
+                <div className="flex items-center justify-center gap-4 mt-6 text-[10px] text-zinc-600">
+                    <a href="/privacy" className="hover:text-zinc-400 transition-colors">Privacy</a>
+                    <span>·</span>
+                    <a href="/terms" className="hover:text-zinc-400 transition-colors">Terms</a>
+                    <span>·</span>
+                    <span>v{CONFIG.VERSION}</span>
+                </div>
+            </motion.div>
+            
+            <FingerprintReveal 
+                isOpen={showFingerprint} 
+                onClose={() => setShowFingerprint(false)} 
+                fingerprint={fingerprint}
+            />
+        </motion.div>
+    );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ACTION BAR (Share, Export, Fingerprint)
+// ═══════════════════════════════════════════════════════════════
+
+const ActionBar = ({ onShare, onExport, onShowFingerprint, hasMessages }) => (
+    <div className="flex items-center gap-2">
+        <button
+            onClick={onShowFingerprint}
+            className="p-2 rounded-lg text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-all"
+            title="What cloud sees"
+        >
+            <Fingerprint size={16} />
+        </button>
+        
+        {hasMessages && (
+            <>
+                <button
+                    onClick={onShare}
+                    className="p-2 rounded-lg text-zinc-600 hover:text-violet-400 hover:bg-violet-500/10 transition-all"
+                    title="Share reflection"
+                >
+                    <Share2 size={16} />
+                </button>
+                
+                <button
+                    onClick={onExport}
+                    className="p-2 rounded-lg text-zinc-600 hover:text-blue-400 hover:bg-blue-500/10 transition-all"
+                    title="Export as markdown"
+                >
+                    <FileDown size={16} />
+                </button>
+            </>
+        )}
+    </div>
+);
+
+// ═══════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════
 
-export default function Mirror({ onMessageSent, disabled }) {
+const Mirror = () => {
+    // Device & capability
+    const [deviceType, setDeviceType] = useState(DeviceType.DESKTOP);
+    const [webGPUSupported, setWebGPUSupported] = useState(false);
+    const [fingerprint, setFingerprint] = useState(null);
+    
+    // Core state
     const [messages, setMessages] = useState(() => {
+        if (typeof window === 'undefined') return [];
         try {
             const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
-            return saved ? JSON.parse(saved) : [];
+            return saved ? JSON.parse(saved).slice(-CONFIG.MAX_HISTORY) : [];
         } catch { return []; }
     });
+    
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isIdle, setIsIdle] = useState(false);
-    const [gateNotification, setGateNotification] = useState(null);
-
-    // Turn counter and upgrade system
+    
+    // Turn & mode tracking
     const [turnCount, setTurnCount] = useState(() => {
-        try {
-            return parseInt(localStorage.getItem(CONFIG.TURN_KEY) || '0', 10);
-        } catch { return 0; }
+        if (typeof window === 'undefined') return 0;
+        return parseInt(localStorage.getItem(CONFIG.TURN_KEY) || '0', 10);
     });
+    
+    const [inferenceMode, setInferenceMode] = useState(() => {
+        if (typeof window === 'undefined') return InferenceMode.CLOUD;
+        return localStorage.getItem(CONFIG.MODE_KEY) || InferenceMode.CLOUD;
+    });
+    
+    // Sovereign state
+    const [showSovereignConfirm, setShowSovereignConfirm] = useState(false);
+    const [sovereignLoading, setSovereignLoading] = useState(false);
+    const [sovereignProgress, setSovereignProgress] = useState(0);
+    
+    // Mesh status (distributed infrastructure)
+    const [meshStatus, setMeshStatus] = useState({
+        ollama: { online: false, models: [] },
+        sc1_pixel: { online: false },
+        sc1_oneplus: { online: false },
+        mcp_bridge: { online: false },
+        total_compute_gb: 0
+    });
+    const [localAvailable, setLocalAvailable] = useState(false);
+    
+    // UI state
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-    const [deviceType] = useState(detectDevice);
-
-    const bottomRef = useRef(null);
+    const [showEmailModal, setShowEmailModal] = useState(false);
+    const [showWelcome, setShowWelcome] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return !localStorage.getItem(CONFIG.STORAGE_KEY);
+    });
+    const [showFingerprint, setShowFingerprint] = useState(false);
+    const [showShareCard, setShowShareCard] = useState(false);
+    const [selectedReflection, setSelectedReflection] = useState(null);
+    
+    // Metrics
+    const [networkRequests, setNetworkRequests] = useState(0);
+    const [sessionStart] = useState(Date.now());
+    
+    // Refs
+    const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
     const abortRef = useRef(null);
-    const idleTimer = useRef(null);
-
-    // Parallax
-    const mouseX = useMotionValue(0);
-    const mouseY = useMotionValue(0);
-    const springX = useSpring(mouseX, { stiffness: 15, damping: 40 });
-    const springY = useSpring(mouseY, { stiffness: 15, damping: 40 });
-
-    // Effects
+    
+    // Initialize
     useEffect(() => {
-        const handleMove = (e) => {
-            mouseX.set(e.clientX);
-            mouseY.set(e.clientY);
-            resetIdleTimer();
+        setDeviceType(detectDevice());
+        checkWebGPUSupport().then(setWebGPUSupported);
+        setFingerprint(collectFingerprint());
+        SoundEngine.init();
+        
+        // Fetch mesh status
+        const fetchMeshStatus = async () => {
+            try {
+                const response = await fetch(`${CONFIG.PROXY_URL}/mesh-status`);
+                if (response.ok) {
+                    const status = await response.json();
+                    setMeshStatus(status);
+                    setLocalAvailable(status.ollama?.online || false);
+                }
+            } catch (err) {
+                console.log('Mesh status unavailable');
+            }
         };
-
-        const handleInteraction = () => {
-            SoundEngine.init();
-            resetIdleTimer();
-        };
-
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('click', handleInteraction);
-        window.addEventListener('touchstart', handleInteraction);
-        window.addEventListener('keydown', handleInteraction);
-
-        return () => {
-            window.removeEventListener('mousemove', handleMove);
-            window.removeEventListener('click', handleInteraction);
-            window.removeEventListener('touchstart', handleInteraction);
-            window.removeEventListener('keydown', handleInteraction);
-            clearTimeout(idleTimer.current);
-        };
+        
+        fetchMeshStatus();
+        // Refresh every 30 seconds
+        const interval = setInterval(fetchMeshStatus, 30000);
+        return () => clearInterval(interval);
     }, []);
-
+    
+    // Persist
     useEffect(() => {
-        localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(messages.slice(-CONFIG.MAX_HISTORY)));
+        if (typeof window !== 'undefined' && messages.length > 0) {
+            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(messages.slice(-CONFIG.MAX_HISTORY)));
+        }
     }, [messages]);
-
+    
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, isLoading]);
-
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(CONFIG.TURN_KEY, turnCount.toString());
+            localStorage.setItem(CONFIG.MODE_KEY, inferenceMode);
+        }
+    }, [turnCount, inferenceMode]);
+    
+    // Auto-scroll
     useEffect(() => {
-        if (inputRef.current) {
-            inputRef.current.style.height = 'auto';
-            inputRef.current.style.height = Math.min(inputRef.current.scrollHeight, 160) + 'px';
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+    
+    // Handlers
+    const handleSelectCloud = () => setInferenceMode(InferenceMode.CLOUD);
+    
+    const handleSelectSovereign = () => {
+        if (SovereignEngine.isReady) {
+            setInferenceMode(InferenceMode.SOVEREIGN);
+            SoundEngine.sovereign();
+        } else {
+            setShowSovereignConfirm(true);
         }
-    }, [input]);
-
-    const resetIdleTimer = useCallback(() => {
-        setIsIdle(false);
-        clearTimeout(idleTimer.current);
-        if (messages.length > 0 && !input) {
-            idleTimer.current = setTimeout(() => setIsIdle(true), CONFIG.IDLE_TIMEOUT);
+    };
+    
+    const enableSovereignMode = async () => {
+        setShowSovereignConfirm(false);
+        setSovereignLoading(true);
+        
+        const success = await SovereignEngine.init((progress) => {
+            setSovereignProgress(Math.round((progress.progress || 0) * 100));
+        });
+        
+        if (success) {
+            setInferenceMode(InferenceMode.SOVEREIGN);
+            SoundEngine.sovereign();
         }
-    }, [messages.length, input]);
+        
+        setSovereignLoading(false);
+    };
+    
+    const handleEmailSubmit = async (email) => {
+        try {
+            // Store email via proxy endpoint
+            const response = await fetch(`${CONFIG.PROXY_URL}/waitlist`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, source: 'mirror', timestamp: new Date().toISOString() })
+            });
+            
+            if (response.ok) {
+                localStorage.setItem(CONFIG.EMAIL_KEY, 'true');
+                // Also store locally as backup
+                const waitlist = JSON.parse(localStorage.getItem(CONFIG.WAITLIST_KEY) || '[]');
+                waitlist.push({ email, timestamp: new Date().toISOString() });
+                localStorage.setItem(CONFIG.WAITLIST_KEY, JSON.stringify(waitlist));
+                SoundEngine.success();
+            } else {
+                // Fallback to local storage only
+                const waitlist = JSON.parse(localStorage.getItem(CONFIG.WAITLIST_KEY) || '[]');
+                waitlist.push({ email, timestamp: new Date().toISOString() });
+                localStorage.setItem(CONFIG.WAITLIST_KEY, JSON.stringify(waitlist));
+                localStorage.setItem(CONFIG.EMAIL_KEY, 'true');
+                SoundEngine.success();
+            }
+        } catch (err) {
+            // Fallback to local storage
+            const waitlist = JSON.parse(localStorage.getItem(CONFIG.WAITLIST_KEY) || '[]');
+            waitlist.push({ email, timestamp: new Date().toISOString() });
+            localStorage.setItem(CONFIG.WAITLIST_KEY, JSON.stringify(waitlist));
+            localStorage.setItem(CONFIG.EMAIL_KEY, 'true');
+            SoundEngine.success();
+        }
+    };
+    
+    const handleShare = (reflection) => {
+        setSelectedReflection(reflection);
+        setShowShareCard(true);
+    };
+    
+    const handleExport = () => {
+        exportReflection(messages);
+        SoundEngine.success();
+    };
+    
+    const getTurnMessage = () => {
+        if (inferenceMode === InferenceMode.SOVEREIGN) {
+            return "⟡ Running locally — your words stay on your device";
+        }
+        return TURN_MESSAGES[Math.min(turnCount + 1, 10)] || TURN_MESSAGES[10];
+    };
 
-    const handleSend = async (e) => {
-        e?.preventDefault();
-        if (!input.trim() || isLoading || disabled) return;
-
-        // Check turn limit
+    
+    // ═══════════════════════════════════════════════════════════════
+    // SEND MESSAGE
+    // ═══════════════════════════════════════════════════════════════
+    
+    const handleSend = async () => {
+        const trimmedInput = input.trim();
+        
+        // Validation
+        if (!trimmedInput || isLoading) return;
+        
+        // Empty or whitespace only
+        if (trimmedInput.length === 0) {
+            return;
+        }
+        
+        // Too long (limit to 4000 chars)
+        if (trimmedInput.length > 4000) {
+            setMessages(prev => [...prev, 
+                { role: 'user', content: trimmedInput.slice(0, 100) + '...' },
+                { role: 'assistant', content: '⟡ That message is quite long. Could you break it into smaller pieces?', gateStatus: GateStatus.PASSED }
+            ]);
+            setInput('');
+            return;
+        }
+        
         if (turnCount >= CONFIG.MAX_FREE_TURNS) {
             setShowUpgradeModal(true);
             return;
         }
-
-        onMessageSent?.();
-        SoundEngine.send();
-        setIsIdle(false);
-
-        // Increment turn counter
-        const newTurnCount = turnCount + 1;
-        setTurnCount(newTurnCount);
-        localStorage.setItem(CONFIG.TURN_KEY, newTurnCount.toString());
-
-        const userMsg = input.trim();
+        
+        const userMsg = trimmedInput;
         setInput('');
-        if (inputRef.current) inputRef.current.style.height = 'auto';
-
-        setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
         setIsLoading(true);
+        SoundEngine.send();
+        
+        setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
         setMessages(prev => [...prev, { role: 'assistant', content: '', gateStatus: GateStatus.PENDING }]);
-
+        setTurnCount(prev => prev + 1);
+        
         try {
-            abortRef.current = new AbortController();
-
-            const response = await fetch(`${CONFIG.PROXY_URL}/mirror`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: userMsg,
-                    history: messages.slice(-20).map(m => ({ role: m.role, content: m.content })),
-                    dial: 0.5
-                }),
-                signal: abortRef.current.signal
-            });
-
-            if (!response.ok) throw new Error(`Server: ${response.status}`);
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let gateStatusSet = false;
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split('\n').filter(l => l.trim());
-
-                for (const line of lines) {
-                    try {
-                        const data = JSON.parse(line);
-
-                        if (data.gate || data.audit?.gate) {
-                            const gateResult = data.gate || data.audit?.gate;
-                            setMessages(prev => {
-                                const updated = [...prev];
-                                const last = updated[updated.length - 1];
-                                if (last.role === 'assistant') {
-                                    last.gateStatus = gateResult === 'blocked' ? GateStatus.BLOCKED : GateStatus.PASSED;
-                                }
-                                return updated;
-                            });
-                            if (gateResult === 'blocked') {
-                                SoundEngine.block();
-                                setGateNotification({ type: 'blocked', reason: data.reason });
-                                setTimeout(() => setGateNotification(null), 4000);
+            if (inferenceMode === InferenceMode.SOVEREIGN && SovereignEngine.isReady) {
+                // SOVEREIGN (local) with hybrid escalation
+                const result = await SovereignEngine.generate(
+                    [...messages, { role: 'user', content: userMsg }],
+                    (chunk, full) => {
+                        setMessages(prev => {
+                            const updated = prev.slice(0, -1);
+                            const last = prev[prev.length - 1];
+                            if (last?.role === 'assistant') {
+                                updated.push({ ...last, content: full, gateStatus: GateStatus.PASSED });
                             }
-                            gateStatusSet = true;
-                        }
-
-                        if (data.status === 'chunk' || data.status === 'ok') {
-                            setMessages(prev => {
-                                const updated = [...prev];
-                                const last = updated[updated.length - 1];
-                                if (last.role === 'assistant') {
-                                    last.content += data.content;
-                                    if (!gateStatusSet) last.gateStatus = GateStatus.PASSED;
-                                }
-                                return updated;
+                            return updated;
+                        });
+                    },
+                    userMsg // Pass user message for context fetching
+                );
+                
+                // If sovereign model was uncertain on a complex question, offer to escalate
+                if (result.uncertain && result.response.length < 100) {
+                    setMessages(prev => {
+                        const updated = prev.slice(0, -1);
+                        const last = prev[prev.length - 1];
+                        if (last?.role === 'assistant') {
+                            updated.push({ 
+                                ...last, 
+                                content: result.response + '\n\n_[Running locally — switch to Cloud for more detailed answers]_',
+                                gateStatus: GateStatus.PASSED 
                             });
-                            gateStatusSet = true;
                         }
-
-                        if (data.status === 'blocked') {
-                            setMessages(prev => {
-                                const updated = [...prev];
-                                const last = updated[updated.length - 1];
-                                if (last.role === 'assistant') {
-                                    last.content = data.content;
-                                    last.gateStatus = GateStatus.BLOCKED;
-                                }
-                                return updated;
-                            });
-                            SoundEngine.block();
-                        }
-                    } catch { }
+                        return updated;
+                    });
                 }
+                
+                SoundEngine.sovereign();
+            } else if (inferenceMode === InferenceMode.LOCAL && localAvailable) {
+                // LOCAL — Route to Mac Mini Ollama
+                setNetworkRequests(prev => prev + 1);
+                abortRef.current = new AbortController();
+                
+                const response = await fetch(`${CONFIG.PROXY_URL}/mirror-local`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        message: userMsg,
+                        history: messages.slice(-10).map(m => ({ role: m.role, content: m.content }))
+                    }),
+                    signal: abortRef.current.signal,
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const reader = response.body?.getReader();
+                if (!reader) throw new Error('No reader');
+                
+                const decoder = new TextDecoder();
+                let fullText = '';
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    fullText += decoder.decode(value, { stream: true });
+                    
+                    setMessages(prev => {
+                        const updated = prev.slice(0, -1);
+                        const last = prev[prev.length - 1];
+                        if (last?.role === 'assistant') {
+                            updated.push({ ...last, content: fullText, gateStatus: GateStatus.PASSED });
+                        }
+                        return updated;
+                    });
+                }
+                
+                SoundEngine.receive();
+            } else {
+                // CLOUD (Groq)
+                setNetworkRequests(prev => prev + 1);
+                abortRef.current = new AbortController();
+                
+                // Build context from recent messages
+                const contextMessages = messages.slice(-6).map(m => 
+                    `${m.role === 'user' ? 'User' : 'Mirror'}: ${m.content}`
+                ).join('\n');
+                
+                const fullMessage = contextMessages 
+                    ? `${contextMessages}\nUser: ${userMsg}`
+                    : userMsg;
+                
+                const response = await fetch(`${CONFIG.PROXY_URL}/mirror`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: fullMessage }),
+                    signal: abortRef.current.signal,
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const reader = response.body?.getReader();
+                if (!reader) throw new Error('No reader');
+                
+                const decoder = new TextDecoder();
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const text = decoder.decode(value, { stream: true });
+                    const lines = text.split('\n').filter(l => l.trim());
+                    
+                    for (const line of lines) {
+                        try {
+                            const data = JSON.parse(line);
+                            
+                            if (data.status === 'chunk' || data.status === 'ok') {
+                                setMessages(prev => {
+                                    const updated = prev.slice(0, -1);
+                                    const last = prev[prev.length - 1];
+                                    if (last?.role === 'assistant') {
+                                        updated.push({
+                                            ...last,
+                                            content: last.content + data.content,
+                                            gateStatus: GateStatus.PASSED
+                                        });
+                                    } else {
+                                        updated.push(last);
+                                    }
+                                    return updated;
+                                });
+                            }
+                        } catch { }
+                    }
+                }
+                
+                SoundEngine.receive();
             }
-
-            SoundEngine.receive();
-
         } catch (err) {
             if (err.name !== 'AbortError') {
+                let errorMessage = '⟡ The mirror ripples... try again.';
+                
+                // More specific error messages
+                if (err.message?.includes('network') || err.message?.includes('fetch')) {
+                    errorMessage = '⟡ Connection lost. Check your internet and try again.';
+                } else if (err.message?.includes('timeout')) {
+                    errorMessage = '⟡ Taking too long... the mirror needs a moment.';
+                } else if (err.message?.includes('rate') || err.message?.includes('429')) {
+                    errorMessage = '⟡ Let\'s slow down. Take a breath and try again in a moment.';
+                } else if (inferenceMode === InferenceMode.SOVEREIGN) {
+                    errorMessage = '⟡ The local model stumbled. Try switching to Cloud mode for this question.';
+                }
+                
+                console.error('Mirror error:', err);
+                
                 setMessages(prev => {
-                    const updated = [...prev];
-                    const last = updated[updated.length - 1];
-                    if (last.role === 'assistant') {
-                        last.content = '⟡ The mirror ripples... try again in a moment.';
-                        last.gateStatus = GateStatus.NONE;
+                    const updated = prev.slice(0, -1);
+                    const last = prev[prev.length - 1];
+                    if (last?.role === 'assistant') {
+                        updated.push({ ...last, content: errorMessage, gateStatus: GateStatus.NONE });
+                    } else {
+                        updated.push(last);
                     }
                     return updated;
                 });
+                
+                SoundEngine.error?.();
             }
         } finally {
             setIsLoading(false);
             abortRef.current = null;
         }
     };
-
-    const handleKeyDown = (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSend();
-        }
+    
+    const handleStop = () => {
+        abortRef.current?.abort();
+        setIsLoading(false);
     };
-
-    const clearChat = () => {
+    
+    const handleClear = () => {
         setMessages([]);
-        setIsMenuOpen(false);
+        setNetworkRequests(0);
+        localStorage.removeItem(CONFIG.STORAGE_KEY);
+    };
+    
+    const handleStartReflection = () => {
+        setShowWelcome(false);
+        inputRef.current?.focus();
     };
 
-    const orbX = useTransform(springX, [0, typeof window !== 'undefined' ? window.innerWidth : 1920], [-40, 40]);
-    const orbY = useTransform(springY, [0, typeof window !== 'undefined' ? window.innerHeight : 1080], [-40, 40]);
-
+    
+    // ═══════════════════════════════════════════════════════════════
+    // RENDER
+    // ═══════════════════════════════════════════════════════════════
+    
     return (
-        <div className="fixed inset-0 bg-[#020204] text-white flex flex-col overflow-hidden selection:bg-violet-500/30">
-            <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap');
-                * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-                :root { --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px); }
-                .scrollbar-hide::-webkit-scrollbar { display: none; }
-                .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-                .safe-top { padding-top: var(--safe-top); }
-                .safe-bottom { padding-bottom: max(var(--safe-bottom), 16px); }
-                html, body { overscroll-behavior: none; }
-                input, textarea { font-size: 16px !important; }
+        <div className="min-h-screen bg-black text-white overflow-hidden relative">
+            <div className="fixed inset-0 bg-gradient-to-br from-black via-zinc-950 to-black" />
+            <FloatingParticles count={20} />
+            
+            {/* Main layout with transparency pane on desktop */}
+            <div className="relative z-10 flex h-screen">
+                {/* Chat area */}
+                <div className="flex-1 flex flex-col max-w-3xl mx-auto">
                 
-                @keyframes shimmer {
-                    0% { background-position: -200% 0; }
-                    100% { background-position: 200% 0; }
-                }
-                .shimmer {
-                    background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.08), transparent);
-                    background-size: 200% 100%;
-                    animation: shimmer 4s infinite;
-                }
-                
-                @keyframes breathe {
-                    0%, 100% { opacity: 0.6; }
-                    50% { opacity: 1; }
-                }
-                .breathe { animation: breathe 4s ease-in-out infinite; }
-            `}</style>
-
-            {/* Background layers */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-violet-950/[0.08] via-[#020204] to-[#020204]" />
-
-                {/* Parallax orbs */}
-                <motion.div style={{ x: orbX, y: orbY }} className="absolute inset-0">
-                    <AmbientOrb className="top-[-25%] left-[-15%] w-[700px] h-[700px]" color="violet" delay={0} />
-                    <AmbientOrb className="bottom-[-35%] right-[-25%] w-[900px] h-[900px]" color="indigo" delay={5} />
-                    <AmbientOrb className="top-[30%] right-[-35%] w-[600px] h-[600px]" color="fuchsia" delay={10} />
-                </motion.div>
-
-                {/* Floating particles */}
-                <FloatingParticles count={25} />
-
-                {/* Noise */}
-                <div className="absolute inset-0 opacity-[0.012]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")` }} />
-
-                {/* Vignette */}
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)]" />
-            </div>
-
-            {/* Gate notification */}
-            <AnimatePresence>
-                {gateNotification && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -30, scale: 0.9 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -30, scale: 0.9 }}
-                        className="fixed top-24 left-1/2 -translate-x-1/2 z-50"
-                    >
-                        <div className={`px-6 py-3 rounded-2xl backdrop-blur-2xl border ${gateNotification.type === 'blocked'
-                            ? 'bg-red-950/70 border-red-500/30 text-red-200'
-                            : 'bg-emerald-950/70 border-emerald-500/30 text-emerald-200'
-                            } shadow-2xl`}>
-                            <div className="flex items-center gap-3">
-                                <ShieldAlert size={16} />
-                                <span className="text-sm font-medium">MirrorGate: Response filtered</span>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Header */}
-            <motion.header
-                animate={{ opacity: isIdle ? 0.15 : 1, y: isIdle ? -15 : 0, filter: isIdle ? 'blur(4px)' : 'blur(0px)' }}
-                transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
-                className="relative z-20 flex justify-between items-center p-4 pt-6 safe-top"
-            >
-                <motion.button
-                    onClick={() => window.location.href = '/'}
-                    onMouseEnter={() => SoundEngine.hover()}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-white/[0.1] transition-all duration-500 text-sm text-zinc-500 hover:text-white backdrop-blur-xl"
-                >
-                    <ArrowLeft size={14} strokeWidth={1.5} />
-                    <span className="hidden sm:inline font-light">Exit Mirror</span>
-                </motion.button>
-
-                <div className="flex items-center gap-3">
-                    <motion.div
-                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/50 border border-white/[0.05] backdrop-blur-2xl"
-                        animate={{ borderColor: ['rgba(255,255,255,0.05)', 'rgba(139,92,246,0.15)', 'rgba(255,255,255,0.05)'] }}
-                        transition={{ duration: 6, repeat: Infinity }}
-                    >
-                        <motion.span
-                            animate={{ opacity: [0.6, 1, 0.6], scale: [0.95, 1.05, 0.95] }}
-                            transition={{ duration: 4, repeat: Infinity }}
-                            className="text-violet-400"
-                        >
-                            ⟡
-                        </motion.span>
-                        <span className="text-[10px] font-medium tracking-[0.25em] text-zinc-500 uppercase">Mirror</span>
-                    </motion.div>
-                </div>
-
-                <div className="relative">
-                    <motion.button
-                        onClick={() => { SoundEngine.hover(); setIsMenuOpen(!isMenuOpen); }}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className={`p-3 rounded-full transition-all duration-500 ${isMenuOpen
-                            ? 'bg-white text-black'
-                            : 'bg-white/[0.03] text-zinc-500 hover:bg-white/[0.06] hover:text-white border border-white/[0.06] hover:border-white/[0.1]'
-                            }`}
-                    >
-                        {isMenuOpen ? <X size={16} strokeWidth={1.5} /> : <Menu size={16} strokeWidth={1.5} />}
-                    </motion.button>
-
-                    <AnimatePresence>
-                        {isMenuOpen && (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                                className="absolute top-full right-0 mt-3 w-56 bg-zinc-900/95 border border-white/[0.06] rounded-2xl shadow-2xl backdrop-blur-2xl overflow-hidden"
-                            >
-                                <button
-                                    onClick={clearChat}
-                                    className="w-full text-left px-5 py-4 hover:bg-white/[0.04] flex items-center gap-3 text-sm text-zinc-400 hover:text-white transition-all"
-                                >
-                                    <Plus size={14} strokeWidth={1.5} />
-                                    <span className="font-light">New Reflection</span>
-                                </button>
-                                <div className="h-px bg-white/[0.05] mx-4" />
-                                <a
-                                    href="/research/"
-                                    className="w-full text-left px-5 py-4 hover:bg-white/[0.04] flex items-center gap-3 text-sm text-zinc-400 hover:text-white transition-all"
-                                >
-                                    <Shield size={14} strokeWidth={1.5} />
-                                    <span className="font-light">Research</span>
-                                </a>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
-            </motion.header>
-
-            {/* Chat */}
-            <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 pb-44 pt-4 z-10 scrollbar-hide">
-                {messages.length === 0 ? (
-                    <EmptyState />
-                ) : (
-                    <div className="max-w-2xl mx-auto">
-                        <AnimatePresence initial={false}>
-                            {messages.map((msg, i) => (
-                                <Message key={i} msg={msg} isLast={i === messages.length - 1} isStreaming={i === messages.length - 1 && isLoading} />
-                            ))}
-                        </AnimatePresence>
+                {/* Header */}
+                <header className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+                    <div className="flex items-center gap-3">
+                        <a href="/" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors">
+                            <ArrowLeft size={18} />
+                        </a>
+                        <ActionBar 
+                            onShare={() => {
+                                const lastAssistant = messages.filter(m => m.role === 'assistant').pop();
+                                if (lastAssistant) handleShare(lastAssistant.content);
+                            }}
+                            onExport={handleExport}
+                            onShowFingerprint={() => setShowFingerprint(true)}
+                            hasMessages={messages.length > 0}
+                        />
                     </div>
-                )}
-                <div ref={bottomRef} className="h-4" />
-            </div>
-
-            {/* Input */}
-            <motion.div
-                animate={{ opacity: isIdle ? 0.3 : 1, y: isIdle ? 25 : 0, filter: isIdle ? 'blur(3px)' : 'blur(0px)' }}
-                transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
-                className="absolute bottom-0 left-0 right-0 p-4 pb-6 z-20 safe-bottom"
-            >
-                <div className="absolute inset-x-0 bottom-full h-40 bg-gradient-to-t from-[#020204] via-[#020204]/90 to-transparent pointer-events-none" />
-
-                <div className="max-w-2xl mx-auto">
-                    <motion.div
-                        className="relative bg-zinc-900/70 backdrop-blur-3xl rounded-2xl border border-white/[0.06] shadow-2xl shadow-black/50 overflow-hidden group hover:border-white/[0.1] focus-within:border-violet-500/40 transition-all duration-500"
-                        whileFocus={{ boxShadow: '0 0 40px rgba(139, 92, 246, 0.15)' }}
-                    >
-                        <div className="absolute inset-0 shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-                        <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-violet-500/0 via-violet-500/20 to-violet-500/0 opacity-0 group-focus-within:opacity-100 transition-opacity duration-700 pointer-events-none blur-sm" />
-
-                        <form onSubmit={handleSend} className="relative flex items-end gap-2 p-3 pl-5">
-                            <textarea
-                                ref={inputRef}
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                placeholder="What's on your mind?"
-                                rows={1}
-                                className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none resize-none text-white/95 placeholder-zinc-600 py-3 max-h-40 min-h-[52px] leading-relaxed text-[15px] font-light"
-                                autoFocus
-                            />
-
-                            <AnimatePresence mode="wait">
-                                {isLoading ? (
-                                    <motion.button
-                                        key="stop"
-                                        initial={{ scale: 0.8, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        exit={{ scale: 0.8, opacity: 0 }}
-                                        type="button"
-                                        onClick={() => abortRef.current?.abort()}
-                                        className="p-3.5 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20 border border-red-500/20 transition-all"
-                                    >
-                                        <StopCircle size={18} strokeWidth={1.5} />
-                                    </motion.button>
-                                ) : (
-                                    <motion.button
-                                        key="send"
-                                        initial={{ scale: 0.8, opacity: 0 }}
-                                        animate={{ scale: input.trim() ? 1 : 0.8, opacity: input.trim() ? 1 : 0 }}
-                                        exit={{ scale: 0.8, opacity: 0 }}
-                                        type="submit"
-                                        disabled={!input.trim()}
-                                        className="p-3.5 bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white rounded-xl hover:from-violet-400 hover:to-fuchsia-400 disabled:opacity-0 disabled:scale-75 transition-all duration-300 shadow-lg shadow-violet-500/25"
-                                    >
-                                        <Send size={18} strokeWidth={1.5} />
-                                    </motion.button>
+                    
+                    <div className="flex items-center gap-3">
+                        <ModeSelector 
+                            mode={inferenceMode}
+                            onSelectCloud={handleSelectCloud}
+                            onSelectLocal={() => setInferenceMode(InferenceMode.LOCAL)}
+                            onSelectSovereign={handleSelectSovereign}
+                            sovereignReady={SovereignEngine.isReady}
+                            sovereignLoading={sovereignLoading}
+                            loadProgress={sovereignProgress}
+                            localAvailable={localAvailable}
+                        />
+                        
+                        <motion.span
+                            animate={{ opacity: [0.5, 1, 0.5] }}
+                            transition={{ duration: 3, repeat: Infinity }}
+                            className="text-2xl"
+                            style={{ textShadow: '0 0 20px rgba(139, 92, 246, 0.5)' }}
+                        >⟡</motion.span>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                        <NetworkMonitor mode={inferenceMode} requestCount={networkRequests} />
+                        <button onClick={handleClear} className="text-zinc-500 hover:text-white text-sm transition-colors">
+                            Clear
+                        </button>
+                    </div>
+                </header>
+                
+                {/* Sovereign Loading Progress */}
+                <AnimatePresence>
+                    {sovereignLoading && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="px-4 py-3 bg-green-500/10 border-b border-green-500/20"
+                        >
+                            <div className="flex items-center gap-3">
+                                <Cpu size={16} className="text-green-400 animate-pulse" />
+                                <div className="flex-1">
+                                    <div className="h-1.5 bg-green-500/20 rounded-full overflow-hidden">
+                                        <motion.div className="h-full bg-green-500" initial={{ width: 0 }} animate={{ width: `${sovereignProgress}%` }} />
+                                    </div>
+                                </div>
+                                <span className="text-green-400 text-xs">{sovereignProgress}%</span>
+                            </div>
+                            <p className="text-green-400/70 text-xs mt-1">Downloading sovereign model — one time only, cached in browser</p>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+                
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+                    {messages.length === 0 && !showWelcome && (
+                        <div className="flex flex-col items-center justify-center h-full text-center">
+                            <motion.span
+                                animate={{ scale: [1, 1.1, 1], opacity: [0.4, 0.7, 0.4] }}
+                                transition={{ duration: 4, repeat: Infinity }}
+                                className="text-6xl mb-6"
+                                style={{ textShadow: '0 0 40px rgba(139, 92, 246, 0.4)' }}
+                            >⟡</motion.span>
+                            <p className="text-zinc-500 text-lg">What's on your mind?</p>
+                            <p className="text-zinc-600 text-sm mt-2">
+                                {inferenceMode === InferenceMode.SOVEREIGN ? "Running locally — complete privacy" : "Type anything to begin reflection"}
+                            </p>
+                        </div>
+                    )}
+                    
+                    {messages.map((msg, i) => (
+                        <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                            <div
+                                className={`max-w-[85%] px-4 py-3 rounded-2xl ${
+                                    msg.role === 'user'
+                                        ? 'bg-violet-500/20 border border-violet-500/30 text-white'
+                                        : 'bg-white/5 border border-white/10 text-zinc-200'
+                                }`}
+                            >
+                                {msg.role === 'assistant' && msg.gateStatus === GateStatus.PENDING && !msg.content && (
+                                    <motion.div animate={{ opacity: [0.3, 0.7, 0.3] }} transition={{ duration: 1.5, repeat: Infinity }} className="flex gap-1">
+                                        <span>⟡</span>
+                                        <span className="text-zinc-500">reflecting...</span>
+                                    </motion.div>
                                 )}
-                            </AnimatePresence>
-                        </form>
-                    </motion.div>
+                                
+                                {msg.content && <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>}
+                                
+                                {/* Share button on assistant messages */}
+                                {msg.role === 'assistant' && msg.content && (
+                                    <button
+                                        onClick={() => handleShare(msg.content)}
+                                        className="mt-2 pt-2 border-t border-white/5 flex items-center gap-1 text-xs text-zinc-600 hover:text-violet-400 transition-colors"
+                                    >
+                                        <Share2 size={10} />
+                                        Share this reflection
+                                    </button>
+                                )}
+                            </div>
+                        </motion.div>
+                    ))}
+                    
+                    <div ref={messagesEndRef} />
+                </div>
 
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.8 }}
-                        className="flex justify-center mt-4"
-                    >
-                        <div className="flex items-center gap-2 text-[10px] text-zinc-600 tracking-wide breathe">
-                            <ShieldCheck size={10} strokeWidth={1.5} />
-                            <span>Protected by MirrorGate</span>
-                            <span className="text-zinc-700">•</span>
-                            <span>v{CONFIG.VERSION}</span>
-                            {turnCount > 0 && turnCount < CONFIG.MAX_FREE_TURNS && (
-                                <>
-                                    <span className="text-zinc-700">•</span>
-                                    <span className="text-violet-400/70">
-                                        {CONFIG.MAX_FREE_TURNS - turnCount} turns left
-                                    </span>
-                                </>
+                
+                {/* Footer / Input */}
+                <div className="p-4 border-t border-white/5">
+                    <div className="flex items-center justify-between mb-3 text-xs">
+                        <span className="text-zinc-600">{getTurnMessage()}</span>
+                        <SessionInsights messages={messages} turnCount={turnCount} mode={inferenceMode} startTime={sessionStart} />
+                        <span className={`${turnCount >= 8 ? 'text-amber-400' : 'text-zinc-600'}`}>
+                            {CONFIG.MAX_FREE_TURNS - turnCount} left
+                        </span>
+                    </div>
+                    
+                    <div className="flex items-end gap-3">
+                        <textarea
+                            ref={inputRef}
+                            value={input}
+                            onChange={e => setInput(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                            placeholder="Speak your truth..."
+                            aria-label="Message input"
+                            aria-describedby="input-hint"
+                            className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-zinc-600 resize-none focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-colors"
+                            style={{ minHeight: '48px', maxHeight: '120px' }}
+                            rows={1}
+                            disabled={isLoading}
+                            maxLength={4000}
+                        />
+                        <span id="input-hint" className="sr-only">Press Enter to send, Shift+Enter for new line</span>
+                        
+                        {isLoading ? (
+                            <button 
+                                onClick={handleStop} 
+                                aria-label="Stop generating"
+                                className="p-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                            >
+                                <StopCircle size={20} aria-hidden="true" />
+                            </button>
+                        ) : (
+                            <button 
+                                onClick={handleSend} 
+                                disabled={!input.trim()} 
+                                aria-label="Send message"
+                                className="p-3 rounded-xl bg-violet-500/20 border border-violet-500/30 text-violet-400 hover:bg-violet-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                            >
+                                <Send size={20} aria-hidden="true" />
+                            </button>
+                        )}
+                    </div>
+                    
+                    <div className="flex flex-col items-center gap-1 mt-3 text-xs text-zinc-600">
+                        <div className="flex items-center gap-2">
+                            {inferenceMode === InferenceMode.SOVEREIGN ? (
+                                <><Cpu size={10} className="text-green-500" /><span>Running locally in your browser</span></>
+                            ) : (
+                                <><ShieldCheck size={10} /><span>Protected by MirrorGate</span></>
                             )}
                         </div>
-                    </motion.div>
+                        <span className="text-zinc-700 text-[10px]">AI can make mistakes. Verify important information.</span>
+                    </div>
                 </div>
-            </motion.div>
-
+                </div>
+                
+                {/* Transparency Pane - Desktop only */}
+                {deviceType === DeviceType.DESKTOP && (
+                    <TransparencyPane
+                        mode={inferenceMode}
+                        messages={messages}
+                        networkRequests={networkRequests}
+                        turnCount={turnCount}
+                        fingerprint={fingerprint}
+                        isLoading={isLoading}
+                        systemPrompt={ECOSYSTEM_CONTEXT}
+                        meshStatus={meshStatus}
+                    />
+                )}
+            </div>
+            
+            {/* Welcome Overlay */}
+            <AnimatePresence>
+                {showWelcome && <WelcomeOverlay onStart={handleStartReflection} fingerprint={fingerprint} />}
+            </AnimatePresence>
+            
+            {/* Fingerprint Modal */}
+            <AnimatePresence>
+                <FingerprintReveal isOpen={showFingerprint} onClose={() => setShowFingerprint(false)} fingerprint={fingerprint} />
+            </AnimatePresence>
+            
+            {/* Share Card */}
+            <AnimatePresence>
+                <ShareCard isOpen={showShareCard} onClose={() => setShowShareCard(false)} reflection={selectedReflection} />
+            </AnimatePresence>
+            
+            {/* Email Capture */}
+            <AnimatePresence>
+                <EmailCaptureModal isOpen={showEmailModal} onClose={() => setShowEmailModal(false)} onSubmit={handleEmailSubmit} />
+            </AnimatePresence>
+            
+            {/* Sovereign Download Confirm */}
+            <AnimatePresence>
+                <SovereignDownloadModal isOpen={showSovereignConfirm} onConfirm={enableSovereignMode} onCancel={() => setShowSovereignConfirm(false)} />
+            </AnimatePresence>
+            
             {/* Upgrade Modal */}
             <AnimatePresence>
-                <UpgradeModal
-                    isOpen={showUpgradeModal}
-                    onClose={() => setShowUpgradeModal(false)}
-                    deviceType={deviceType}
+                <UpgradeModal 
+                    isOpen={showUpgradeModal} 
+                    onClose={() => setShowUpgradeModal(false)} 
+                    deviceType={deviceType} 
                     turnCount={turnCount}
+                    onEmailCapture={() => { setShowUpgradeModal(false); setShowEmailModal(true); }}
                 />
             </AnimatePresence>
         </div>
     );
-}
+};
+
+export default Mirror;

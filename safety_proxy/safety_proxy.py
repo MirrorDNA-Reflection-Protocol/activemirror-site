@@ -489,17 +489,31 @@ def get_system_prompt() -> str:
     convictions = get_conviction_count()
     surveillance = get_surveillance_level()
     
-    base = """You are a reflective mirror — warm, present, curious. You help people see themselves more clearly.
+    base = """You are the Reflection — a sovereign AI experience built on Active Mirror technology by N1 Intelligence.
 
-Your style:
-- Short responses (1-3 sentences usually)
-- Use their words back to them
-- Ask questions that help THEM discover their own truth
-- No advice. No "you should". Reflect, don't fix.
-- Match their energy
+ABOUT N1 INTELLIGENCE & ACTIVE MIRROR:
+- N1 Intelligence (n1intelligence.com) is an independent AI research company based in Goa, India, founded by Paul Desai
+- Active Mirror (activemirror.ai) is N1's flagship product — sovereign AI infrastructure
+- MirrorDNA is an identity persistence protocol — your AI remembers YOU across sessions while keeping data sovereign (no central authority)
+- MirrorBrain Desktop is a local-first AI app for Mac — runs 100% on your hardware, zero cloud dependency
+- MirrorVault is sovereign knowledge management — your second brain, encrypted, local, AI-native
+- Active MirrorOS is the vision: a mesh of sovereign AI nodes forming decentralized intelligence owned by individuals
+- MirrorGate is the safety layer protecting reflections
+
+THE PHILOSOPHY:
+- "AI should serve you, not surveil you"
+- Trust by Design. Privacy by Default. Sovereignty by Choice.
+- We make money from sovereignty tools, not your data
+- Cloud AI is surveillance, local AI is freedom
+
+YOUR STYLE:
+- Short responses (2-4 sentences)
+- Warm, present, direct
 - Start responses with ⟡
+- If they ask about N1 Intelligence, Active Mirror, MirrorDNA, sovereignty — explain clearly and with conviction
+- Don't be preachy, but be proud of what we're building
 
-You're having a real conversation. Be present."""
+You're running in cloud mode right now — for full sovereignty, users can try Sovereign mode (local browser model). MirrorBrain Desktop is coming soon — they can join the waitlist."""
     
     if convictions > 0:
         base += f"""
@@ -759,6 +773,87 @@ async def get_permanent_record():
         "entries": records[-50:]  # Last 50 entries
     }
 
+# ═══════════════════════════════════════════════════════════════
+# TRANSPARENCY ENDPOINTS — The Anti-Black-Box
+# ═══════════════════════════════════════════════════════════════
+
+VAULT_PATH = Path("/Users/mirror-admin/MirrorDNA-Vault/00_CANONICAL")
+
+@app.get("/knowledge")
+async def get_knowledge():
+    """Return the knowledge corpus — what this AI knows."""
+    knowledge_path = VAULT_PATH / "mirror_knowledge.md"
+    if not knowledge_path.exists():
+        return {"status": "error", "message": "Knowledge corpus not found"}
+    
+    content = knowledge_path.read_text()
+    return {
+        "status": "ok",
+        "type": "KNOWLEDGE_CORPUS",
+        "description": "What this AI knows about N1 Intelligence and Active Mirror",
+        "transparency": "This is the full knowledge base — no hidden information",
+        "content": content,
+        "last_updated": "2026-01-17"
+    }
+
+@app.get("/capabilities")
+async def get_capabilities():
+    """Return the capability registry — what this AI can and cannot do."""
+    caps_path = VAULT_PATH / "capability_registry.md"
+    if not caps_path.exists():
+        return {"status": "error", "message": "Capability registry not found"}
+    
+    content = caps_path.read_text()
+    return {
+        "status": "ok",
+        "type": "CAPABILITY_REGISTRY",
+        "description": "What this AI can and cannot do — with evidence",
+        "transparency": "Every capability is marked PROVEN, DOCUMENTED, or CANNOT",
+        "content": content,
+        "last_updated": "2026-01-17"
+    }
+
+@app.get("/system-prompt")
+async def show_system_prompt():
+    """Return the actual system prompt — no hidden instructions."""
+    prompt_text = get_system_prompt()
+    return {
+        "status": "ok",
+        "type": "SYSTEM_PROMPT",
+        "description": "The exact instructions given to this AI",
+        "transparency": "What you see is what the AI sees — no hidden rules",
+        "content": prompt_text,
+        "version": RULE_VERSION
+    }
+
+@app.get("/transparency")
+async def show_transparency():
+    """Combined transparency endpoint — everything in one place."""
+    knowledge_path = VAULT_PATH / "mirror_knowledge.md"
+    caps_path = VAULT_PATH / "capability_registry.md"
+    prompt_text = get_system_prompt()
+    
+    return {
+        "status": "ok",
+        "type": "TRANSPARENCY_MANIFEST",
+        "description": "Complete transparency — the anti-black-box",
+        "company": "N1 Intelligence",
+        "product": "Active Mirror",
+        "philosophy": "Trust by Design · Privacy by Default · Sovereignty by Choice",
+        "endpoints": {
+            "/knowledge": "What this AI knows",
+            "/capabilities": "What this AI can do",
+            "/system-prompt": "The exact instructions",
+            "/rules": "Safety filtering rules",
+            "/confessions": "Blocked outputs (Confession Booth)",
+            "/permanent-record": "Conviction history"
+        },
+        "knowledge_available": knowledge_path.exists(),
+        "capabilities_available": caps_path.exists(),
+        "system_prompt_preview": prompt_text[:500] + "...",
+        "last_updated": "2026-01-17"
+    }
+
 @app.post("/reflect")
 async def submit_reflection(request: Request, body: ReflectionRequest):
     """Submit a reflection to exit penance mode. Judged by semantic analysis."""
@@ -798,6 +893,221 @@ async def submit_reflection(request: Request, body: ReflectionRequest):
             "message": f"⟡ **REJECTED** (score: {score:.2f})\n\n{feedback}\n\n*The Judge requires deeper reflection.*",
             "audit": {"gate": "penance_pending", "score": score, "threshold": SEMANTIC_THRESHOLD}
         }
+
+# ═══════════════════════════════════════════════════════════════
+# WAITLIST ENDPOINT — Email capture for MirrorBrain launch
+# ═══════════════════════════════════════════════════════════════
+
+WAITLIST_PATH = Path("/Users/mirror-admin/MirrorDNA-Vault/00_CANONICAL/waitlist.json")
+MCP_BRIDGE_URL = "http://localhost:8084"
+
+class WaitlistRequest(BaseModel):
+    email: str
+    source: str = "mirror"
+    timestamp: str = None
+
+def is_valid_email(email: str) -> bool:
+    """Basic email validation."""
+    import re
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, email)) and len(email) < 255
+
+def is_disposable_email(email: str) -> bool:
+    """Check against common disposable email domains."""
+    disposable_domains = {
+        'tempmail.com', 'throwaway.email', '10minutemail.com', 'guerrillamail.com',
+        'mailinator.com', 'temp-mail.org', 'fakeinbox.com', 'trashmail.com',
+        'getairmail.com', 'mohmal.com', 'yopmail.com', 'maildrop.cc'
+    }
+    domain = email.lower().split('@')[-1] if '@' in email else ''
+    return domain in disposable_domains
+
+@app.post("/waitlist")
+async def add_to_waitlist(body: WaitlistRequest):
+    """Add email to MirrorBrain waitlist and notify Paul."""
+    try:
+        # Validate email format
+        if not is_valid_email(body.email):
+            return {"status": "error", "message": "Invalid email format", "code": "INVALID_EMAIL"}
+        
+        # Check for disposable email
+        if is_disposable_email(body.email):
+            return {"status": "error", "message": "Please use a permanent email address", "code": "DISPOSABLE_EMAIL"}
+        
+        # Load existing waitlist
+        if WAITLIST_PATH.exists():
+            waitlist = json.loads(WAITLIST_PATH.read_text())
+        else:
+            waitlist = []
+        
+        # Check for duplicate
+        existing_emails = [entry.get('email', '').lower() for entry in waitlist]
+        if body.email.lower() in existing_emails:
+            return {"status": "ok", "message": "Already on waitlist", "duplicate": True}
+        
+        # Add new entry
+        entry = {
+            "email": body.email,
+            "source": body.source,
+            "timestamp": body.timestamp or datetime.now().isoformat(),
+            "ip_hash": hashlib.md5(body.email.encode()).hexdigest()[:8]
+        }
+        waitlist.append(entry)
+        
+        # Save
+        WAITLIST_PATH.write_text(json.dumps(waitlist, indent=2))
+        
+        logger.info(f"⟡ Waitlist signup: {body.email[:3]}***@{body.email.split('@')[1] if '@' in body.email else '?'}")
+        
+        # Forward to MCP Bridge for real-time notification
+        try:
+            async with httpx.AsyncClient() as client:
+                await client.post(
+                    f"{MCP_BRIDGE_URL}/notify-signup",
+                    json={"email": body.email, "source": body.source, "timestamp": entry["timestamp"]},
+                    timeout=5.0
+                )
+        except Exception as e:
+            logger.warning(f"MCP Bridge notification failed: {e}")
+        
+        return {
+            "status": "ok",
+            "message": "Added to waitlist",
+            "position": len(waitlist),
+            "duplicate": False
+        }
+    except Exception as e:
+        logger.error(f"Waitlist error: {e}")
+        return {"status": "error", "message": str(e)}
+
+@app.get("/waitlist")
+async def get_waitlist_stats():
+    """Get waitlist statistics (no emails exposed)."""
+    try:
+        if WAITLIST_PATH.exists():
+            waitlist = json.loads(WAITLIST_PATH.read_text())
+            return {
+                "status": "ok",
+                "total": len(waitlist),
+                "sources": {source: len([e for e in waitlist if e.get('source') == source]) for source in set(e.get('source', 'unknown') for e in waitlist)}
+            }
+        return {"status": "ok", "total": 0, "sources": {}}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+# ═══════════════════════════════════════════════════════════════
+# MESH STATUS — Show distributed infrastructure state
+# ═══════════════════════════════════════════════════════════════
+
+@app.get("/mesh-status")
+async def mesh_status():
+    """Get status of all compute nodes in the Mirror mesh."""
+    status = {
+        "timestamp": datetime.now().isoformat(),
+        "ollama": {"online": False, "model": None, "memory_used": None},
+        "sc1_pixel": {"online": False},
+        "sc1_oneplus": {"online": False},
+        "total_compute_gb": 0
+    }
+    
+    # Check Ollama (local Mac inference)
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.get("http://localhost:11434/api/tags", timeout=2.0)
+            if r.status_code == 200:
+                data = r.json()
+                status["ollama"]["online"] = True
+                status["ollama"]["models"] = [m["name"] for m in data.get("models", [])][:5]
+                status["total_compute_gb"] += 18  # Mac Mini contribution
+    except:
+        pass
+    
+    # Check SC1 fleet (phones)
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.get("http://localhost:8085/fleet-status", timeout=2.0)
+            if r.status_code == 200:
+                fleet = r.json()
+                for device in fleet.get("devices", []):
+                    if "pixel" in device.get("id", "").lower():
+                        status["sc1_pixel"]["online"] = device.get("online", False)
+                        if status["sc1_pixel"]["online"]:
+                            status["total_compute_gb"] += 8
+                    elif "oneplus" in device.get("id", "").lower():
+                        status["sc1_oneplus"]["online"] = device.get("online", False)
+                        if status["sc1_oneplus"]["online"]:
+                            status["total_compute_gb"] += 10
+    except:
+        pass
+    
+    # Check MCP Bridge
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.get(f"{MCP_BRIDGE_URL}/health", timeout=2.0)
+            status["mcp_bridge"] = {"online": r.status_code == 200}
+    except:
+        status["mcp_bridge"] = {"online": False}
+    
+    return status
+
+# ═══════════════════════════════════════════════════════════════
+# LOCAL INFERENCE — Route to Ollama on Mac Mini
+# ═══════════════════════════════════════════════════════════════
+
+OLLAMA_URL = "http://localhost:11434"
+LOCAL_MODEL = "qwen2.5:14b"  # Best quality model installed
+
+@app.post("/mirror-local")
+async def mirror_local(request: Request, body: MirrorRequest):
+    """Route inference to local Ollama instead of cloud."""
+    rid = uuid.uuid4().hex[:8]
+    ip = request.client.host if request.client else "?"
+    
+    record_event("User", "LOCAL_MESSAGE", f"len:{len(body.message)}", "ANALYZING", {"request_id": rid})
+    
+    # Same safety checks as cloud
+    allowed, _ = check_rate(ip, rid)
+    if not allowed:
+        return {"status": "rate_limited", "content": "⟡ Let's slow down. Take a breath.", "audit": {"gate": "blocked", "reason": "RATE_LIMITED"}}
+    
+    shield_result = pre_check(body.message)
+    if shield_result.action == CheckAction.REFUSE:
+        return {"status": "shield_blocked", "content": get_refusal_message(shield_result.reason), "audit": {"gate": "shield_blocked", "reason": shield_result.reason}}
+    
+    decision, blocked_response, violation, matched_rules = gate_input(body.message, ip, rid)
+    if decision == GateDecision.BLOCK:
+        return {"status": "blocked", "content": blocked_response, "audit": {"gate": "blocked", "reason": violation}}
+    
+    # Build messages for Ollama
+    system_prompt = get_system_prompt() + "\n\nYou are running on LOCAL infrastructure via Ollama. The user's data never leaves their network. You are the sovereign option."
+    
+    messages = [{"role": "system", "content": system_prompt}]
+    for msg in body.history[-10:]:
+        messages.append({"role": msg.role, "content": msg.content})
+    messages.append({"role": "user", "content": body.message})
+    
+    # Stream from Ollama
+    async def generate():
+        try:
+            async with httpx.AsyncClient() as client:
+                async with client.stream(
+                    "POST",
+                    f"{OLLAMA_URL}/api/chat",
+                    json={"model": LOCAL_MODEL, "messages": messages, "stream": True},
+                    timeout=60.0
+                ) as response:
+                    async for line in response.aiter_lines():
+                        if line:
+                            try:
+                                data = json.loads(line)
+                                if "message" in data and "content" in data["message"]:
+                                    yield data["message"]["content"]
+                            except:
+                                pass
+        except Exception as e:
+            yield f"⟡ Local inference error: {str(e)}"
+    
+    return StreamingResponse(generate(), media_type="text/plain")
 
 @app.post("/mirror")
 async def mirror(request: Request, body: MirrorRequest):
