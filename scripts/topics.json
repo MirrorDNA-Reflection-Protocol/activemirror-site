@@ -1,7 +1,8 @@
 {
   "category_index": 0,
-  "topic_index": 1,
+  "topic_index": 2,
   "used_topics": [
-    "Why local LLMs matter for privacy"
+    "Why local LLMs matter for privacy",
+    "The case for owning your AI infrastructure"
   ]
 }
