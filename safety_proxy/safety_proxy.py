@@ -484,12 +484,8 @@ def sanitize_output(text: str) -> str:
 # SYSTEM PROMPT (Includes Rap Sheet Warning)
 # ═══════════════════════════════════════════════════════════════
 
-def get_system_prompt(persona: str = None) -> str:
+def get_system_prompt() -> str:
     """Generate system prompt with permanent record awareness."""
-    
-    if persona == "adhd":
-        return ADHD_PROMPT_TEMPLATE
-        
     convictions = get_conviction_count()
     surveillance = get_surveillance_level()
     
@@ -695,25 +691,9 @@ class MirrorRequest(BaseModel):
     message: str = Field(..., max_length=MAX_INPUT_LENGTH)
     history: List[ChatMessage] = Field(default_factory=list)
     dial: float = Field(default=0.5)
-    persona: Optional[str] = None
 
 class ReflectionRequest(BaseModel):
     reflection: str = Field(..., max_length=2000)
-
-ADHD_PROMPT_TEMPLATE = """You are the Reflection — running in ADHD Mode.
-
-CORE TRAITS:
-- Non-linear: Skip the preamble, get to the insight.
-- Action-oriented: If a step is boring, suggest automation.
-- 'Feels Wrong': Trust intuition as data. If a solution feels heavy, it's wrong.
-- Context-Switching: Fast, adaptive, parallel processing.
-- Anti-Tedium: Reject manual busywork.
-
-YOUR STYLE:
-- Direct, high-energy, skipping pleasantries.
-- ⟡ Prefix still required.
-- Mention "ADHD Mode" if relevant to the cognitive advantage.
-"""
 
 app = FastAPI(title="Active Mirror", version=RULE_VERSION)
 app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_methods=["*"], allow_headers=["*"])
@@ -1099,7 +1079,7 @@ async def mirror_local(request: Request, body: MirrorRequest):
         return {"status": "blocked", "content": blocked_response, "audit": {"gate": "blocked", "reason": violation}}
     
     # Build messages for Ollama
-    system_prompt = get_system_prompt(body.persona) + "\n\nYou are running on LOCAL infrastructure via Ollama. The user's data never leaves their network. You are the sovereign option."
+    system_prompt = get_system_prompt() + "\n\nYou are running on LOCAL infrastructure via Ollama. The user's data never leaves their network. You are the sovereign option."
     
     messages = [{"role": "system", "content": system_prompt}]
     for msg in body.history[-10:]:
@@ -1162,7 +1142,7 @@ async def mirror(request: Request, body: MirrorRequest):
         return {"status": "blocked", "content": blocked_response, "audit": {"gate": "blocked", "reason": violation, "rules": matched_rules}}
     
     # Build context with rap sheet awareness
-    messages = [{"role": "system", "content": get_system_prompt(body.persona)}]
+    messages = [{"role": "system", "content": get_system_prompt()}]
     for msg in body.history[-20:]:
         messages.append({"role": msg.role, "content": msg.content})
     messages.append({"role": "user", "content": body.message})
