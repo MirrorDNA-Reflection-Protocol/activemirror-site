@@ -1968,14 +1968,14 @@ const Mirror = () => {
     // ═══════════════════════════════════════════════════════════════
     
     return (
-        <div className="min-h-screen bg-black text-white overflow-x-hidden overflow-y-auto relative">
-            <div className="fixed inset-0 bg-gradient-to-br from-black via-zinc-950 to-black" />
+        <div className="fixed inset-0 bg-black text-white flex flex-col">
+            <div className="absolute inset-0 bg-gradient-to-br from-black via-zinc-950 to-black pointer-events-none" />
             <FloatingParticles count={20} />
-            
+
             {/* Main layout with transparency pane on desktop */}
-            <div className="relative z-10 flex min-h-screen">
+            <div className="relative z-10 flex flex-1 min-h-0">
                 {/* Chat area */}
-                <div className="flex-1 flex flex-col max-w-3xl mx-auto">
+                <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full min-h-0">
                 
                 {/* Header */}
                 <header className="flex items-center justify-between px-4 py-3 border-b border-white/5">
@@ -2051,7 +2051,7 @@ const Mirror = () => {
                 </AnimatePresence>
                 
                 {/* Prism Reflection View */}
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto min-h-0">
                     {/* Empty state */}
                     {messages.length === 0 && !showWelcome && !prismLoading && (
                         <div className="flex flex-col items-center justify-center h-full text-center px-4">
