@@ -621,47 +621,47 @@ const TransparencyPane = ({
 // ═══════════════════════════════════════════════════════════════
 
 const ModeSelector = ({ mode, onSelectCloud, onSelectLocal, onSelectSovereign, sovereignReady, sovereignLoading, loadProgress, localAvailable }) => (
-    <div className="flex items-center gap-1 p-1 rounded-full bg-white/5 border border-white/10">
+    <div className="flex items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 rounded-full bg-white/5 border border-white/10">
         <button
             onClick={onSelectCloud}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                mode === InferenceMode.CLOUD 
-                    ? 'bg-red-500/20 text-red-300 border border-red-500/30' 
+            className={`flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium transition-all ${
+                mode === InferenceMode.CLOUD
+                    ? 'bg-red-500/20 text-red-300 border border-red-500/30'
                     : 'text-zinc-500 hover:text-zinc-300'
             }`}
             title="Fast but surveilled — data goes to Groq"
         >
-            <Cloud size={12} />
-            <span>Cloud</span>
+            <Cloud size={10} className="sm:w-3 sm:h-3" />
+            <span className="hidden sm:inline">Cloud</span>
         </button>
-        
+
         {localAvailable && (
             <button
                 onClick={onSelectLocal}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                className={`flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium transition-all ${
                     mode === InferenceMode.LOCAL
-                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                         : 'text-zinc-500 hover:text-zinc-300'
                 }`}
                 title="Fast AND private — runs on your local server"
             >
-                <span className="text-[10px]">🖥️</span>
-                <span>Local</span>
+                <span className="text-[9px] sm:text-[10px]">🖥️</span>
+                <span className="hidden sm:inline">Local</span>
             </button>
         )}
-        
+
         <button
             onClick={onSelectSovereign}
             disabled={sovereignLoading}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+            className={`flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium transition-all ${
                 mode === InferenceMode.SOVEREIGN
-                    ? 'bg-green-500/20 text-green-300 border border-green-500/30' 
+                    ? 'bg-green-500/20 text-green-300 border border-green-500/30'
                     : 'text-zinc-500 hover:text-zinc-300'
             }`}
             title="100% browser-only — requires 2GB download"
         >
-            <Cpu size={12} className={sovereignLoading ? 'animate-pulse' : ''} />
-            {sovereignLoading ? <span>{loadProgress}%</span> : <span>Sovereign</span>}
+            <Cpu size={10} className={`sm:w-3 sm:h-3 ${sovereignLoading ? 'animate-pulse' : ''}`} />
+            {sovereignLoading ? <span>{loadProgress}%</span> : <span className="hidden sm:inline">Sovereign</span>}
         </button>
     </div>
 );
@@ -675,7 +675,7 @@ const ModeSelector = ({ mode, onSelectCloud, onSelectLocal, onSelectSovereign, s
 // ═══════════════════════════════════════════════════════════════
 
 const LensSelector = ({ lens, onSelectLens }) => (
-    <div className="flex items-center gap-1 p-1 rounded-full bg-white/5 border border-white/10">
+    <div className="hidden sm:flex items-center gap-1 p-1 rounded-full bg-white/5 border border-white/10">
         <button
             onClick={() => onSelectLens(ReflectionLens.LINEAR)}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
@@ -732,7 +732,7 @@ const PrismReflection = ({ userMessage, prism, isLoading, lens }) => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
-            className="w-full max-w-4xl mx-auto px-4 py-8"
+            className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-8"
         >
             {/* User's original message - the source of light */}
             <motion.div
@@ -1968,7 +1968,7 @@ const Mirror = () => {
     // ═══════════════════════════════════════════════════════════════
     
     return (
-        <div className="fixed inset-0 bg-black text-white flex flex-col">
+        <div className="fixed inset-0 bg-black text-white flex flex-col overflow-x-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-black via-zinc-950 to-black pointer-events-none" />
             <FloatingParticles count={20} />
 
@@ -1977,24 +1977,26 @@ const Mirror = () => {
                 {/* Chat area */}
                 <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full min-h-0">
                 
-                {/* Header */}
-                <header className="flex items-center justify-between px-4 py-3 border-b border-white/5">
-                    <div className="flex items-center gap-3">
-                        <a href="/" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors">
-                            <ArrowLeft size={18} />
+                {/* Header - Mobile optimized */}
+                <header className="flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 border-b border-white/5 gap-2">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                        <a href="/" className="flex items-center text-zinc-400 hover:text-white transition-colors p-1">
+                            <ArrowLeft size={16} className="sm:w-[18px] sm:h-[18px]" />
                         </a>
-                        <ActionBar 
-                            onShare={() => {
-                                const lastAssistant = messages.filter(m => m.role === 'assistant').pop();
-                                if (lastAssistant) handleShare(lastAssistant.content);
-                            }}
-                            onExport={handleExport}
-                            onShowFingerprint={() => setShowFingerprint(true)}
-                            hasMessages={messages.length > 0}
-                        />
+                        <div className="hidden sm:block">
+                            <ActionBar
+                                onShare={() => {
+                                    const lastAssistant = messages.filter(m => m.role === 'assistant').pop();
+                                    if (lastAssistant) handleShare(lastAssistant.content);
+                                }}
+                                onExport={handleExport}
+                                onShowFingerprint={() => setShowFingerprint(true)}
+                                hasMessages={messages.length > 0}
+                            />
+                        </div>
                     </div>
-                    
-                    <div className="flex items-center gap-3">
+
+                    <div className="flex items-center gap-1 sm:gap-3 flex-shrink min-w-0">
                         <ModeSelector
                             mode={inferenceMode}
                             onSelectCloud={handleSelectCloud}
@@ -2014,14 +2016,16 @@ const Mirror = () => {
                         <motion.span
                             animate={{ opacity: [0.5, 1, 0.5] }}
                             transition={{ duration: 3, repeat: Infinity }}
-                            className="text-2xl"
+                            className="text-xl sm:text-2xl hidden sm:block"
                             style={{ textShadow: '0 0 20px rgba(139, 92, 246, 0.5)' }}
                         >⟡</motion.span>
                     </div>
-                    
-                    <div className="flex items-center gap-3">
-                        <NetworkMonitor mode={inferenceMode} requestCount={networkRequests} />
-                        <button onClick={handleClear} className="text-zinc-500 hover:text-white text-sm transition-colors">
+
+                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                        <div className="hidden sm:block">
+                            <NetworkMonitor mode={inferenceMode} requestCount={networkRequests} />
+                        </div>
+                        <button onClick={handleClear} className="text-zinc-500 hover:text-white text-xs sm:text-sm transition-colors">
                             Clear
                         </button>
                     </div>
@@ -2105,16 +2109,16 @@ const Mirror = () => {
 
                 
                 {/* Footer / Input */}
-                <div className="p-4 border-t border-white/5">
-                    <div className="flex items-center justify-between mb-3 text-xs">
-                        <span className="text-zinc-600">{getTurnMessage()}</span>
-                        <SessionInsights messages={messages} turnCount={turnCount} mode={inferenceMode} startTime={sessionStart} />
-                        <span className={`${turnCount >= 8 ? 'text-amber-400' : 'text-zinc-600'}`}>
+                <div className="p-2 sm:p-4 border-t border-white/5">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3 text-[10px] sm:text-xs">
+                        <span className="text-zinc-600 truncate">{getTurnMessage()}</span>
+                        <span className="hidden sm:block"><SessionInsights messages={messages} turnCount={turnCount} mode={inferenceMode} startTime={sessionStart} /></span>
+                        <span className={`flex-shrink-0 ${turnCount >= 8 ? 'text-amber-400' : 'text-zinc-600'}`}>
                             {CONFIG.MAX_FREE_TURNS - turnCount} left
                         </span>
                     </div>
-                    
-                    <div className="flex items-end gap-3">
+
+                    <div className="flex items-end gap-2 sm:gap-3">
                         <textarea
                             ref={inputRef}
                             value={input}
@@ -2123,43 +2127,43 @@ const Mirror = () => {
                             placeholder="Speak your truth..."
                             aria-label="Message input"
                             aria-describedby="input-hint"
-                            className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-zinc-600 resize-none focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-colors"
-                            style={{ minHeight: '48px', maxHeight: '120px' }}
+                            className="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl text-white placeholder-zinc-600 resize-none focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-colors text-sm sm:text-base"
+                            style={{ minHeight: '44px', maxHeight: '120px' }}
                             rows={1}
                             disabled={isLoading}
                             maxLength={4000}
                         />
                         <span id="input-hint" className="sr-only">Press Enter to send, Shift+Enter for new line</span>
-                        
+
                         {isLoading ? (
-                            <button 
-                                onClick={handleStop} 
+                            <button
+                                onClick={handleStop}
                                 aria-label="Stop generating"
-                                className="p-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                                className="p-2 sm:p-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/50 flex-shrink-0"
                             >
-                                <StopCircle size={20} aria-hidden="true" />
+                                <StopCircle size={18} className="sm:w-5 sm:h-5" aria-hidden="true" />
                             </button>
                         ) : (
-                            <button 
-                                onClick={handleSend} 
-                                disabled={!input.trim()} 
+                            <button
+                                onClick={handleSend}
+                                disabled={!input.trim()}
                                 aria-label="Send message"
-                                className="p-3 rounded-xl bg-violet-500/20 border border-violet-500/30 text-violet-400 hover:bg-violet-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                                className="p-2 sm:p-3 rounded-xl bg-violet-500/20 border border-violet-500/30 text-violet-400 hover:bg-violet-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-violet-500/50 flex-shrink-0"
                             >
-                                <Send size={20} aria-hidden="true" />
+                                <Send size={18} className="sm:w-5 sm:h-5" aria-hidden="true" />
                             </button>
                         )}
                     </div>
-                    
-                    <div className="flex flex-col items-center gap-1 mt-3 text-xs text-zinc-600">
-                        <div className="flex items-center gap-2">
+
+                    <div className="flex flex-col items-center gap-0.5 sm:gap-1 mt-2 sm:mt-3 text-[10px] sm:text-xs text-zinc-600">
+                        <div className="flex items-center gap-1 sm:gap-2">
                             {inferenceMode === InferenceMode.SOVEREIGN ? (
-                                <><Cpu size={10} className="text-green-500" /><span>Running locally in your browser</span></>
+                                <><Cpu size={10} className="text-green-500" /><span>Running locally</span></>
                             ) : (
-                                <><ShieldCheck size={10} /><span>Protected by MirrorGate</span></>
+                                <><ShieldCheck size={10} /><span>MirrorGate Protected</span></>
                             )}
                         </div>
-                        <span className="text-zinc-700 text-[10px]">AI can make mistakes. Verify important information.</span>
+                        <span className="text-zinc-700 text-[9px] sm:text-[10px]">AI can make mistakes</span>
                     </div>
                 </div>
                 </div>
