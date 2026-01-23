@@ -16,6 +16,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, ArrowLeft, Volume2, VolumeX } from 'lucide-react';
 
+const PROXY_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8082'
+    : 'https://proxy.activemirror.ai';
+
 // ═══════════════════════════════════════════════════════════════
 // TIME-AWARE ATMOSPHERE
 // ═══════════════════════════════════════════════════════════════
@@ -373,17 +377,24 @@ const MirrorAmbient = () => {
         setPhase('processing');
 
         try {
-            const response = await fetch('https://mirror.activemirror.ai/mirror-prism', {
+            const response = await fetch(`${PROXY_URL}/mirror-prism`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message, lens: 'divergent' }),
             });
 
+            if (!response.ok) throw new Error('API error');
+
             const data = await response.json();
-            setPrism(data.prism);
-            setPhase('reflecting');
+            if (data.prism) {
+                setPrism(data.prism);
+                setPhase('reflecting');
+            } else {
+                throw new Error('No prism in response');
+            }
         } catch (error) {
             console.error('Prism error:', error);
+            // Show error state briefly then return to input
             setPhase('input');
         }
     }, [input]);
