@@ -53,6 +53,7 @@ const MirrorAmbient = () => {
 
         setUserMessage(text);
         setInput('');
+        setPrism(null); // Clear previous prism
         setMode('loading');
         setError(null);
 
@@ -137,49 +138,29 @@ const MirrorAmbient = () => {
                     </motion.div>
                 )}
 
-                {/* READY: Show input */}
+                {/* READY: Centered prompt */}
                 {mode === 'ready' && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="w-full max-w-md flex flex-col items-center gap-6"
+                        className="flex flex-col items-center gap-4"
                     >
                         <motion.span
                             animate={{ scale: [1, 1.1, 1], opacity: [0.4, 0.7, 0.4] }}
                             transition={{ duration: 3, repeat: Infinity }}
-                            className="text-4xl"
+                            className="text-5xl"
                             style={{ color: atmosphere.primary, textShadow: `0 0 30px ${atmosphere.primary}` }}
                         >
                             ⟡
                         </motion.span>
 
-                        <p className="text-white/60 text-center">What's on your mind?</p>
+                        <p className="text-white/50 text-center text-lg">What's on your mind?</p>
 
                         {error && (
                             <p className="text-red-400 text-sm text-center">Error: {error}</p>
                         )}
 
-                        <div className="w-full relative">
-                            <textarea
-                                ref={inputRef}
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                placeholder="Speak your truth..."
-                                className="w-full px-4 py-3 pr-14 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/30 resize-none focus:outline-none focus:border-white/30"
-                                style={{ minHeight: '56px', maxHeight: '120px' }}
-                                rows={2}
-                            />
-                            <button
-                                onClick={handleSubmit}
-                                disabled={!input.trim()}
-                                className="absolute right-2 bottom-2 p-2 rounded-xl bg-white/10 text-white/60 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                            >
-                                <Send size={20} />
-                            </button>
-                        </div>
-
-                        <p className="text-white/20 text-xs">Press Enter to reflect</p>
+                        <p className="text-white/20 text-xs">Type below ↓</p>
                     </motion.div>
                 )}
 
@@ -216,30 +197,30 @@ const MirrorAmbient = () => {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="w-full max-w-lg px-2"
+                        className="w-full max-w-lg px-2 pb-4"
                     >
                         {/* What you said */}
-                        <div className="text-center mb-8">
+                        <div className="text-center mb-6">
                             <p className="text-white/30 text-xs uppercase tracking-widest mb-2">You said</p>
-                            <p className="text-white text-lg">"{userMessage}"</p>
+                            <p className="text-white text-base">"{userMessage}"</p>
                         </div>
 
                         {/* Three perspectives */}
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                             {/* Said */}
                             <motion.div
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.2 }}
-                                className="p-4 rounded-2xl"
+                                className="p-3 rounded-xl"
                                 style={{
                                     background: 'rgba(59, 130, 246, 0.1)',
                                     border: '1px solid rgba(59, 130, 246, 0.2)'
                                 }}
                             >
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="w-2 h-2 rounded-full bg-blue-400" />
-                                    <span className="text-blue-400 text-xs uppercase tracking-wider">Said</span>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                                    <span className="text-blue-400 text-[10px] uppercase tracking-wider">Said</span>
                                 </div>
                                 <p className="text-white/80 text-sm">{prism.said}</p>
                             </motion.div>
@@ -249,15 +230,15 @@ const MirrorAmbient = () => {
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.4 }}
-                                className="p-4 rounded-2xl"
+                                className="p-3 rounded-xl"
                                 style={{
                                     background: 'rgba(217, 70, 239, 0.1)',
                                     border: '1px solid rgba(217, 70, 239, 0.2)'
                                 }}
                             >
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="w-2 h-2 rounded-full bg-fuchsia-400" />
-                                    <span className="text-fuchsia-400 text-xs uppercase tracking-wider">Unsaid</span>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-400" />
+                                    <span className="text-fuchsia-400 text-[10px] uppercase tracking-wider">Unsaid</span>
                                 </div>
                                 <p className="text-white/80 text-sm italic">{prism.unsaid}</p>
                             </motion.div>
@@ -267,15 +248,15 @@ const MirrorAmbient = () => {
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.6 }}
-                                className="p-4 rounded-2xl"
+                                className="p-3 rounded-xl"
                                 style={{
                                     background: 'rgba(245, 158, 11, 0.1)',
                                     border: '1px solid rgba(245, 158, 11, 0.2)'
                                 }}
                             >
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="w-2 h-2 rounded-full bg-amber-400" />
-                                    <span className="text-amber-400 text-xs uppercase tracking-wider">Future You</span>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                                    <span className="text-amber-400 text-[10px] uppercase tracking-wider">Future You</span>
                                 </div>
                                 <p className="text-white/80 text-sm">{prism.futureYou}</p>
                             </motion.div>
@@ -286,30 +267,40 @@ const MirrorAmbient = () => {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ delay: 0.8 }}
-                                    className="text-center pt-4"
+                                    className="text-center pt-2"
                                 >
                                     <p className="text-violet-400/60 text-xs">⚡ {prism.tangent}</p>
                                 </motion.div>
                             )}
                         </div>
-
-                        {/* Reflect again */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 1 }}
-                            className="text-center mt-8"
-                        >
-                            <button
-                                onClick={handleOrbTap}
-                                className="text-white/30 text-sm hover:text-white/60 transition-colors"
-                            >
-                                ↻ Reflect again
-                            </button>
-                        </motion.div>
                     </motion.div>
                 )}
             </main>
+
+            {/* Persistent input - shows in ready and done modes */}
+            {(mode === 'ready' || mode === 'done') && (
+                <div className="relative z-20 p-4 border-t border-white/5" style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}>
+                    <div className="max-w-lg mx-auto relative">
+                        <textarea
+                            ref={mode === 'ready' ? inputRef : null}
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder={mode === 'done' ? "Continue reflecting..." : "Speak your truth..."}
+                            className="w-full px-4 py-3 pr-14 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/30 resize-none focus:outline-none focus:border-white/30 text-base"
+                            style={{ minHeight: '52px', maxHeight: '100px' }}
+                            rows={1}
+                        />
+                        <button
+                            onClick={handleSubmit}
+                            disabled={!input.trim()}
+                            className="absolute right-2 bottom-2 p-2.5 rounded-xl bg-white/10 text-white/60 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        >
+                            <Send size={18} />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
