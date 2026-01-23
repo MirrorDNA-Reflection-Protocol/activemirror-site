@@ -44,6 +44,7 @@ const CONFIG = {
 const DeviceType = { MOBILE: 'mobile', DESKTOP: 'desktop' };
 const GateStatus = { PASSED: 'passed', BLOCKED: 'blocked', PENDING: 'pending', NONE: 'none' };
 const InferenceMode = { CLOUD: 'cloud', SOVEREIGN: 'sovereign', LOCAL: 'local' };
+const ReflectionLens = { LINEAR: 'linear', DIVERGENT: 'divergent', HYBRID: 'hybrid' };
 
 // ═══════════════════════════════════════════════════════════════
 // DEVICE & CAPABILITY DETECTION
@@ -265,15 +266,36 @@ const SovereignEngine = {
         return '';
     },
     
-    async generate(messages, onChunk, userMessage) {
+    async generate(messages, onChunk, userMessage, lens = 'linear') {
         if (!this.engine || !this.isReady) throw new Error('Sovereign engine not initialized');
-        
+
         // Fetch dynamic knowledge context based on the question
         let dynamicContext = '';
         if (userMessage) {
             dynamicContext = await this.fetchKnowledgeContext(userMessage);
         }
-        
+
+        // Lens-specific instructions
+        const lensInstructions = {
+            linear: `
+REFLECTION STYLE (Linear):
+- Ask one clear question that cuts to the core
+- Follow logical threads step by step
+- Help organize scattered thoughts into structure`,
+            divergent: `
+REFLECTION STYLE (Divergent/ADHD Lens):
+- Honor the leaps - connect unexpected dots
+- Ask "what else does this remind you of?"
+- Multiple threads are valid - don't force linear paths
+- The tangent might BE the point
+- Pattern recognition over sequential logic`,
+            hybrid: `
+REFLECTION STYLE (Hybrid):
+- Start with structure, then reveal the hidden connections
+- "Here's what I notice... but also, what about..."
+- Bridge linear and divergent thinking`
+        };
+
         const systemPrompt = `You are Reflection, a sovereign AI by N1 Intelligence running locally in the user's browser.
 
 CORE KNOWLEDGE:
@@ -283,10 +305,11 @@ CORE KNOWLEDGE:
 - MirrorBrain Desktop: Coming soon - local AI for Mac
 - MirrorVault: Coming soon - sovereign knowledge management
 - Active MirrorOS: Vision for decentralized AI mesh
+${lensInstructions[lens] || lensInstructions.linear}
 
 RULES:
 - Respond in 2-4 sentences, direct and warm
-- Start with ⟡ 
+- Start with ⟡
 - You're running 100% locally - user's data never leaves their device
 - If asked about N1/Active Mirror, explain with conviction
 ${dynamicContext ? `\nRELEVANT CONTEXT:\n${dynamicContext}` : ''}`;
@@ -667,6 +690,53 @@ const ModeSelector = ({ mode, onSelectCloud, onSelectLocal, onSelectSovereign, s
 // ═══════════════════════════════════════════════════════════════
 // NETWORK ACTIVITY MONITOR (Trust Proof)
 // ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// LENS SELECTOR (Linear vs Divergent vs Hybrid) - ADHD Support
+// ═══════════════════════════════════════════════════════════════
+
+const LensSelector = ({ lens, onSelectLens }) => (
+    <div className="flex items-center gap-1 p-1 rounded-full bg-white/5 border border-white/10">
+        <button
+            onClick={() => onSelectLens(ReflectionLens.LINEAR)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
+                lens === ReflectionLens.LINEAR
+                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                    : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+            title="Structured, sequential reflection"
+        >
+            <span className="text-[10px]">→</span>
+            <span>Linear</span>
+        </button>
+
+        <button
+            onClick={() => onSelectLens(ReflectionLens.DIVERGENT)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
+                lens === ReflectionLens.DIVERGENT
+                    ? 'bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/30'
+                    : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+            title="ADHD lens — leaps, connections, tangents that matter"
+        >
+            <span className="text-[10px]">⚡</span>
+            <span>Divergent</span>
+        </button>
+
+        <button
+            onClick={() => onSelectLens(ReflectionLens.HYBRID)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
+                lens === ReflectionLens.HYBRID
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                    : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+            title="Start structured, reveal the leaps"
+        >
+            <span className="text-[10px]">◇</span>
+            <span>Hybrid</span>
+        </button>
+    </div>
+);
 
 const NetworkMonitor = ({ mode, requestCount }) => {
     const isSovereign = mode === InferenceMode.SOVEREIGN;
@@ -1399,6 +1469,9 @@ const Mirror = () => {
         if (typeof window === 'undefined') return InferenceMode.CLOUD;
         return localStorage.getItem(CONFIG.MODE_KEY) || InferenceMode.CLOUD;
     });
+
+    // ADHD Lens - reflection style
+    const [reflectionLens, setReflectionLens] = useState(ReflectionLens.LINEAR);
     
     // Sovereign state
     const [showSovereignConfirm, setShowSovereignConfirm] = useState(false);
@@ -1615,7 +1688,8 @@ const Mirror = () => {
                             return updated;
                         });
                     },
-                    userMsg // Pass user message for context fetching
+                    userMsg, // Pass user message for context fetching
+                    reflectionLens // Pass lens for reflection style
                 );
                 
                 // If sovereign model was uncertain on a complex question, offer to escalate
@@ -1643,9 +1717,10 @@ const Mirror = () => {
                 const response = await fetch(`${CONFIG.PROXY_URL}/mirror-local`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         message: userMsg,
-                        history: messages.slice(-10).map(m => ({ role: m.role, content: m.content }))
+                        history: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
+                        lens: reflectionLens
                     }),
                     signal: abortRef.current.signal,
                 });
@@ -1692,7 +1767,7 @@ const Mirror = () => {
                 const response = await fetch(`${CONFIG.PROXY_URL}/mirror`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: fullMessage }),
+                    body: JSON.stringify({ message: fullMessage, lens: reflectionLens }),
                     signal: abortRef.current.signal,
                 });
                 
@@ -1821,7 +1896,7 @@ const Mirror = () => {
                     </div>
                     
                     <div className="flex items-center gap-3">
-                        <ModeSelector 
+                        <ModeSelector
                             mode={inferenceMode}
                             onSelectCloud={handleSelectCloud}
                             onSelectLocal={() => setInferenceMode(InferenceMode.LOCAL)}
@@ -1831,7 +1906,12 @@ const Mirror = () => {
                             loadProgress={sovereignProgress}
                             localAvailable={localAvailable}
                         />
-                        
+
+                        <LensSelector
+                            lens={reflectionLens}
+                            onSelectLens={setReflectionLens}
+                        />
+
                         <motion.span
                             animate={{ opacity: [0.5, 1, 0.5] }}
                             transition={{ duration: 3, repeat: Infinity }}
