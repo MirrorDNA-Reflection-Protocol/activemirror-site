@@ -18,7 +18,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Send, ArrowLeft, StopCircle, Shield, ShieldCheck, ShieldAlert, X, Cpu, Cloud, Download, ChevronRight, Mail, Share2, FileDown, Eye, EyeOff, Wifi, WifiOff, Globe, Fingerprint, Clock, MessageSquare, Copy, Check, ExternalLink } from 'lucide-react';
+import { Send, ArrowLeft, StopCircle, Shield, ShieldCheck, ShieldAlert, X, Cpu, Cloud, Download, ChevronRight, Mail, Share2, FileDown, Eye, EyeOff, Wifi, WifiOff, Globe, Fingerprint, Clock, MessageSquare, Copy, Check, ExternalLink, Settings, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ═══════════════════════════════════════════════════════════════
@@ -673,6 +673,76 @@ const ModeSelector = ({ mode, onSelectCloud, onSelectLocal, onSelectSovereign, s
 // ═══════════════════════════════════════════════════════════════
 // LENS SELECTOR (Linear vs Divergent vs Hybrid) - ADHD Support
 // ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// MOBILE MENU — Reveals hidden options on small screens
+// ═══════════════════════════════════════════════════════════════
+
+const MobileMenu = ({ isOpen, onClose, lens, onSelectLens, onShare, onExport, onShowFingerprint, hasMessages }) => {
+    if (!isOpen) return null;
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 sm:hidden"
+        >
+            <div className="absolute inset-0 bg-black/80" onClick={onClose} />
+            <motion.div
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 25 }}
+                className="absolute bottom-0 left-0 right-0 bg-zinc-900 rounded-t-3xl border-t border-white/10 p-6 pb-8"
+            >
+                <div className="w-12 h-1 bg-zinc-700 rounded-full mx-auto mb-6" />
+
+                <h3 className="text-white font-medium mb-4">Reflection Lens</h3>
+                <div className="grid grid-cols-3 gap-2 mb-6">
+                    <button
+                        onClick={() => { onSelectLens(ReflectionLens.LINEAR); onClose(); }}
+                        className={`p-3 rounded-xl text-center ${lens === ReflectionLens.LINEAR ? 'bg-blue-500/20 border border-blue-500/30' : 'bg-white/5 border border-white/10'}`}
+                    >
+                        <span className="text-lg">→</span>
+                        <p className={`text-xs mt-1 ${lens === ReflectionLens.LINEAR ? 'text-blue-300' : 'text-zinc-400'}`}>Linear</p>
+                    </button>
+                    <button
+                        onClick={() => { onSelectLens(ReflectionLens.DIVERGENT); onClose(); }}
+                        className={`p-3 rounded-xl text-center ${lens === ReflectionLens.DIVERGENT ? 'bg-fuchsia-500/20 border border-fuchsia-500/30' : 'bg-white/5 border border-white/10'}`}
+                    >
+                        <span className="text-lg">⚡</span>
+                        <p className={`text-xs mt-1 ${lens === ReflectionLens.DIVERGENT ? 'text-fuchsia-300' : 'text-zinc-400'}`}>Divergent</p>
+                    </button>
+                    <button
+                        onClick={() => { onSelectLens(ReflectionLens.HYBRID); onClose(); }}
+                        className={`p-3 rounded-xl text-center ${lens === ReflectionLens.HYBRID ? 'bg-amber-500/20 border border-amber-500/30' : 'bg-white/5 border border-white/10'}`}
+                    >
+                        <span className="text-lg">◇</span>
+                        <p className={`text-xs mt-1 ${lens === ReflectionLens.HYBRID ? 'text-amber-300' : 'text-zinc-400'}`}>Hybrid</p>
+                    </button>
+                </div>
+
+                {hasMessages && (
+                    <>
+                        <h3 className="text-white font-medium mb-3">Actions</h3>
+                        <div className="space-y-2">
+                            <button onClick={() => { onShare(); onClose(); }} className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-zinc-300 flex items-center gap-3">
+                                <Share2 size={18} /> Share Last Reflection
+                            </button>
+                            <button onClick={() => { onExport(); onClose(); }} className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-zinc-300 flex items-center gap-3">
+                                <FileDown size={18} /> Export Session
+                            </button>
+                            <button onClick={() => { onShowFingerprint(); onClose(); }} className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-zinc-300 flex items-center gap-3">
+                                <Fingerprint size={18} /> View Session ID
+                            </button>
+                        </div>
+                    </>
+                )}
+            </motion.div>
+        </motion.div>
+    );
+};
 
 const LensSelector = ({ lens, onSelectLens }) => (
     <div className="hidden sm:flex items-center gap-1 p-1 rounded-full bg-white/5 border border-white/10">
@@ -1625,6 +1695,7 @@ const Mirror = () => {
     const [showFingerprint, setShowFingerprint] = useState(false);
     const [showShareCard, setShowShareCard] = useState(false);
     const [selectedReflection, setSelectedReflection] = useState(null);
+    const [showMobileMenu, setShowMobileMenu] = useState(false);
     
     // Metrics
     const [networkRequests, setNetworkRequests] = useState(0);
@@ -2028,6 +2099,14 @@ const Mirror = () => {
                         <button onClick={handleClear} className="text-zinc-500 hover:text-white text-xs sm:text-sm transition-colors">
                             Clear
                         </button>
+                        {/* Mobile menu button */}
+                        <button
+                            onClick={() => setShowMobileMenu(true)}
+                            className="sm:hidden p-1.5 rounded-lg bg-white/5 border border-white/10 text-zinc-400 hover:text-white transition-colors"
+                            aria-label="Open menu"
+                        >
+                            <Settings size={16} />
+                        </button>
                     </div>
                 </header>
                 
@@ -2056,18 +2135,41 @@ const Mirror = () => {
                 
                 {/* Prism Reflection View */}
                 <div className="flex-1 overflow-y-auto min-h-0">
-                    {/* Empty state */}
+                    {/* Empty state - Enhanced for mobile */}
                     {messages.length === 0 && !showWelcome && !prismLoading && (
-                        <div className="flex flex-col items-center justify-center h-full text-center px-4">
+                        <div className="flex flex-col items-center justify-center h-full text-center px-4 py-8">
                             <motion.span
                                 animate={{ scale: [1, 1.1, 1], opacity: [0.4, 0.7, 0.4] }}
                                 transition={{ duration: 4, repeat: Infinity }}
-                                className="text-6xl mb-6"
+                                className="text-5xl sm:text-6xl mb-4 sm:mb-6"
                                 style={{ textShadow: '0 0 40px rgba(139, 92, 246, 0.4)' }}
                             >⟡</motion.span>
-                            <p className="text-zinc-400 text-lg font-light">What's on your mind?</p>
-                            <p className="text-zinc-600 text-sm mt-2 max-w-md">
-                                Share a thought. You'll see it refracted into three perspectives: what you said, what you didn't say, and your future self looking back.
+                            <h2 className="text-white text-xl sm:text-2xl font-light mb-2">Prism Reflection</h2>
+                            <p className="text-zinc-400 text-sm sm:text-base mb-6 max-w-sm">
+                                Share a thought and see it refracted into three perspectives
+                            </p>
+
+                            {/* Feature preview */}
+                            <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full max-w-sm mb-6">
+                                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-2 sm:p-3 text-center">
+                                    <div className="w-2 h-2 rounded-full bg-blue-400 mx-auto mb-1" />
+                                    <p className="text-blue-400 text-[10px] sm:text-xs font-medium">Said</p>
+                                    <p className="text-zinc-500 text-[9px] sm:text-[10px]">Clarified</p>
+                                </div>
+                                <div className="bg-fuchsia-500/10 border border-fuchsia-500/20 rounded-xl p-2 sm:p-3 text-center">
+                                    <div className="w-2 h-2 rounded-full bg-fuchsia-400 mx-auto mb-1" />
+                                    <p className="text-fuchsia-400 text-[10px] sm:text-xs font-medium">Unsaid</p>
+                                    <p className="text-zinc-500 text-[9px] sm:text-[10px]">The shadow</p>
+                                </div>
+                                <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2 sm:p-3 text-center">
+                                    <div className="w-2 h-2 rounded-full bg-amber-400 mx-auto mb-1" />
+                                    <p className="text-amber-400 text-[10px] sm:text-xs font-medium">Future</p>
+                                    <p className="text-zinc-500 text-[9px] sm:text-[10px]">Looking back</p>
+                                </div>
+                            </div>
+
+                            <p className="text-zinc-600 text-xs">
+                                Type below to begin ↓
                             </p>
                         </div>
                     )}
@@ -2210,12 +2312,29 @@ const Mirror = () => {
             
             {/* Upgrade Modal */}
             <AnimatePresence>
-                <UpgradeModal 
-                    isOpen={showUpgradeModal} 
-                    onClose={() => setShowUpgradeModal(false)} 
-                    deviceType={deviceType} 
+                <UpgradeModal
+                    isOpen={showUpgradeModal}
+                    onClose={() => setShowUpgradeModal(false)}
+                    deviceType={deviceType}
                     turnCount={turnCount}
                     onEmailCapture={() => { setShowUpgradeModal(false); setShowEmailModal(true); }}
+                />
+            </AnimatePresence>
+
+            {/* Mobile Menu */}
+            <AnimatePresence>
+                <MobileMenu
+                    isOpen={showMobileMenu}
+                    onClose={() => setShowMobileMenu(false)}
+                    lens={reflectionLens}
+                    onSelectLens={setReflectionLens}
+                    onShare={() => {
+                        const lastAssistant = messages.filter(m => m.role === 'assistant').pop();
+                        if (lastAssistant) handleShare(lastAssistant.content);
+                    }}
+                    onExport={handleExport}
+                    onShowFingerprint={() => setShowFingerprint(true)}
+                    hasMessages={messages.length > 0}
                 />
             </AnimatePresence>
         </div>
