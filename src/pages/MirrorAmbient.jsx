@@ -26,6 +26,57 @@ const PROXY_URL = typeof window !== 'undefined' && window.location.hostname === 
     : 'https://proxy.activemirror.ai';
 
 // ============================================
+// MODEL OPTIONS
+// ============================================
+const MODEL_OPTIONS = [
+    {
+        id: 'groq',
+        name: 'Llama 3.3 70B',
+        provider: 'Groq',
+        description: 'Fast & free, great for most tasks',
+        tier: 'fast_free',
+        icon: '⚡',
+        badge: 'Recommended'
+    },
+    {
+        id: 'deepseek',
+        name: 'DeepSeek V3',
+        provider: 'DeepSeek',
+        description: 'Best reasoning, very affordable',
+        tier: 'budget',
+        icon: '🧠',
+        badge: 'Smartest'
+    },
+    {
+        id: 'mistral',
+        name: 'Mistral Large',
+        provider: 'Mistral',
+        description: 'European, fast function calling',
+        tier: 'budget',
+        icon: '🇪🇺',
+        badge: null
+    },
+    {
+        id: 'gpt4o',
+        name: 'GPT-4o Mini',
+        provider: 'OpenAI',
+        description: 'Premium quality, costs more',
+        tier: 'frontier',
+        icon: '✨',
+        badge: 'Premium'
+    },
+    {
+        id: 'local',
+        name: 'Local (Ollama)',
+        provider: 'Your Device',
+        description: '100% private, runs on your hardware',
+        tier: 'sovereign',
+        icon: '🔒',
+        badge: 'Private'
+    }
+];
+
+// ============================================
 // SAFETY: Client-side content filters
 // ============================================
 const SAFETY_PATTERNS = {
@@ -275,7 +326,7 @@ const QuickAction = ({ icon: Icon, label, onClick, atmosphere }) => (
 );
 
 // Settings modal
-const SettingsModal = ({ isOpen, onClose, memory, setMemory, voiceEnabled, setVoiceEnabled }) => {
+const SettingsModal = ({ isOpen, onClose, memory, setMemory, voiceEnabled, setVoiceEnabled, selectedModel, setSelectedModel }) => {
     if (!isOpen) return null;
 
     return (
@@ -289,7 +340,7 @@ const SettingsModal = ({ isOpen, onClose, memory, setMemory, voiceEnabled, setVo
             <motion.div
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="w-full max-w-sm bg-zinc-900 border border-white/10 rounded-2xl p-5"
+                className="w-full max-w-sm bg-zinc-900 border border-white/10 rounded-2xl p-5 max-h-[85vh] overflow-y-auto"
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between mb-4">
@@ -300,8 +351,53 @@ const SettingsModal = ({ isOpen, onClose, memory, setMemory, voiceEnabled, setVo
                 </div>
 
                 <div className="space-y-4">
+                    {/* Model selection */}
+                    <div>
+                        <label className="text-white/50 text-xs block mb-2">AI Model</label>
+                        <div className="space-y-2">
+                            {MODEL_OPTIONS.map(model => (
+                                <button
+                                    key={model.id}
+                                    onClick={() => {
+                                        setSelectedModel(model.id);
+                                        const updated = { ...memory, preferences: { ...memory.preferences, model: model.id } };
+                                        setMemory(updated);
+                                        saveMemory(updated);
+                                    }}
+                                    className={`w-full p-3 rounded-xl text-left transition-all ${
+                                        selectedModel === model.id
+                                            ? 'bg-violet-500/20 border-violet-500/50'
+                                            : 'bg-white/5 border-white/10 hover:bg-white/10'
+                                    } border`}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-lg">{model.icon}</span>
+                                            <div>
+                                                <div className="text-white text-sm font-medium">{model.name}</div>
+                                                <div className="text-white/40 text-xs">{model.provider}</div>
+                                            </div>
+                                        </div>
+                                        {model.badge && (
+                                            <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                                                model.badge === 'Recommended' ? 'bg-green-500/20 text-green-400' :
+                                                model.badge === 'Smartest' ? 'bg-blue-500/20 text-blue-400' :
+                                                model.badge === 'Premium' ? 'bg-amber-500/20 text-amber-400' :
+                                                model.badge === 'Private' ? 'bg-violet-500/20 text-violet-400' :
+                                                'bg-white/10 text-white/60'
+                                            }`}>
+                                                {model.badge}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-white/30 text-xs mt-1 ml-7">{model.description}</p>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Voice toggle */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between pt-3 border-t border-white/10">
                         <span className="text-white/70 text-sm">Voice Output</span>
                         <button
                             onClick={() => setVoiceEnabled(!voiceEnabled)}
@@ -335,7 +431,7 @@ const SettingsModal = ({ isOpen, onClose, memory, setMemory, voiceEnabled, setVo
                         </p>
                         <button
                             onClick={() => {
-                                const cleared = { userName: null, preferences: {}, facts: [], sessionCount: 0 };
+                                const cleared = { userName: null, preferences: { model: 'groq' }, facts: [], sessionCount: 0 };
                                 setMemory(cleared);
                                 saveMemory(cleared);
                             }}
@@ -364,9 +460,16 @@ const MirrorAmbient = () => {
     const [voiceEnabled, setVoiceEnabled] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
+    const [selectedModel, setSelectedModel] = useState(() => {
+        const saved = loadMemory();
+        return saved.preferences?.model || 'groq';
+    });
 
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
+
+    // Get current model info
+    const currentModel = MODEL_OPTIONS.find(m => m.id === selectedModel) || MODEL_OPTIONS[0];
     const recognitionRef = useRef(null);
 
     // Generate particles
@@ -548,7 +651,9 @@ const MirrorAmbient = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     message: text,
-                    messages: messagesForAPI
+                    messages: messagesForAPI,
+                    tier: currentModel.tier,
+                    model: selectedModel
                 }),
             });
 
@@ -717,12 +822,15 @@ const MirrorAmbient = () => {
                         >
                             ⟡
                         </motion.span>
-                        <span className="text-white/80 font-medium">Mirror</span>
+                        <div>
+                            <span className="text-white/80 font-medium">Mirror</span>
+                            <span className="text-white/30 text-xs ml-2">{currentModel.icon} {currentModel.name}</span>
+                        </div>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <Sparkles size={12} style={{ color: atmosphere.primary }} className="animate-pulse" />
-                    <span className="text-white/30 text-xs uppercase tracking-widest">{atmosphere.phase}</span>
+                    <span className="text-white/30 text-xs uppercase tracking-widest hidden sm:inline">{atmosphere.phase}</span>
                     <button
                         onClick={() => setShowSettings(true)}
                         className="ml-2 p-2 rounded-full bg-white/5 text-white/40 hover:text-white/60 transition-colors"
@@ -886,6 +994,8 @@ const MirrorAmbient = () => {
                         setMemory={setMemory}
                         voiceEnabled={voiceEnabled}
                         setVoiceEnabled={setVoiceEnabled}
+                        selectedModel={selectedModel}
+                        setSelectedModel={setSelectedModel}
                     />
                 )}
             </AnimatePresence>
