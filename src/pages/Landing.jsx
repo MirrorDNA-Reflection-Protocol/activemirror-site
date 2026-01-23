@@ -54,7 +54,7 @@ export default function Landing() {
               <div className="px-4 py-4 space-y-3">
                 <Link to="/pricing" onClick={() => setMenuOpen(false)} className="block text-zinc-300 py-2">Pricing</Link>
                 <Link to="/confessions" onClick={() => setMenuOpen(false)} className="block text-zinc-300 py-2">Confessions</Link>
-                <Link to="/research/" onClick={() => setMenuOpen(false)} className="block text-zinc-300 py-2">Research</Link>
+                <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/research/" onClick={() => setMenuOpen(false)} className="block text-zinc-300 py-2" target="_blank" rel="noopener noreferrer">Research</a>
                 <a href="https://github.com/MirrorDNA-Reflection-Protocol" target="_blank" className="block text-zinc-300 py-2">GitHub</a>
                 <Link to="/mirror" onClick={() => setMenuOpen(false)} className="block bg-white text-black px-4 py-3 rounded-lg text-center font-medium mt-4">
                   Try Free →
@@ -266,7 +266,7 @@ export default function Landing() {
           <div className="flex gap-4 sm:gap-6 text-zinc-500 text-sm">
             <Link to="/privacy" className="hover:text-white transition">Privacy</Link>
             <Link to="/terms" className="hover:text-white transition">Terms</Link>
-            <Link to="/research/" className="hover:text-white transition">Research</Link>
+            <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/research/" className="hover:text-white transition" target="_blank" rel="noopener noreferrer">Research</a>
             <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="hover:text-white transition">GitHub</a>
           </div>
         </div>

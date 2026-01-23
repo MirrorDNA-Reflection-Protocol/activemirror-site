@@ -19,17 +19,17 @@ export default function Home() {
             <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none z-0"></div>
 
             {/* TOP NAVIGATION BAR - Two rows on mobile */}
-            <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-purple-500/10">
+            <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-purple-500/10" role="navigation" aria-label="Main navigation">
                 <div className="flex flex-wrap justify-center gap-x-4 sm:gap-x-6 gap-y-1 py-2 sm:py-3 px-2 sm:px-4 text-[10px] sm:text-xs text-zinc-400">
-                    <a href="/mobile/" className="hover:text-purple-400 transition-colors">Mobile</a>
-                    <a href="/architecture/" className="hover:text-purple-400 transition-colors">Architecture</a>
-                    <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/ecosystem/" className="hover:text-purple-400 transition-colors" target="_blank">Ecosystem</a>
-                    <a href="/open-source/" className="hover:text-purple-400 transition-colors">Open Source</a>
-                    <a href="/enterprise/" className="hover:text-purple-400 transition-colors">Enterprise</a>
+                    <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/mobile/" className="hover:text-purple-400 transition-colors" target="_blank" rel="noopener noreferrer">Mobile</a>
+                    <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/architecture/" className="hover:text-purple-400 transition-colors" target="_blank" rel="noopener noreferrer">Architecture</a>
+                    <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/ecosystem/" className="hover:text-purple-400 transition-colors" target="_blank" rel="noopener noreferrer">Ecosystem</a>
+                    <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="hover:text-purple-400 transition-colors" target="_blank" rel="noopener noreferrer">Open Source</a>
+                    <a href="mailto:enterprise@activemirror.ai" className="hover:text-purple-400 transition-colors">Enterprise</a>
                 </div>
             </nav>
 
-            <main className="relative z-10 w-full min-h-screen flex items-center justify-center p-4 sm:p-6 pt-14 sm:pt-16 pb-8">
+            <main className="relative z-10 w-full min-h-screen flex items-center justify-center p-4 sm:p-6 pt-14 sm:pt-16 pb-8" role="main">
                 <SpotlightCard className="w-full max-w-2xl text-center p-6 sm:p-12 md:p-16 border border-purple-500/20 bg-black/40 backdrop-blur-3xl shadow-2xl shadow-purple-500/10 ring-1 ring-purple-500/10">
 
                     {/* LOGO HERO */}
@@ -50,7 +50,7 @@ export default function Home() {
                     {/* ACTIONS STACK */}
                     <div className="flex flex-col gap-3 sm:gap-4 mb-6 sm:mb-12 max-w-md mx-auto w-full">
                         {/* 1. START REFLECTION (Primary) */}
-                        <a href="/mirror/" className="group w-full py-3 sm:py-4 rounded-xl bg-gradient-to-r from-purple-500 to-violet-500 text-white font-bold text-base sm:text-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-[0_0_25px_rgba(168,85,247,0.3)] hover:shadow-[0_0_35px_rgba(168,85,247,0.4)]">
+                        <a href="/mirror/" className="group w-full py-3 sm:py-4 rounded-xl bg-gradient-to-r from-purple-500 to-violet-500 text-white font-bold text-base sm:text-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-[0_0_25px_rgba(168,85,247,0.3)] hover:shadow-[0_0_35px_rgba(168,85,247,0.4)]" aria-label="Start AI reflection session">
                             Start Reflection <ArrowRight className="group-hover:translate-x-1 transition-transform" size={18} />
                         </a>
 
@@ -72,13 +72,13 @@ export default function Home() {
                             <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="py-2 sm:py-3 rounded-xl border border-purple-500/10 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500/20 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-purple-400 text-xs sm:text-sm font-medium">
                                 <Github size={14} /> Protocol
                             </a>
-                            <a href="/research/" className="py-2 sm:py-3 rounded-xl border border-purple-500/10 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500/20 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-purple-400 text-xs sm:text-sm font-medium">
+                            <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/research/" className="py-2 sm:py-3 rounded-xl border border-purple-500/10 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500/20 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-purple-400 text-xs sm:text-sm font-medium" target="_blank" rel="noopener noreferrer">
                                 <FileText size={14} /> Research
                             </a>
-                            <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/story/" className="py-2 sm:py-3 rounded-xl border border-purple-500/10 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500/20 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-purple-400 text-xs sm:text-sm font-medium">
+                            <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/story/" className="py-2 sm:py-3 rounded-xl border border-purple-500/10 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500/20 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-purple-400 text-xs sm:text-sm font-medium" target="_blank" rel="noopener noreferrer">
                                 <Book size={14} /> The Story
                             </a>
-                            <a href="/blog/" className="py-2 sm:py-3 rounded-xl border border-purple-500/10 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500/20 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-purple-400 text-xs sm:text-sm font-medium">
+                            <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/blog/" className="py-2 sm:py-3 rounded-xl border border-purple-500/10 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500/20 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-purple-400 text-xs sm:text-sm font-medium" target="_blank" rel="noopener noreferrer">
                                 <ArrowRight size={14} /> Blog
                             </a>
                         </div>

@@ -13,6 +13,7 @@ import Trust from './pages/Trust';
 import TestLab from './pages/TestLab';
 import Hub from './pages/Hub';
 import Confessions from './pages/Confessions';
+import NotFound from './pages/NotFound';
 
 export default function App() {
     return (
@@ -31,6 +32,7 @@ export default function App() {
                 <Route path="/lab" element={<TestLab />} />
                 <Route path="/hub" element={<Hub />} />
                 <Route path="/confessions" element={<Confessions />} />
+                <Route path="*" element={<NotFound />} />
             </Routes>
         </BrowserRouter>
     );
