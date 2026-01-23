@@ -28,7 +28,7 @@ const ConsentGate = ({ onConsent }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8 }}
-            className="fixed inset-0 bg-[#020204] text-white flex items-center justify-center overflow-hidden"
+            className="fixed inset-0 bg-[#020204] text-white flex items-center justify-center overflow-y-auto"
         >
             {/* Background effects */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">

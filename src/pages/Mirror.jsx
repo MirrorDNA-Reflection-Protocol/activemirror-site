@@ -1968,12 +1968,12 @@ const Mirror = () => {
     // ═══════════════════════════════════════════════════════════════
     
     return (
-        <div className="min-h-screen bg-black text-white overflow-hidden relative">
+        <div className="min-h-screen bg-black text-white overflow-x-hidden overflow-y-auto relative">
             <div className="fixed inset-0 bg-gradient-to-br from-black via-zinc-950 to-black" />
             <FloatingParticles count={20} />
             
             {/* Main layout with transparency pane on desktop */}
-            <div className="relative z-10 flex h-screen">
+            <div className="relative z-10 flex min-h-screen">
                 {/* Chat area */}
                 <div className="flex-1 flex flex-col max-w-3xl mx-auto">
                 
