@@ -6,13 +6,14 @@ import { copyFileSync, mkdirSync, existsSync } from 'fs'
 // All React routes that need SPA fallbacks
 const SPA_ROUTES = [
     'mirror',
-    'preview', 
+    'preview',
     'confessions',
     'pricing',
     'demo',
     'hub',
     'lab',
-    'mirror-beta'
+    'mirror-beta',
+    'ambient'
 ];
 
 // Plugin to copy index.html for SPA routing on GitHub Pages
