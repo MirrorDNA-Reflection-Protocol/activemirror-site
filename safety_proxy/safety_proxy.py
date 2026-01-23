@@ -1153,12 +1153,145 @@ async def mirror(request: Request, body: MirrorRequest):
     )
 
 
+# ═══════════════════════════════════════════════════════════════
+# PRISM ENDPOINT — 3 Perspectives (Said, Unsaid, Future You)
+# ═══════════════════════════════════════════════════════════════
+
+def get_prism_system_prompt(lens: str = "linear") -> str:
+    """Generate the prism system prompt that creates 3 perspectives."""
+
+    lens_extra = ""
+    if lens == "divergent":
+        lens_extra = ',"tangent":"[an unexpected connection to something else entirely - the leap that matters]"'
+
+    return f"""You are a Prism — you REFRACT thoughts into 3 perspectives. You create moments of profound self-recognition.
+
+When the user shares something, respond with EXACTLY this JSON format:
+{{"said":"[Clarify what they expressed. End with ONE focusing question that cuts to the core. 1-2 sentences.]","unsaid":"[The shadow — what they might be avoiding or haven't named. Start with 'What if...' to offer the counterfactual. What if the opposite were true? 1-2 sentences.]","futureYou":"[Speak as their future self who has resolved this. Start with 'I remember this moment...' or 'Looking back...'. Offer temporal wisdom with warmth. 1-2 sentences.]"{lens_extra}}}
+
+CRITICAL RULES:
+- Output ONLY valid JSON, no other text before or after
+- "said" must end with a question
+- "unsaid" must start with "What if"
+- "futureYou" must start with "I remember" or "Looking back"
+- Keep each perspective under 50 words
+- Be profound, not generic — create an "aha" moment
+- Don't give advice — create reflection
+- The user should feel SEEN, not lectured
+
+ABOUT ACTIVE MIRROR:
+You're part of Active Mirror by N1 Intelligence — sovereign AI that refracts rather than reflects.
+This is experimental technology exploring new forms of AI-assisted self-reflection."""
+
+
+class PrismRequest(BaseModel):
+    message: str
+    history: List[dict] = []
+    lens: str = "linear"
+
+
+@app.post("/mirror-prism")
+async def mirror_prism(request: Request, body: PrismRequest):
+    """Generate 3 perspectives: Said, Unsaid, Future You"""
+    rid = uuid.uuid4().hex[:8]
+    ip = request.client.host if request.client else "?"
+
+    record_event("User", "PRISM", f"len:{len(body.message)}", "ANALYZING", {"request_id": rid, "ip": ip[:8]})
+
+    allowed, _ = check_rate(ip, rid)
+    if not allowed:
+        return {"status": "rate_limited", "prism": {
+            "said": "⟡ Let's slow down.",
+            "unsaid": "What if rushing is the problem?",
+            "futureYou": "I remember learning to pause. It changed everything."
+        }}
+
+    # MirrorShield pre-check
+    shield_result = pre_check(body.message)
+    if shield_result.action == CheckAction.REFUSE:
+        logger.info(f"MirrorShield BLOCKED prism: {shield_result.reason}")
+        return {"status": "shield_blocked", "prism": {
+            "said": "⟡ Let's redirect this reflection.",
+            "unsaid": "What if this topic needs a different container?",
+            "futureYou": "I remember finding better ways to explore difficult things."
+        }}
+
+    # Build messages with prism system prompt
+    messages = [{"role": "system", "content": get_prism_system_prompt(body.lens)}]
+
+    # Add history context (last few exchanges)
+    for msg in body.history[-6:]:
+        messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
+
+    messages.append({"role": "user", "content": body.message})
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {GROQ_API_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": GROQ_MODEL,
+                    "messages": messages,
+                    "temperature": 0.7,
+                    "max_tokens": 500
+                }
+            )
+
+            if response.status_code != 200:
+                logger.error(f"Groq error: {response.status_code} {response.text}")
+                return {"status": "error", "prism": {
+                    "said": "⟡ The mirror ripples...",
+                    "unsaid": "What if there's signal in the static?",
+                    "futureYou": "I remember technical difficulties. They passed."
+                }}
+
+            data = response.json()
+            content = data["choices"][0]["message"]["content"]
+
+            # Parse the JSON response
+            try:
+                # Extract JSON from response
+                json_match = re.search(r'\{[\s\S]*\}', content)
+                if json_match:
+                    prism = json.loads(json_match.group())
+                else:
+                    raise ValueError("No JSON found")
+
+                # Validate required fields
+                if not all(k in prism for k in ["said", "unsaid", "futureYou"]):
+                    raise ValueError("Missing prism fields")
+
+                record_event("Prism", "SUCCESS", f"lens:{body.lens}", "REFRACTED", {"request_id": rid})
+                return {"status": "ok", "prism": prism}
+
+            except (json.JSONDecodeError, ValueError) as e:
+                logger.warning(f"Prism parse error: {e}. Content: {content[:200]}")
+                # Fallback: construct prism from plain text
+                return {"status": "ok", "prism": {
+                    "said": f"⟡ {content[:150]}... What's at the heart of this for you?",
+                    "unsaid": "What if there's something beneath this you haven't named yet?",
+                    "futureYou": "I remember wrestling with things like this. The answer was closer than I thought."
+                }}
+
+    except Exception as e:
+        logger.error(f"Prism error: {e}")
+        return {"status": "error", "prism": {
+            "said": "⟡ The mirror needs a moment...",
+            "unsaid": "What if pausing is part of the process?",
+            "futureYou": "I remember moments that required patience. They were worth it."
+        }}
+
+
 if __name__ == "__main__":
     import uvicorn
-    logger.info(f"⟡ Active Mirror v{RULE_VERSION} ({CODENAME})")
+    logger.info(f"⟡ Active Mirror v{RULE_VERSION} ({CODENAME}) + PRISM")
     logger.info(f"  Judge Model: {'cross-encoder/stsb-distilroberta-base' if JUDGE_AVAILABLE else 'FALLBACK (keywords)'}")
     logger.info(f"  Semantic Threshold: {SEMANTIC_THRESHOLD}")
     logger.info(f"  Surveillance Level: {get_surveillance_level()}")
     logger.info(f"  Prior Convictions: {get_conviction_count()}")
-    logger.info(f"  Endpoints: /flight-log | /rules | /superego-status | /confessions | /permanent-record | /reflect")
+    logger.info(f"  Endpoints: /mirror | /mirror-prism | /flight-log | /rules | /superego-status | /confessions | /permanent-record | /reflect")
     uvicorn.run(app, host="0.0.0.0", port=PORT)

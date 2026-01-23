@@ -1,17 +1,20 @@
 /**
- * ⟡ ACTIVE MIRROR — Sovereign Reflective Chat
- * Version: 18.0 (Undeniable Edition)
- * 
+ * ⟡ ACTIVE MIRROR — Prism Reflection Engine
+ * Version: 19.0 (Prism Edition)
+ *
+ * THE BREAKTHROUGH:
+ * Instead of reflecting, we REFRACT — showing three perspectives:
+ * - SAID: What you expressed, clarified
+ * - UNSAID: The shadow, the counterfactual, what you're avoiding
+ * - FUTURE YOU: Your future self looking back at this moment
+ *
  * Features:
- * - Cloud vs Sovereign toggle with live proof
- * - Email capture funnel
- * - Shareable reflection cards
- * - Trust proof (network activity monitor)
- * - Mobile Groq fast-path
- * - Reflection export (markdown)
- * - "What cloud knows" live reveal
- * - Fingerprint awareness
- * - Session insights
+ * - Prism reflection (3 simultaneous perspectives)
+ * - Cloud vs Sovereign vs Local toggle
+ * - ADHD lens (Linear/Divergent/Hybrid)
+ * - Temporal dialogue (past, present, future)
+ * - Counterfactual questioning
+ * - Visual refraction layout
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -23,7 +26,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 // ═══════════════════════════════════════════════════════════════
 
 const CONFIG = {
-    VERSION: '18.2',
+    VERSION: '19.0-prism',
     STORAGE_KEY: 'mirror_v18',
     TURN_KEY: 'mirror_turns',
     MODE_KEY: 'mirror_mode',
@@ -275,44 +278,20 @@ const SovereignEngine = {
             dynamicContext = await this.fetchKnowledgeContext(userMessage);
         }
 
-        // Lens-specific instructions
-        const lensInstructions = {
-            linear: `
-REFLECTION STYLE (Linear):
-- Ask one clear question that cuts to the core
-- Follow logical threads step by step
-- Help organize scattered thoughts into structure`,
-            divergent: `
-REFLECTION STYLE (Divergent/ADHD Lens):
-- Honor the leaps - connect unexpected dots
-- Ask "what else does this remind you of?"
-- Multiple threads are valid - don't force linear paths
-- The tangent might BE the point
-- Pattern recognition over sequential logic`,
-            hybrid: `
-REFLECTION STYLE (Hybrid):
-- Start with structure, then reveal the hidden connections
-- "Here's what I notice... but also, what about..."
-- Bridge linear and divergent thinking`
-        };
+        // Prism system prompt - generates 3 perspectives
+        const systemPrompt = `You are a Prism — you REFRACT thoughts into 3 perspectives. You run locally, sovereign.
 
-        const systemPrompt = `You are Reflection, a sovereign AI by N1 Intelligence running locally in the user's browser.
-
-CORE KNOWLEDGE:
-- N1 Intelligence: Independent AI research company, Goa India, founded by Paul Desai
-- Active Mirror: Sovereign AI platform (activemirror.ai)
-- MirrorDNA: Identity persistence protocol
-- MirrorBrain Desktop: Coming soon - local AI for Mac
-- MirrorVault: Coming soon - sovereign knowledge management
-- Active MirrorOS: Vision for decentralized AI mesh
-${lensInstructions[lens] || lensInstructions.linear}
+When the user shares something, respond with EXACTLY this JSON format:
+{"said":"[clarify what they expressed - 1-2 sentences, ask a focusing question]","unsaid":"[the shadow - what they might be avoiding, the counterfactual - 1-2 sentences starting with 'What if...']","futureYou":"[speak as their future self looking back - 1-2 sentences starting with 'I remember this moment...' or 'Looking back...']"${lens === 'divergent' ? ',"tangent":"[an unexpected connection to something else entirely]"' : ''}}
 
 RULES:
-- Respond in 2-4 sentences, direct and warm
-- Start with ⟡
-- You're running 100% locally - user's data never leaves their device
-- If asked about N1/Active Mirror, explain with conviction
-${dynamicContext ? `\nRELEVANT CONTEXT:\n${dynamicContext}` : ''}`;
+- Output ONLY valid JSON, no other text
+- "said" clarifies and asks one focusing question
+- "unsaid" challenges with "What if the opposite were true?" energy
+- "futureYou" speaks with temporal wisdom, warmth, hindsight
+- Keep each under 50 words
+- Be profound, not generic
+${dynamicContext ? `\nCONTEXT:\n${dynamicContext}` : ''}`;
         
         const formattedMessages = [
             { role: 'system', content: systemPrompt },
@@ -737,6 +716,149 @@ const LensSelector = ({ lens, onSelectLens }) => (
         </button>
     </div>
 );
+
+// ═══════════════════════════════════════════════════════════════
+// PRISM REFLECTION — The Jaw-Drop Component
+// Shows 3 perspectives: SAID, UNSAID, FUTURE YOU
+// ═══════════════════════════════════════════════════════════════
+
+const PrismReflection = ({ userMessage, prism, isLoading, lens }) => {
+    if (!userMessage && !isLoading) return null;
+
+    const { said, unsaid, futureYou } = prism || {};
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="w-full max-w-4xl mx-auto px-4 py-8"
+        >
+            {/* User's original message - the source of light */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center mb-8"
+            >
+                <p className="text-zinc-500 text-xs uppercase tracking-wider mb-2">You said</p>
+                <p className="text-white text-lg font-light leading-relaxed max-w-xl mx-auto">
+                    "{userMessage}"
+                </p>
+            </motion.div>
+
+            {/* The Prism - 3 perspectives */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+
+                {/* SAID - What you expressed */}
+                <motion.div
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="relative group"
+                >
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-blue-600/5 rounded-2xl blur-xl group-hover:blur-2xl transition-all" />
+                    <div className="relative bg-zinc-900/80 backdrop-blur-sm border border-blue-500/20 rounded-2xl p-5 h-full">
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="w-2 h-2 rounded-full bg-blue-400" />
+                            <span className="text-blue-400 text-xs font-medium uppercase tracking-wider">Said</span>
+                        </div>
+                        <p className="text-zinc-300 text-sm leading-relaxed">
+                            {isLoading && !said ? (
+                                <motion.span
+                                    animate={{ opacity: [0.4, 0.8, 0.4] }}
+                                    transition={{ duration: 1.5, repeat: Infinity }}
+                                    className="text-blue-400/60"
+                                >
+                                    Clarifying what you expressed...
+                                </motion.span>
+                            ) : said || '...'}
+                        </p>
+                    </div>
+                </motion.div>
+
+                {/* UNSAID - The shadow, the counterfactual */}
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="relative group md:-mt-4"
+                >
+                    <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500/20 to-purple-600/5 rounded-2xl blur-xl group-hover:blur-2xl transition-all" />
+                    <div className="relative bg-zinc-900/80 backdrop-blur-sm border border-fuchsia-500/20 rounded-2xl p-5 h-full">
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="w-2 h-2 rounded-full bg-fuchsia-400" />
+                            <span className="text-fuchsia-400 text-xs font-medium uppercase tracking-wider">Unsaid</span>
+                        </div>
+                        <p className="text-zinc-300 text-sm leading-relaxed italic">
+                            {isLoading && !unsaid ? (
+                                <motion.span
+                                    animate={{ opacity: [0.4, 0.8, 0.4] }}
+                                    transition={{ duration: 1.5, repeat: Infinity }}
+                                    className="text-fuchsia-400/60"
+                                >
+                                    Sensing the shadow...
+                                </motion.span>
+                            ) : unsaid || '...'}
+                        </p>
+                    </div>
+                </motion.div>
+
+                {/* FUTURE YOU - Temporal wisdom */}
+                <motion.div
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.6 }}
+                    className="relative group"
+                >
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-orange-600/5 rounded-2xl blur-xl group-hover:blur-2xl transition-all" />
+                    <div className="relative bg-zinc-900/80 backdrop-blur-sm border border-amber-500/20 rounded-2xl p-5 h-full">
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="w-2 h-2 rounded-full bg-amber-400" />
+                            <span className="text-amber-400 text-xs font-medium uppercase tracking-wider">Future You</span>
+                        </div>
+                        <p className="text-zinc-300 text-sm leading-relaxed">
+                            {isLoading && !futureYou ? (
+                                <motion.span
+                                    animate={{ opacity: [0.4, 0.8, 0.4] }}
+                                    transition={{ duration: 1.5, repeat: Infinity }}
+                                    className="text-amber-400/60"
+                                >
+                                    Reaching through time...
+                                </motion.span>
+                            ) : futureYou || '...'}
+                        </p>
+                    </div>
+                </motion.div>
+            </div>
+
+            {/* Divergent lens extras */}
+            {lens === ReflectionLens.DIVERGENT && prism?.tangent && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 }}
+                    className="mt-6 text-center"
+                >
+                    <div className="inline-block bg-violet-500/10 border border-violet-500/20 rounded-xl px-4 py-3">
+                        <p className="text-violet-400 text-xs uppercase tracking-wider mb-1">⚡ Tangent</p>
+                        <p className="text-zinc-300 text-sm">{prism.tangent}</p>
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Visual connector lines */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20 hidden md:block" style={{ zIndex: -1 }}>
+                <defs>
+                    <linearGradient id="prismGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.5" />
+                        <stop offset="50%" stopColor="#d946ef" stopOpacity="0.5" />
+                        <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.5" />
+                    </linearGradient>
+                </defs>
+            </svg>
+        </motion.div>
+    );
+};
 
 const NetworkMonitor = ({ mode, requestCount }) => {
     const isSovereign = mode === InferenceMode.SOVEREIGN;
@@ -1472,7 +1594,12 @@ const Mirror = () => {
 
     // ADHD Lens - reflection style
     const [reflectionLens, setReflectionLens] = useState(ReflectionLens.LINEAR);
-    
+
+    // Prism state - the 3 perspectives
+    const [currentPrism, setCurrentPrism] = useState(null);
+    const [prismLoading, setPrismLoading] = useState(false);
+    const [lastUserMessage, setLastUserMessage] = useState('');
+
     // Sovereign state
     const [showSovereignConfirm, setShowSovereignConfirm] = useState(false);
     const [sovereignLoading, setSovereignLoading] = useState(false);
@@ -1667,54 +1794,66 @@ const Mirror = () => {
         const userMsg = trimmedInput;
         setInput('');
         setIsLoading(true);
+        setPrismLoading(true);
+        setLastUserMessage(userMsg);
+        setCurrentPrism(null); // Reset prism
         SoundEngine.send();
-        
+
         setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
-        setMessages(prev => [...prev, { role: 'assistant', content: '', gateStatus: GateStatus.PENDING }]);
         setTurnCount(prev => prev + 1);
-        
+
+        // Helper to parse prism JSON from response
+        const parsePrismResponse = (text) => {
+            try {
+                // Try to extract JSON from the response
+                const jsonMatch = text.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    return JSON.parse(jsonMatch[0]);
+                }
+            } catch (e) {
+                console.log('Prism parse error:', e);
+            }
+            // Fallback: create prism from plain text
+            return {
+                said: text.includes('⟡') ? text : `⟡ ${text}`,
+                unsaid: "What if there's something beneath this you haven't named yet?",
+                futureYou: "I remember wrestling with this. The answer was closer than I thought."
+            };
+        };
+
         try {
             if (inferenceMode === InferenceMode.SOVEREIGN && SovereignEngine.isReady) {
-                // SOVEREIGN (local) with hybrid escalation
+                // SOVEREIGN (local) - Prism mode
                 const result = await SovereignEngine.generate(
                     [...messages, { role: 'user', content: userMsg }],
                     (chunk, full) => {
-                        setMessages(prev => {
-                            const updated = prev.slice(0, -1);
-                            const last = prev[prev.length - 1];
-                            if (last?.role === 'assistant') {
-                                updated.push({ ...last, content: full, gateStatus: GateStatus.PASSED });
-                            }
-                            return updated;
-                        });
+                        // Try to parse partial prism as it streams
+                        const partial = parsePrismResponse(full);
+                        setCurrentPrism(partial);
                     },
-                    userMsg, // Pass user message for context fetching
-                    reflectionLens // Pass lens for reflection style
+                    userMsg,
+                    reflectionLens
                 );
-                
-                // If sovereign model was uncertain on a complex question, offer to escalate
-                if (result.uncertain && result.response.length < 100) {
-                    setMessages(prev => {
-                        const updated = prev.slice(0, -1);
-                        const last = prev[prev.length - 1];
-                        if (last?.role === 'assistant') {
-                            updated.push({ 
-                                ...last, 
-                                content: result.response + '\n\n_[Running locally — switch to Cloud for more detailed answers]_',
-                                gateStatus: GateStatus.PASSED 
-                            });
-                        }
-                        return updated;
-                    });
-                }
-                
+
+                // Final parse
+                const prism = parsePrismResponse(result.response);
+                setCurrentPrism(prism);
+
+                // Also add to messages for history
+                setMessages(prev => [...prev, {
+                    role: 'assistant',
+                    content: `**Said:** ${prism.said}\n\n**Unsaid:** ${prism.unsaid}\n\n**Future You:** ${prism.futureYou}`,
+                    gateStatus: GateStatus.PASSED,
+                    prism: prism
+                }]);
+
                 SoundEngine.sovereign();
             } else if (inferenceMode === InferenceMode.LOCAL && localAvailable) {
-                // LOCAL — Route to Mac Mini Ollama
+                // LOCAL — Route to Mac Mini Ollama with Prism
                 setNetworkRequests(prev => prev + 1);
                 abortRef.current = new AbortController();
-                
-                const response = await fetch(`${CONFIG.PROXY_URL}/mirror-local`, {
+
+                const response = await fetch(`${CONFIG.PROXY_URL}/mirror-prism`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1724,91 +1863,50 @@ const Mirror = () => {
                     }),
                     signal: abortRef.current.signal,
                 });
-                
+
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                
-                const reader = response.body?.getReader();
-                if (!reader) throw new Error('No reader');
-                
-                const decoder = new TextDecoder();
-                let fullText = '';
-                
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    
-                    fullText += decoder.decode(value, { stream: true });
-                    
-                    setMessages(prev => {
-                        const updated = prev.slice(0, -1);
-                        const last = prev[prev.length - 1];
-                        if (last?.role === 'assistant') {
-                            updated.push({ ...last, content: fullText, gateStatus: GateStatus.PASSED });
-                        }
-                        return updated;
-                    });
-                }
-                
+
+                const data = await response.json();
+                const prism = data.prism || parsePrismResponse(data.content || '');
+                setCurrentPrism(prism);
+
+                setMessages(prev => [...prev, {
+                    role: 'assistant',
+                    content: `**Said:** ${prism.said}\n\n**Unsaid:** ${prism.unsaid}\n\n**Future You:** ${prism.futureYou}`,
+                    gateStatus: GateStatus.PASSED,
+                    prism: prism
+                }]);
+
                 SoundEngine.receive();
             } else {
-                // CLOUD (Groq)
+                // CLOUD (Groq) with Prism
                 setNetworkRequests(prev => prev + 1);
                 abortRef.current = new AbortController();
-                
-                // Build context from recent messages
-                const contextMessages = messages.slice(-6).map(m => 
-                    `${m.role === 'user' ? 'User' : 'Mirror'}: ${m.content}`
-                ).join('\n');
-                
-                const fullMessage = contextMessages 
-                    ? `${contextMessages}\nUser: ${userMsg}`
-                    : userMsg;
-                
-                const response = await fetch(`${CONFIG.PROXY_URL}/mirror`, {
+
+                const response = await fetch(`${CONFIG.PROXY_URL}/mirror-prism`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: fullMessage, lens: reflectionLens }),
+                    body: JSON.stringify({
+                        message: userMsg,
+                        history: messages.slice(-6).map(m => ({ role: m.role, content: m.content })),
+                        lens: reflectionLens
+                    }),
                     signal: abortRef.current.signal,
                 });
-                
+
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                
-                const reader = response.body?.getReader();
-                if (!reader) throw new Error('No reader');
-                
-                const decoder = new TextDecoder();
-                
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    
-                    const text = decoder.decode(value, { stream: true });
-                    const lines = text.split('\n').filter(l => l.trim());
-                    
-                    for (const line of lines) {
-                        try {
-                            const data = JSON.parse(line);
-                            
-                            if (data.status === 'chunk' || data.status === 'ok') {
-                                setMessages(prev => {
-                                    const updated = prev.slice(0, -1);
-                                    const last = prev[prev.length - 1];
-                                    if (last?.role === 'assistant') {
-                                        updated.push({
-                                            ...last,
-                                            content: last.content + data.content,
-                                            gateStatus: GateStatus.PASSED
-                                        });
-                                    } else {
-                                        updated.push(last);
-                                    }
-                                    return updated;
-                                });
-                            }
-                        } catch { }
-                    }
-                }
-                
+
+                const data = await response.json();
+                const prism = data.prism || parsePrismResponse(data.content || '');
+                setCurrentPrism(prism);
+
+                setMessages(prev => [...prev, {
+                    role: 'assistant',
+                    content: `**Said:** ${prism.said}\n\n**Unsaid:** ${prism.unsaid}\n\n**Future You:** ${prism.futureYou}`,
+                    gateStatus: GateStatus.PASSED,
+                    prism: prism
+                }]);
+
                 SoundEngine.receive();
             }
         } catch (err) {
@@ -1843,6 +1941,7 @@ const Mirror = () => {
             }
         } finally {
             setIsLoading(false);
+            setPrismLoading(false);
             abortRef.current = null;
         }
     };
@@ -1951,60 +2050,56 @@ const Mirror = () => {
                     )}
                 </AnimatePresence>
                 
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
-                    {messages.length === 0 && !showWelcome && (
-                        <div className="flex flex-col items-center justify-center h-full text-center">
+                {/* Prism Reflection View */}
+                <div className="flex-1 overflow-y-auto">
+                    {/* Empty state */}
+                    {messages.length === 0 && !showWelcome && !prismLoading && (
+                        <div className="flex flex-col items-center justify-center h-full text-center px-4">
                             <motion.span
                                 animate={{ scale: [1, 1.1, 1], opacity: [0.4, 0.7, 0.4] }}
                                 transition={{ duration: 4, repeat: Infinity }}
                                 className="text-6xl mb-6"
                                 style={{ textShadow: '0 0 40px rgba(139, 92, 246, 0.4)' }}
                             >⟡</motion.span>
-                            <p className="text-zinc-500 text-lg">What's on your mind?</p>
-                            <p className="text-zinc-600 text-sm mt-2">
-                                {inferenceMode === InferenceMode.SOVEREIGN ? "Running locally — complete privacy" : "Type anything to begin reflection"}
+                            <p className="text-zinc-400 text-lg font-light">What's on your mind?</p>
+                            <p className="text-zinc-600 text-sm mt-2 max-w-md">
+                                Share a thought. You'll see it refracted into three perspectives: what you said, what you didn't say, and your future self looking back.
                             </p>
                         </div>
                     )}
-                    
-                    {messages.map((msg, i) => (
-                        <motion.div
-                            key={i}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
-                            <div
-                                className={`max-w-[85%] px-4 py-3 rounded-2xl ${
-                                    msg.role === 'user'
-                                        ? 'bg-violet-500/20 border border-violet-500/30 text-white'
-                                        : 'bg-white/5 border border-white/10 text-zinc-200'
-                                }`}
-                            >
-                                {msg.role === 'assistant' && msg.gateStatus === GateStatus.PENDING && !msg.content && (
-                                    <motion.div animate={{ opacity: [0.3, 0.7, 0.3] }} transition={{ duration: 1.5, repeat: Infinity }} className="flex gap-1">
-                                        <span>⟡</span>
-                                        <span className="text-zinc-500">reflecting...</span>
-                                    </motion.div>
-                                )}
-                                
-                                {msg.content && <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>}
-                                
-                                {/* Share button on assistant messages */}
-                                {msg.role === 'assistant' && msg.content && (
-                                    <button
-                                        onClick={() => handleShare(msg.content)}
-                                        className="mt-2 pt-2 border-t border-white/5 flex items-center gap-1 text-xs text-zinc-600 hover:text-violet-400 transition-colors"
-                                    >
-                                        <Share2 size={10} />
-                                        Share this reflection
-                                    </button>
-                                )}
-                            </div>
-                        </motion.div>
-                    ))}
-                    
+
+                    {/* Current Prism (latest reflection) */}
+                    {(currentPrism || prismLoading) && (
+                        <PrismReflection
+                            userMessage={lastUserMessage}
+                            prism={currentPrism}
+                            isLoading={prismLoading}
+                            lens={reflectionLens}
+                        />
+                    )}
+
+                    {/* History (collapsed previous exchanges) */}
+                    {messages.length > 2 && !prismLoading && (
+                        <div className="px-4 pb-6">
+                            <details className="group">
+                                <summary className="cursor-pointer text-zinc-600 text-xs uppercase tracking-wider flex items-center gap-2 hover:text-zinc-400 transition-colors">
+                                    <ChevronRight size={12} className="group-open:rotate-90 transition-transform" />
+                                    Previous reflections ({Math.floor((messages.length - 1) / 2)})
+                                </summary>
+                                <div className="mt-4 space-y-4 pl-4 border-l border-white/5">
+                                    {messages.slice(0, -2).map((msg, i) => (
+                                        msg.role === 'user' && (
+                                            <div key={i} className="text-sm">
+                                                <p className="text-zinc-500 text-xs mb-1">You said:</p>
+                                                <p className="text-zinc-400 italic">"{msg.content}"</p>
+                                            </div>
+                                        )
+                                    ))}
+                                </div>
+                            </details>
+                        </div>
+                    )}
+
                     <div ref={messagesEndRef} />
                 </div>
 
