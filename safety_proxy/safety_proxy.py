@@ -58,8 +58,26 @@ VOICE_NAME = "Evan"
 
 ALLOWED_ORIGINS = [
     "https://activemirror.ai", "https://www.activemirror.ai",
+    "https://id.activemirror.ai",
     "http://localhost:5173", "http://localhost:3000", "http://localhost:4173",
 ]
+
+# ═══════════════════════════════════════════════════════════════
+# SEED COUNTER — Global counter for MIRROR SEED generations
+# ═══════════════════════════════════════════════════════════════
+
+SEED_COUNTER_PATH = Path.home() / ".mirrordna" / "seed_counter.json"
+
+def _read_seed_counter() -> dict:
+    if SEED_COUNTER_PATH.exists():
+        try:
+            return json.loads(SEED_COUNTER_PATH.read_text())
+        except:
+            pass
+    return {"count": 50, "last_updated": datetime.now(timezone.utc).isoformat()}
+
+def _write_seed_counter(data: dict):
+    SEED_COUNTER_PATH.write_text(json.dumps(data, indent=2))
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(levelname)s | %(message)s')
 logger = logging.getLogger("mirror-judge")
@@ -990,6 +1008,25 @@ async def get_waitlist_stats():
         return {"status": "ok", "total": 0, "sources": {}}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+# ═══════════════════════════════════════════════════════════════
+# SEED COUNTER ENDPOINTS — For id.activemirror.ai
+# ═══════════════════════════════════════════════════════════════
+
+@app.get("/seed-count")
+async def get_seed_count():
+    """Get current global seed generation count."""
+    data = _read_seed_counter()
+    return {"status": "ok", "count": data["count"], "last_updated": data.get("last_updated")}
+
+@app.post("/seed-count/increment")
+async def increment_seed_count():
+    """Increment global seed generation count."""
+    data = _read_seed_counter()
+    data["count"] += 1
+    data["last_updated"] = datetime.now(timezone.utc).isoformat()
+    _write_seed_counter(data)
+    return {"status": "ok", "count": data["count"]}
 
 # ═══════════════════════════════════════════════════════════════
 # MESH STATUS — Show distributed infrastructure state
