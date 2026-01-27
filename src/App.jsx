@@ -26,14 +26,14 @@ export default function App() {
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/trust" element={<Trust />} />
-                <Route path="/mirror" element={<MirrorPage />} />
+                <Route path="/mirror" element={<MirrorAmbient />} />
                 <Route path="/mirror-beta" element={<MirrorWithAuth />} />
                 <Route path="/demo" element={<Demo />} />
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/lab" element={<TestLab />} />
                 <Route path="/hub" element={<Hub />} />
                 <Route path="/confessions" element={<Confessions />} />
-                <Route path="/ambient" element={<MirrorAmbient />} />
+                <Route path="/prism" element={<MirrorPage />} />
                 <Route path="*" element={<NotFound />} />
             </Routes>
         </BrowserRouter>
