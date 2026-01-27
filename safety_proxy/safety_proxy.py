@@ -67,6 +67,8 @@ ALLOWED_ORIGINS = [
 # ═══════════════════════════════════════════════════════════════
 
 SEED_COUNTER_PATH = Path.home() / ".mirrordna" / "seed_counter.json"
+SEEDS_DIR = Path.home() / ".mirrordna" / "seeds"
+SEEDS_DIR.mkdir(parents=True, exist_ok=True)
 
 def _read_seed_counter() -> dict:
     if SEED_COUNTER_PATH.exists():
@@ -1027,6 +1029,65 @@ async def increment_seed_count():
     data["last_updated"] = datetime.now(timezone.utc).isoformat()
     _write_seed_counter(data)
     return {"status": "ok", "count": data["count"]}
+
+# ═══════════════════════════════════════════════════════════════
+# SEED SHARING — Shareable seed URLs for id.activemirror.ai
+# ═══════════════════════════════════════════════════════════════
+
+class SeedCreateRequest(BaseModel):
+    content: str = Field(..., max_length=10000)
+
+@app.post("/seed/create")
+async def create_seed(body: SeedCreateRequest):
+    """Create a shareable seed and return its shortcode."""
+    shortcode = hashlib.sha256(body.content.encode()).hexdigest()[:6]
+    seed_file = SEEDS_DIR / f"{shortcode}.json"
+
+    if seed_file.exists():
+        data = json.loads(seed_file.read_text())
+        return {"status": "ok", "shortcode": shortcode, "url": f"https://id.activemirror.ai/?seed={shortcode}", "existing": True, "views": data.get("views", 0)}
+
+    seed_file.write_text(json.dumps({
+        "content": body.content,
+        "created": datetime.now(timezone.utc).isoformat(),
+        "views": 0
+    }, indent=2))
+
+    # Bump shared counter
+    counter = _read_seed_counter()
+    counter["shared"] = counter.get("shared", 0) + 1
+    _write_seed_counter(counter)
+
+    logger.info(f"⟡ Seed created: {shortcode}")
+    return {"status": "ok", "shortcode": shortcode, "url": f"https://id.activemirror.ai/?seed={shortcode}", "existing": False}
+
+@app.get("/seed/{shortcode}")
+async def get_seed(shortcode: str):
+    """Retrieve a shared seed by shortcode."""
+    if not re.match(r'^[a-f0-9]{6}$', shortcode):
+        return {"status": "error", "message": "Invalid shortcode"}
+
+    seed_file = SEEDS_DIR / f"{shortcode}.json"
+    if not seed_file.exists():
+        return {"status": "error", "message": "Seed not found"}
+
+    data = json.loads(seed_file.read_text())
+    data["views"] += 1
+    seed_file.write_text(json.dumps(data, indent=2))
+
+    return {"status": "ok", "content": data["content"], "views": data["views"], "created": data.get("created")}
+
+@app.get("/stats")
+async def get_stats():
+    """Public stats for social proof display."""
+    counter = _read_seed_counter()
+    shared = sum(1 for _ in SEEDS_DIR.glob("*.json"))
+    return {
+        "status": "ok",
+        "generated": counter.get("count", 0),
+        "shared": shared,
+        "last_updated": counter.get("last_updated")
+    }
 
 # ═══════════════════════════════════════════════════════════════
 # MESH STATUS — Show distributed infrastructure state
