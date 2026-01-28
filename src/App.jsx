@@ -15,6 +15,7 @@ import Hub from './pages/Hub';
 import Confessions from './pages/Confessions';
 import NotFound from './pages/NotFound';
 import MirrorAmbient from './pages/MirrorAmbient';
+import Research from './pages/Research';
 
 export default function App() {
     return (
@@ -34,6 +35,7 @@ export default function App() {
                 <Route path="/hub" element={<Hub />} />
                 <Route path="/confessions" element={<Confessions />} />
                 <Route path="/prism" element={<MirrorPage />} />
+                <Route path="/research" element={<Research />} />
                 <Route path="*" element={<NotFound />} />
             </Routes>
         </BrowserRouter>
