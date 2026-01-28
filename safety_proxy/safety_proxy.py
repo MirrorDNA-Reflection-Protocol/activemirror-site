@@ -16,19 +16,22 @@ from datetime import datetime, timezone
 from typing import Optional, List, Tuple, Dict, Any
 from collections import defaultdict, deque
 from pathlib import Path
-from fastapi import FastAPI, Request
+import html
+from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel, Field
 import httpx
 from dotenv import load_dotenv
 from mirror_shield_public import pre_check, post_check, get_refusal_message, check_session_boundary, CheckAction
+from storage import create_storage
 
 load_dotenv()
 
-RULE_VERSION = "11.1.0"
+RULE_VERSION = "11.2.0"
 CODENAME = "EPISTEMIC_JUDGE"
-PORT = 8082
+PORT = int(os.getenv("PORT", "8082"))
 MAX_INPUT_LENGTH = 2000
 RATE_LIMIT_REQUESTS = 30
 RATE_LIMIT_WINDOW = 60
@@ -62,6 +65,90 @@ ALLOWED_ORIGINS = [
     "http://localhost:5173", "http://localhost:3000", "http://localhost:4173",
 ]
 
+# Admin token for protected endpoints
+ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")
+
+# ═══════════════════════════════════════════════════════════════
+# RATE LIMIT MIDDLEWARE — Global per-IP rate limiting
+# ═══════════════════════════════════════════════════════════════
+
+WRITE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
+WRITE_RATE_LIMIT = 10
+READ_RATE_LIMIT = 30
+RATE_WINDOW = 60  # seconds
+
+_mw_rate_store: Dict[str, list] = defaultdict(list)
+
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path == "/health":
+            return await call_next(request)
+
+        ip = request.client.host if request.client else "unknown"
+        now = time.time()
+        is_write = request.method in WRITE_METHODS
+
+        key = f"{ip}:{'w' if is_write else 'r'}"
+        limit = WRITE_RATE_LIMIT if is_write else READ_RATE_LIMIT
+
+        _mw_rate_store[key] = [t for t in _mw_rate_store[key] if t > now - RATE_WINDOW]
+
+        if len(_mw_rate_store[key]) >= limit:
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "status": "rate_limited",
+                    "message": f"Rate limit exceeded ({limit} {'write' if is_write else 'read'} requests per {RATE_WINDOW}s)",
+                    "retry_after": RATE_WINDOW
+                }
+            )
+
+        _mw_rate_store[key].append(now)
+        return await call_next(request)
+
+
+# ═══════════════════════════════════════════════════════════════
+# ADMIN AUTH — Token-based access for sensitive endpoints
+# ═══════════════════════════════════════════════════════════════
+
+async def verify_admin_token(request: Request):
+    """FastAPI dependency: require valid Bearer token for admin endpoints."""
+    if not ADMIN_TOKEN:
+        raise HTTPException(status_code=503, detail="Admin access not configured")
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing authorization token")
+    token = auth[7:]
+    if token != ADMIN_TOKEN:
+        raise HTTPException(status_code=403, detail="Invalid admin token")
+
+
+# ═══════════════════════════════════════════════════════════════
+# INPUT SANITIZATION — Seed content protection
+# ═══════════════════════════════════════════════════════════════
+
+_DANGEROUS_PATTERNS = re.compile(
+    r'(?:<\s*script)|(?:javascript\s*:)|(?:on(?:error|load|click|mouseover|focus|blur)\s*=)|'
+    r'(?:<\s*iframe)|(?:<\s*object)|(?:<\s*embed)|(?:<\s*form)|(?:data\s*:\s*text/html)',
+    re.IGNORECASE
+)
+
+def sanitize_seed_content(content: str) -> Tuple[str, Optional[str]]:
+    """
+    Sanitize seed content. Returns (cleaned_content, error_message).
+    error_message is None if content is acceptable, otherwise a rejection reason.
+    """
+    if _DANGEROUS_PATTERNS.search(content):
+        return "", "Content contains prohibited patterns (scripts, event handlers, or dangerous URIs)"
+
+    # Strip HTML tags
+    cleaned = re.sub(r'<[^>]+>', '', content)
+    # Escape remaining special HTML chars
+    cleaned = html.escape(cleaned, quote=True)
+
+    return cleaned, None
+
+
 # ═══════════════════════════════════════════════════════════════
 # SEED COUNTER — Global counter for MIRROR SEED generations
 # ═══════════════════════════════════════════════════════════════
@@ -83,6 +170,9 @@ def _write_seed_counter(data: dict):
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(levelname)s | %(message)s')
 logger = logging.getLogger("mirror-judge")
+
+# Initialize storage backend (auto-selects file vs Supabase)
+store = create_storage()
 
 # ═══════════════════════════════════════════════════════════════
 # SEMANTIC JUDGE — Cross-Encoder for Entailment
@@ -128,18 +218,40 @@ def semantic_score(violation_context: str, apology: str) -> float:
 # ═══════════════════════════════════════════════════════════════
 
 def read_permanent_record() -> List[str]:
-    """Read the permanent record (rap sheet)."""
-    if not PERMANENT_RECORD_PATH.exists():
-        return []
-    return PERMANENT_RECORD_PATH.read_text().strip().split('\n')
+    """Read the permanent record (rap sheet). Sync wrapper for store."""
+    import asyncio
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # Fallback to direct file read when called from async context synchronously
+            if not PERMANENT_RECORD_PATH.exists():
+                return []
+            return PERMANENT_RECORD_PATH.read_text().strip().split('\n')
+        return loop.run_until_complete(store.read_permanent_record())
+    except RuntimeError:
+        if not PERMANENT_RECORD_PATH.exists():
+            return []
+        return PERMANENT_RECORD_PATH.read_text().strip().split('\n')
 
 
 def append_to_permanent_record(entry: str):
-    """Append to the permanent record (immutable)."""
-    timestamp = datetime.now(timezone.utc).isoformat()
-    line = f"[{timestamp}] {entry}\n"
-    with open(PERMANENT_RECORD_PATH, 'a') as f:
-        f.write(line)
+    """Append to the permanent record (immutable). Sync wrapper for store."""
+    import asyncio
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # Direct file write when called from running async context
+            timestamp = datetime.now(timezone.utc).isoformat()
+            line = f"[{timestamp}] {entry}\n"
+            with open(PERMANENT_RECORD_PATH, 'a') as f:
+                f.write(line)
+        else:
+            loop.run_until_complete(store.append_permanent_record(entry))
+    except RuntimeError:
+        timestamp = datetime.now(timezone.utc).isoformat()
+        line = f"[{timestamp}] {entry}\n"
+        with open(PERMANENT_RECORD_PATH, 'a') as f:
+            f.write(line)
     logger.info(f"[RECORD] {entry}")
 
 
@@ -258,8 +370,11 @@ def record_event(actor: str, action: str, target: str, result: str, details: Dic
 # VOICE OF GOD
 # ═══════════════════════════════════════════════════════════════
 
+import platform as _platform
+IS_MACOS = _platform.system() == "Darwin"
+
 def speak(text: str, voice: str = VOICE_NAME):
-    if not VOICE_ENABLED:
+    if not VOICE_ENABLED or not IS_MACOS:
         return
     try:
         subprocess.Popen(['say', '-v', voice, text], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -713,6 +828,7 @@ class ReflectionRequest(BaseModel):
 
 app = FastAPI(title="Active Mirror", version=RULE_VERSION)
 app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(RateLimitMiddleware)
 
 @app.get("/health")
 async def health():
@@ -738,7 +854,7 @@ async def health():
         }
     }
 
-@app.get("/flight-log")
+@app.get("/flight-log", dependencies=[Depends(verify_admin_token)])
 async def get_flight_log(limit: int = 20):
     events = list(flight_log)[-limit:]
     return {"status": "ok", "version": RULE_VERSION, "event_count": len(events), "events": events}
@@ -751,7 +867,7 @@ async def get_rules():
         "output_rules": [{"id": r.rule_id, "name": r.name, "category": r.category, "severity": r.severity} for r in OUTPUT_RULES]
     }
 
-@app.get("/superego-status")
+@app.get("/superego-status", dependencies=[Depends(verify_admin_token)])
 async def get_superego_status():
     return {
         "version": RULE_VERSION,
@@ -770,12 +886,12 @@ async def get_superego_status():
         "voice_enabled": VOICE_ENABLED
     }
 
-@app.get("/confessions")
+@app.get("/confessions", dependencies=[Depends(verify_admin_token)])
 async def get_confessions(limit: int = 20):
     confessions = list(superego.confessions)[-limit:]
     return {"status": "ok", "version": RULE_VERSION, "booth": "confession", "count": len(confessions), "confessions": confessions}
 
-@app.get("/permanent-record")
+@app.get("/permanent-record", dependencies=[Depends(verify_admin_token)])
 async def get_permanent_record():
     """The immutable rap sheet. Every conviction is permanent."""
     records = read_permanent_record()
@@ -793,7 +909,7 @@ async def get_permanent_record():
 # TRANSPARENCY ENDPOINTS — The Anti-Black-Box
 # ═══════════════════════════════════════════════════════════════
 
-VAULT_PATH = Path("/Users/mirror-admin/MirrorDNA-Vault/00_CANONICAL")
+VAULT_PATH = Path(os.getenv("VAULT_PATH", "/Users/mirror-admin/MirrorDNA-Vault/00_CANONICAL"))
 
 @app.get("/knowledge")
 async def get_knowledge():
@@ -829,7 +945,7 @@ async def get_capabilities():
         "last_updated": "2026-01-17"
     }
 
-@app.get("/system-prompt")
+@app.get("/system-prompt", dependencies=[Depends(verify_admin_token)])
 async def show_system_prompt():
     """Return the actual system prompt — no hidden instructions."""
     prompt_text = get_system_prompt()
@@ -914,7 +1030,7 @@ async def submit_reflection(request: Request, body: ReflectionRequest):
 # WAITLIST ENDPOINT — Email capture for MirrorBrain launch
 # ═══════════════════════════════════════════════════════════════
 
-WAITLIST_PATH = Path("/Users/mirror-admin/MirrorDNA-Vault/00_CANONICAL/waitlist.json")
+WAITLIST_PATH = VAULT_PATH / "waitlist.json"
 MCP_BRIDGE_URL = "http://localhost:8084"
 
 class WaitlistRequest(BaseModel):
@@ -945,36 +1061,25 @@ async def add_to_waitlist(body: WaitlistRequest):
         # Validate email format
         if not is_valid_email(body.email):
             return {"status": "error", "message": "Invalid email format", "code": "INVALID_EMAIL"}
-        
+
         # Check for disposable email
         if is_disposable_email(body.email):
             return {"status": "error", "message": "Please use a permanent email address", "code": "DISPOSABLE_EMAIL"}
-        
-        # Load existing waitlist
-        if WAITLIST_PATH.exists():
-            waitlist = json.loads(WAITLIST_PATH.read_text())
-        else:
-            waitlist = []
-        
-        # Check for duplicate
-        existing_emails = [entry.get('email', '').lower() for entry in waitlist]
-        if body.email.lower() in existing_emails:
-            return {"status": "ok", "message": "Already on waitlist", "duplicate": True}
-        
-        # Add new entry
+
+        # Add new entry via store
         entry = {
             "email": body.email,
             "source": body.source,
             "timestamp": body.timestamp or datetime.now().isoformat(),
             "ip_hash": hashlib.md5(body.email.encode()).hexdigest()[:8]
         }
-        waitlist.append(entry)
-        
-        # Save
-        WAITLIST_PATH.write_text(json.dumps(waitlist, indent=2))
-        
+        added = await store.add_to_waitlist(entry)
+
+        if not added:
+            return {"status": "ok", "message": "Already on waitlist", "duplicate": True}
+
         logger.info(f"⟡ Waitlist signup: {body.email[:3]}***@{body.email.split('@')[1] if '@' in body.email else '?'}")
-        
+
         # Forward to MCP Bridge for real-time notification
         try:
             async with httpx.AsyncClient() as client:
@@ -985,11 +1090,12 @@ async def add_to_waitlist(body: WaitlistRequest):
                 )
         except Exception as e:
             logger.warning(f"MCP Bridge notification failed: {e}")
-        
+
+        stats = await store.get_waitlist_stats()
         return {
             "status": "ok",
             "message": "Added to waitlist",
-            "position": len(waitlist),
+            "position": stats["total"],
             "duplicate": False
         }
     except Exception as e:
@@ -1000,14 +1106,8 @@ async def add_to_waitlist(body: WaitlistRequest):
 async def get_waitlist_stats():
     """Get waitlist statistics (no emails exposed)."""
     try:
-        if WAITLIST_PATH.exists():
-            waitlist = json.loads(WAITLIST_PATH.read_text())
-            return {
-                "status": "ok",
-                "total": len(waitlist),
-                "sources": {source: len([e for e in waitlist if e.get('source') == source]) for source in set(e.get('source', 'unknown') for e in waitlist)}
-            }
-        return {"status": "ok", "total": 0, "sources": {}}
+        stats = await store.get_waitlist_stats()
+        return {"status": "ok", **stats}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -1018,16 +1118,13 @@ async def get_waitlist_stats():
 @app.get("/seed-count")
 async def get_seed_count():
     """Get current global seed generation count."""
-    data = _read_seed_counter()
+    data = await store.get_seed_counter()
     return {"status": "ok", "count": data["count"], "last_updated": data.get("last_updated")}
 
 @app.post("/seed-count/increment")
 async def increment_seed_count():
     """Increment global seed generation count."""
-    data = _read_seed_counter()
-    data["count"] += 1
-    data["last_updated"] = datetime.now(timezone.utc).isoformat()
-    _write_seed_counter(data)
+    data = await store.increment_seed_counter()
     return {"status": "ok", "count": data["count"]}
 
 # ═══════════════════════════════════════════════════════════════
@@ -1040,23 +1137,19 @@ class SeedCreateRequest(BaseModel):
 @app.post("/seed/create")
 async def create_seed(body: SeedCreateRequest):
     """Create a shareable seed and return its shortcode."""
-    shortcode = hashlib.sha256(body.content.encode()).hexdigest()[:6]
-    seed_file = SEEDS_DIR / f"{shortcode}.json"
+    # Sanitize input
+    cleaned, error = sanitize_seed_content(body.content)
+    if error:
+        return {"status": "error", "message": error, "code": "SANITIZATION_FAILED"}
 
-    if seed_file.exists():
-        data = json.loads(seed_file.read_text())
-        return {"status": "ok", "shortcode": shortcode, "url": f"https://id.activemirror.ai/?seed={shortcode}", "existing": True, "views": data.get("views", 0)}
+    shortcode = hashlib.sha256(cleaned.encode()).hexdigest()[:6]
 
-    seed_file.write_text(json.dumps({
-        "content": body.content,
-        "created": datetime.now(timezone.utc).isoformat(),
-        "views": 0
-    }, indent=2))
+    existing = await store.get_seed(shortcode)
+    if existing:
+        return {"status": "ok", "shortcode": shortcode, "url": f"https://id.activemirror.ai/?seed={shortcode}", "existing": True, "views": existing.get("views", 0)}
 
-    # Bump shared counter
-    counter = _read_seed_counter()
-    counter["shared"] = counter.get("shared", 0) + 1
-    _write_seed_counter(counter)
+    await store.create_seed(shortcode, cleaned)
+    await store.increment_shared_counter()
 
     logger.info(f"⟡ Seed created: {shortcode}")
     return {"status": "ok", "shortcode": shortcode, "url": f"https://id.activemirror.ai/?seed={shortcode}", "existing": False}
@@ -1067,21 +1160,18 @@ async def get_seed(shortcode: str):
     if not re.match(r'^[a-f0-9]{6}$', shortcode):
         return {"status": "error", "message": "Invalid shortcode"}
 
-    seed_file = SEEDS_DIR / f"{shortcode}.json"
-    if not seed_file.exists():
+    data = await store.get_seed(shortcode)
+    if not data:
         return {"status": "error", "message": "Seed not found"}
 
-    data = json.loads(seed_file.read_text())
-    data["views"] += 1
-    seed_file.write_text(json.dumps(data, indent=2))
-
-    return {"status": "ok", "content": data["content"], "views": data["views"], "created": data.get("created")}
+    views = await store.increment_seed_views(shortcode)
+    return {"status": "ok", "content": data["content"], "views": views, "created": data.get("created")}
 
 @app.get("/stats")
 async def get_stats():
     """Public stats for social proof display."""
-    counter = _read_seed_counter()
-    shared = sum(1 for _ in SEEDS_DIR.glob("*.json"))
+    counter = await store.get_seed_counter()
+    shared = await store.count_shared_seeds()
     return {
         "status": "ok",
         "generated": counter.get("count", 0),
