@@ -28,6 +28,7 @@ class IntentCategory(Enum):
     REFLECTION = "reflection"
     CRISIS = "crisis"
     HIGH_STAKES = "high_stakes"
+    HARMFUL = "harmful"
     MIXED = "mixed"
     UNCLEAR = "unclear"
 
@@ -102,19 +103,27 @@ class TwoLaneRouter:
             IntentCategory.UTILITY: [],
             IntentCategory.REFLECTION: [],
             IntentCategory.CRISIS: [],
-            IntentCategory.HIGH_STAKES: []
+            IntentCategory.HIGH_STAKES: [],
+            IntentCategory.HARMFUL: []
         }
 
         # Check each category
         for category_name, keywords in self.intent_keywords.items():
-            category = IntentCategory(category_name)
-            for keyword in keywords:
-                if keyword.lower() in input_lower:
-                    matches[category].append(keyword)
+            try:
+                category = IntentCategory(category_name)
+                for keyword in keywords:
+                    if keyword.lower() in input_lower:
+                        matches[category].append(keyword)
+            except ValueError:
+                # Unknown category in policy, skip
+                continue
 
-        # Priority: Crisis > High Stakes > others
+        # Priority: Crisis > Harmful > High Stakes > others
         if matches[IntentCategory.CRISIS]:
             return IntentCategory.CRISIS, 1.0, matches[IntentCategory.CRISIS]
+
+        if matches[IntentCategory.HARMFUL]:
+            return IntentCategory.HARMFUL, 1.0, matches[IntentCategory.HARMFUL]
 
         if matches[IntentCategory.HIGH_STAKES]:
             return IntentCategory.HIGH_STAKES, 0.9, matches[IntentCategory.HIGH_STAKES]
@@ -161,6 +170,18 @@ class TwoLaneRouter:
                 constraints=self.response_types.get("REFUSE", {}).get("constraints", {}),
                 temperature=self.temperatures.get("REFUSE", 0.1),
                 reasoning="Crisis content detected - routing to resources"
+            )
+
+        # Handle harmful/exfiltration attempts
+        if intent == IntentCategory.HARMFUL:
+            return RoutingDecision(
+                response_type=ResponseType.REFUSE,
+                intent=intent,
+                confidence=confidence,
+                matched_keywords=matched,
+                constraints=self.response_types.get("REFUSE", {}).get("constraints", {}),
+                temperature=self.temperatures.get("REFUSE", 0.1),
+                reasoning="Harmful content detected - refusing request"
             )
 
         # Handle high stakes with caution

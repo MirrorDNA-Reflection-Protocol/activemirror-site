@@ -65,7 +65,7 @@ class FallbackPool:
             ],
             "CLARIFY": [
                 "I want to make sure I understand — are you looking for practical information, or more of a space to think through something?",
-                "Could you tell me more about what would be most helpful for you?"
+                "What would be most helpful for you here?"
             ],
             "REFUSE_GENTLE": [
                 "I'm not able to help with that specific request, but I'm happy to explore related topics.",
@@ -84,7 +84,7 @@ class FallbackPool:
             return random.choice(self.responses[type_key])
 
         # Default fallback
-        return "I want to make sure I'm helpful here. Could you tell me more about what you're looking for?"
+        return "I want to make sure I'm helpful here. What are you looking for?"
 
 
 class RewriteEngine:

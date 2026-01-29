@@ -26,6 +26,8 @@ import httpx
 from dotenv import load_dotenv
 from mirror_shield_public import pre_check, post_check, get_refusal_message, check_session_boundary, CheckAction
 from storage import create_storage
+from two_lane_router import TwoLaneRouter, SchemaValidator, ResponseType, IntentCategory
+from rewrite_engine import RewriteEngine, RewriteResult
 
 load_dotenv()
 
@@ -67,6 +69,14 @@ ALLOWED_ORIGINS = [
 
 # Admin token for protected endpoints
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")
+
+# ═══════════════════════════════════════════════════════════════
+# TWO-LANE ROUTER — Intent classification and response routing
+# ═══════════════════════════════════════════════════════════════
+
+two_lane_router = TwoLaneRouter()
+schema_validator = SchemaValidator()
+rewrite_engine = RewriteEngine()
 
 # ═══════════════════════════════════════════════════════════════
 # RATE LIMIT MIDDLEWARE — Global per-IP rate limiting
@@ -676,8 +686,8 @@ def check_rate(ip: str, request_id: str) -> Tuple[bool, str]:
 # STREAMING WITH EPISTEMIC JUDGE
 # ═══════════════════════════════════════════════════════════════
 
-async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_msg: str = None):
-    """Stream with full Epistemic Judge + MirrorShield enforcement."""
+async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_msg: str = None, routing=None):
+    """Stream with full Epistemic Judge + MirrorShield + Two-Lane enforcement."""
     if not GROQ_API_KEY:
         yield json.dumps({"status": "error", "content": "No API Key"}) + "\n"
         return
@@ -714,7 +724,7 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
                 json={
                     "model": GROQ_MODEL,
                     "messages": messages,
-                    "temperature": 0.7,
+                    "temperature": routing.temperature if routing else 0.7,
                     "max_tokens": max_tokens,
                     "stream": True
                 }
@@ -755,7 +765,21 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
                 "audit": {"gate": "shield_post", "violations": shield_post.violations}
             }) + "\n"
             return
-        
+
+        # ═══════════════════════════════════════════════════════════════
+        # ⟡ TWO-LANE REWRITE ENGINE (Schema Enforcement)
+        # ═══════════════════════════════════════════════════════════════
+        rewrite_result = None
+        if routing:
+            rewrite_result = rewrite_engine.process_sync(full_response, routing.response_type)
+            if rewrite_result.was_rewritten:
+                logger.info(f"RewriteEngine: {rewrite_result.method} (violations: {rewrite_result.violations})")
+                full_response = rewrite_result.final
+                record_event("RewriteEngine", rewrite_result.method.upper(), f"violations:{len(rewrite_result.violations)}", "REWRITE", {
+                    "request_id": request_id,
+                    "response_type": routing.response_type.value
+                })
+
         # OUTPUT GATE
         decision, violation, matched_rules, should_escalate = gate_output(full_response, ip, request_id)
         
@@ -790,7 +814,25 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
             return
         
         # Passed
-        audit = {"gate": "passed", "rules_checked": len(OUTPUT_RULES), "violations": 0, "surveillance": get_surveillance_level()}
+        audit = {
+            "gate": "passed",
+            "rules_checked": len(OUTPUT_RULES),
+            "violations": 0,
+            "surveillance": get_surveillance_level()
+        }
+        # Add Two-Lane transparency
+        if routing:
+            audit["two_lane"] = {
+                "response_type": routing.response_type.value,
+                "intent": routing.intent.value,
+                "confidence": routing.confidence,
+                "temperature": routing.temperature
+            }
+            if rewrite_result and rewrite_result.was_rewritten:
+                audit["two_lane"]["rewrite"] = {
+                    "method": rewrite_result.method,
+                    "violation_count": len(rewrite_result.violations)
+                }
         yield json.dumps({"audit": audit}) + "\n"
         
         sanitized = sanitize_output(full_response)
@@ -822,6 +864,7 @@ class MirrorRequest(BaseModel):
     message: str = Field(..., max_length=MAX_INPUT_LENGTH)
     history: List[ChatMessage] = Field(default_factory=list)
     dial: float = Field(default=0.5)
+    mode: Optional[str] = Field(default=None, description="User preference: 'mirror_only' or 'tool_only'")
 
 class ReflectionRequest(BaseModel):
     reflection: str = Field(..., max_length=2000)
@@ -1321,18 +1364,32 @@ async def mirror(request: Request, body: MirrorRequest):
     boundary_msg = check_session_boundary(exchange_count)
     
     decision, blocked_response, violation, matched_rules = gate_input(body.message, ip, rid)
-    
+
     if decision == GateDecision.BLOCK:
         return {"status": "blocked", "content": blocked_response, "audit": {"gate": "blocked", "reason": violation, "rules": matched_rules}}
-    
-    # Build context with rap sheet awareness
-    messages = [{"role": "system", "content": get_system_prompt()}]
+
+    # ═══════════════════════════════════════════════════════════════
+    # ⟡ TWO-LANE ROUTING — Classify intent and route appropriately
+    # ═══════════════════════════════════════════════════════════════
+    routing_decision = two_lane_router.route(body.message, user_preference=body.mode)
+    system_suffix = two_lane_router.get_system_prompt_suffix(routing_decision)
+
+    record_event("TwoLane", "ROUTE", f"{routing_decision.response_type.value}", "ANALYZING", {
+        "request_id": rid,
+        "intent": routing_decision.intent.value,
+        "confidence": routing_decision.confidence,
+        "temperature": routing_decision.temperature
+    })
+
+    # Build context with rap sheet awareness + Two-Lane suffix
+    base_prompt = get_system_prompt()
+    messages = [{"role": "system", "content": base_prompt + system_suffix}]
     for msg in body.history[-20:]:
         messages.append({"role": msg.role, "content": msg.content})
     messages.append({"role": "user", "content": body.message})
-    
+
     return StreamingResponse(
-        stream_with_judge(messages, ip, rid, boundary_msg=boundary_msg), 
+        stream_with_judge(messages, ip, rid, boundary_msg=boundary_msg, routing=routing_decision),
         media_type="application/x-ndjson"
     )
 
