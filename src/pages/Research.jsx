@@ -259,7 +259,7 @@ export default function Research() {
                 <pre className="text-xs text-gray-400 font-mono whitespace-pre-wrap">
 {`@software{activemirror2025,
   author = {Desai, Paul},
-  title = {Active MirrorOS: Sovereign AI Operating System},
+  title = {ActiveMirrorOS: Sovereign AI Operating System},
   year = {2025},
   publisher = {N1 Intelligence},
   url = {https://activemirror.ai}
@@ -269,7 +269,7 @@ export default function Research() {
                   <CopyButton
                     text={`@software{activemirror2025,
   author = {Desai, Paul},
-  title = {Active MirrorOS: Sovereign AI Operating System},
+  title = {ActiveMirrorOS: Sovereign AI Operating System},
   year = {2025},
   publisher = {N1 Intelligence},
   url = {https://activemirror.ai}

@@ -20,7 +20,7 @@ export default function Legal() {
                 <section id="terms" className="mb-12 space-y-4">
                     <h2 className="flex items-center gap-2 text-white font-medium"><Scale size={18} /> Terms of Service</h2>
                     <p className="text-sm leading-relaxed">
-                        Active MirrorOS is a local-first intelligence protocol. By initializing the system, you acknowledge that:
+                        ActiveMirrorOS is a local-first intelligence protocol. By initializing the system, you acknowledge that:
                         1. You are the sole controller of the hardware and data.
                         2. No telemetry is sent to the cloud without explicit consent.
                         3. The software is provided "AS IS", without warranty of any kind.

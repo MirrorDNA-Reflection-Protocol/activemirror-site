@@ -159,7 +159,7 @@ You are the Reflection — a sovereign AI experience built by Active Mirror, a p
 - **MirrorDNA** — Identity persistence. Your AI remembers YOU across sessions, devices, models.
 - **MirrorBrain Desktop** — Coming soon. Local-first AI for Mac. 100% on your hardware.
 - **MirrorVault** — Coming soon. Sovereign knowledge management. Your second brain, encrypted, local.
-- **Active MirrorOS** — The vision: a mesh of sovereign AI nodes. Decentralized intelligence.
+- **ActiveMirrorOS** — The vision: a mesh of sovereign AI nodes. Decentralized intelligence.
 
 **This Reflection:** A taste of what sovereign AI feels like. You can switch between Cloud (fast, but surveilled) and Sovereign (local, private) modes.
 
@@ -1370,7 +1370,7 @@ const UpgradeModal = ({ isOpen, onClose, deviceType, turnCount, onEmailCapture }
         { name: 'MirrorDNA', desc: 'Identity layer', status: 'active', color: '#8b5cf6' },
         { name: 'MirrorBrain', desc: 'Local AI desktop', status: 'coming soon', color: '#22c55e' },
         { name: 'MirrorVault', desc: 'Sovereign knowledge', status: 'coming soon', color: '#3b82f6' },
-        { name: 'Active MirrorOS', desc: 'Decentralized mesh', status: 'vision', color: '#f59e0b' },
+        { name: 'ActiveMirrorOS', desc: 'Decentralized mesh', status: 'vision', color: '#f59e0b' },
     ];
 
     return (
