@@ -21,39 +21,69 @@ import {
     Zap, BookOpen, Languages, Code, Lightbulb, Shield, Database, FileDown,
     ChevronDown, Cloud, Cpu, Monitor, Brain, Trash, Info
 } from 'lucide-react';
-import ConsentGate from '../components/ConsentGate';
-import HeartbeatGlyph from '../components/HeartbeatGlyph';
 
 const PROXY_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8082'
     : 'https://proxy.activemirror.ai';
 
-// MODEL OPTIONS - kept for API routing
+// ============================================
+// MODEL OPTIONS
 // ============================================
 const MODEL_OPTIONS = [
-    { id: 'groq', name: 'Llama 3.3 70B', provider: 'Groq', icon: '⚡' },
-    { id: 'browser', name: 'Phi-3', provider: 'WebLLM', icon: '🧠' },
-    { id: 'sovereign', name: 'Qwen 2.5 7B', provider: 'Mac Mini M4', icon: '🔒' }
+    {
+        id: 'groq',
+        name: 'Llama 3.3 70B',
+        provider: 'Groq',
+        description: 'Fast & free, great for most tasks',
+        tier: 'fast_free',
+        icon: '⚡',
+        badge: 'Recommended'
+    },
+    {
+        id: 'deepseek',
+        name: 'DeepSeek V3',
+        provider: 'DeepSeek',
+        description: 'Best reasoning, very affordable',
+        tier: 'budget',
+        icon: '🧠',
+        badge: 'Smartest'
+    },
+    {
+        id: 'mistral',
+        name: 'Mistral Large',
+        provider: 'Mistral',
+        description: 'European, fast function calling',
+        tier: 'budget',
+        icon: '🇪🇺',
+        badge: null
+    },
+    {
+        id: 'gpt4o',
+        name: 'GPT-4o Mini',
+        provider: 'OpenAI',
+        description: 'Premium quality, costs more',
+        tier: 'frontier',
+        icon: '✨',
+        badge: 'Premium'
+    },
+    {
+        id: 'local',
+        name: 'Local (Ollama)',
+        provider: 'Your Device',
+        description: '100% private, runs on your hardware',
+        tier: 'sovereign',
+        icon: '🔒',
+        badge: 'Private'
+    }
 ];
 
 // ============================================
-// INFERENCE TIERS (each tier = one model, simpler UX)
+// INFERENCE TIERS
 // ============================================
 const INFERENCE_TIERS = [
-    { id: 'hosted', name: 'Hosted', model: 'Intelligent Router', icon: Cloud, desc: 'Optimizes model for your query', privacy: 'Proactively selects best brain (Groq, DeepSeek, or Mistral).' },
-    { id: 'browser', name: 'Browser', model: 'Phi-3', icon: Cpu, desc: 'Runs in your browser', privacy: '100% private. Downloads ~2GB model once.' },
-    { id: 'sovereign', name: 'Mac Mini M4', model: 'Qwen 2.5 7B', icon: Monitor, desc: 'Our local hardware', privacy: 'Try local AI. See what sovereign feels like.' }
-];
-
-// ============================================
-// REFLECTIVE PROMPTS (occasionally inject introspection)
-// ============================================
-const REFLECTIVE_PROMPTS = [
-    "Before I answer — what's driving that question?",
-    "Interesting. What would change if this were true?",
-    "I could answer directly, but I'm curious — what do you think?",
-    "Let me reflect that back: you're really asking about...",
-    "That's a surface question. What's underneath it?"
+    { id: 'hosted', name: 'Hosted', icon: Cloud, desc: 'Our servers (fastest)', privacy: 'Processed on MirrorDNA servers. No data stored.' },
+    { id: 'browser', name: 'Browser', icon: Cpu, desc: 'Your browser (~2GB)', privacy: 'Runs entirely in your browser. Nothing leaves your device.' },
+    { id: 'desktop', name: 'Desktop', icon: Monitor, desc: 'Your Mac (Ollama)', privacy: 'Runs on your computer. Complete sovereignty.' }
 ];
 
 // ============================================
@@ -206,12 +236,7 @@ const emotionAtmospheres = {
     hope: { primary: '#10b981', secondary: '#06b6d4', glow: 'rgba(16, 185, 129, 0.25)' },
     calm: { primary: '#06b6d4', secondary: '#8b5cf6', glow: 'rgba(6, 182, 212, 0.25)' },
     curiosity: { primary: '#f59e0b', secondary: '#ec4899', glow: 'rgba(245, 158, 11, 0.25)' },
-    neutral: { primary: '#8b5cf6', secondary: '#06b6d4', glow: 'rgba(139, 92, 246, 0.25)' },
-    // Astrocyte Resonance
-    focus: { primary: '#22d3ee', secondary: '#3b82f6', glow: 'rgba(34, 211, 238, 0.25)' }, // Cyan/Blue
-    flow: { primary: '#a855f7', secondary: '#ec4899', glow: 'rgba(168, 85, 247, 0.25)' },  // Purple/Pink
-    relief: { primary: '#10b981', secondary: '#06b6d4', glow: 'rgba(16, 185, 129, 0.25)' }, // Green/Teal
-    surge: { primary: '#f59e0b', secondary: '#f97316', glow: 'rgba(245, 158, 11, 0.25)' }   // Amber/Orange
+    neutral: { primary: '#8b5cf6', secondary: '#06b6d4', glow: 'rgba(139, 92, 246, 0.25)' }
 };
 
 const getTimeAtmosphere = () => {
@@ -281,11 +306,6 @@ const MessageBubble = ({ message, atmosphere, onSpeak, voiceEnabled }) => {
                         <div className="flex items-center gap-2">
                             <span style={{ color: atmosphere.primary }} className="text-sm">⟡</span>
                             <span className="text-white/40 text-xs">Mirror</span>
-                            {message.model && (
-                                <span className="text-white/20 text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10">
-                                    via {message.model}
-                                </span>
-                            )}
                         </div>
                         {voiceEnabled && message.content && !message.isStreaming && (
                             <button
@@ -460,11 +480,8 @@ const SettingsModal = ({ isOpen, onClose, memory, setMemory, voiceEnabled, setVo
 // MAIN COMPONENT
 // ============================================
 const MirrorAmbient = () => {
-    const [hasConsented, setHasConsented] = useState(false);
-    const [routingInfo, setRoutingInfo] = useState(null);
-    const [atmosphereKey, setAtmosphereKey] = useState('calm');
     const [timeAtmosphere] = useState(getTimeAtmosphere);
-    const [baseAtmosphere, setBaseAtmosphere] = useState(emotionAtmospheres.calm);
+    const [emotionAtmosphere, setEmotionAtmosphere] = useState(emotionAtmospheres.neutral);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -498,9 +515,9 @@ const MirrorAmbient = () => {
 
     // Blend atmospheres
     const atmosphere = useMemo(() => ({
-        ...baseAtmosphere,
+        ...emotionAtmosphere,
         phase: timeAtmosphere.phase
-    }), [baseAtmosphere, timeAtmosphere]);
+    }), [emotionAtmosphere, timeAtmosphere]);
 
     // Initialize speech recognition
     useEffect(() => {
@@ -575,7 +592,7 @@ const MirrorAmbient = () => {
     useEffect(() => {
         if (input.length > 10) {
             const emotion = analyzeSentiment(input);
-            setBaseAtmosphere(emotionAtmospheres[emotion]);
+            setEmotionAtmosphere(emotionAtmospheres[emotion]);
         }
     }, [input]);
 
@@ -658,7 +675,7 @@ const MirrorAmbient = () => {
 
         // Detect emotion
         const emotion = analyzeSentiment(text);
-        setBaseAtmosphere(emotionAtmospheres[emotion]);
+        setEmotionAtmosphere(emotionAtmospheres[emotion]);
 
         // Add user message
         const userMessage = { role: 'user', content: text };
@@ -732,35 +749,11 @@ const MirrorAmbient = () => {
                 for (const line of lines) {
                     try {
                         const data = JSON.parse(line);
-
-                        // Handle model routing info
-                        if (data.status === 'routing' && data.model_info) {
-                            setRoutingInfo(data.model_info);
-                            if (data.model_info.atmosphere && emotionAtmospheres[data.model_info.atmosphere]) {
-                                setAtmosphereKey(data.model_info.atmosphere);
-                                setBaseAtmosphere(emotionAtmospheres[data.model_info.atmosphere]);
-                            }
-                            setMessages(prev => {
-                                const updated = [...prev];
-                                updated[updated.length - 1] = {
-                                    role: 'assistant',
-                                    content: '',
-                                    isStreaming: true,
-                                    model: data.model_info.model,
-                                    provider: data.model_info.provider,
-                                    reasoning: data.model_info.reasoning,
-                                    atmosphere: data.model_info.atmosphere
-                                };
-                                return updated;
-                            });
-                        }
-
                         if (data.status === 'chunk' && data.content) {
                             fullContent += data.content;
                             setMessages(prev => {
                                 const updated = [...prev];
                                 updated[updated.length - 1] = {
-                                    ...updated[updated.length - 1],
                                     role: 'assistant',
                                     content: fullContent,
                                     isStreaming: true
@@ -771,11 +764,9 @@ const MirrorAmbient = () => {
                             setMessages(prev => {
                                 const updated = [...prev];
                                 updated[updated.length - 1] = {
-                                    ...updated[updated.length - 1],
                                     role: 'assistant',
                                     content: fullContent || data.response || '',
-                                    isStreaming: false,
-                                    model_used: data.model_used
+                                    isStreaming: false
                                 };
                                 return updated;
                             });
@@ -871,39 +862,8 @@ const MirrorAmbient = () => {
         return `${timeGreeting}!`;
     };
 
-    if (!hasConsented) {
-        return <ConsentGate onConsent={() => setHasConsented(true)} />;
-    }
-
     return (
         <div className="fixed inset-0 bg-black flex flex-col" style={{ height: '100dvh' }}>
-            {/* Strategy Panel Overlay */}
-            <AnimatePresence>
-                {routingInfo && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md flex items-center gap-3 cursor-pointer group hover:bg-white/10 transition-colors"
-                        onClick={() => setRoutingInfo(null)} // Toggle off in this demo or expand
-                    >
-                        <Zap size={14} className="text-amber-400" />
-                        <span className="text-[10px] uppercase tracking-widest font-medium opacity-60">
-                            Strategy: {routingInfo.model}
-                        </span>
-                        <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-64 p-3 rounded-xl bg-[#0a0a0c] border border-white/10 shadow-2xl opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all pointer-events-none">
-                            <p className="text-[10px] text-white/40 leading-relaxed italic">
-                                "{routingInfo.reasoning}"
-                            </p>
-                            <div className="mt-2 flex items-center justify-between">
-                                <span className="text-[9px] uppercase tracking-tighter opacity-30">Resonance</span>
-                                <span className="text-[9px] uppercase tracking-widest text-emerald-400/80">{routingInfo.atmosphere}</span>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
             {/* Particles */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 {particles.map(p => <Particle key={p.id} delay={p.delay} atmosphere={atmosphere} />)}
@@ -939,15 +899,55 @@ const MirrorAmbient = () => {
                     </motion.span>
                     <span className="text-white/80 font-medium hidden sm:inline">Mirror</span>
 
-                    {/* Single Tier + Model Selector */}
+                    {/* Model Dropdown */}
                     <div className="relative">
                         <button
-                            onClick={() => setShowTierDropdown(!showTierDropdown)}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-sm"
+                            onClick={() => { setShowModelDropdown(!showModelDropdown); setShowTierDropdown(false); }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-sm"
+                        >
+                            <span>{currentModel.icon}</span>
+                            <span className="text-white/70 hidden sm:inline">{currentModel.name}</span>
+                            <ChevronDown size={14} className={`text-white/40 transition-transform ${showModelDropdown ? 'rotate-180' : ''}`} />
+                        </button>
+                        <AnimatePresence>
+                            {showModelDropdown && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -5 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -5 }}
+                                    className="absolute top-full left-0 mt-2 w-64 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50"
+                                >
+                                    {MODEL_OPTIONS.map(model => (
+                                        <button
+                                            key={model.id}
+                                            onClick={() => { setSelectedModel(model.id); setShowModelDropdown(false); const updated = { ...memory, preferences: { ...memory.preferences, model: model.id } }; setMemory(updated); saveMemory(updated); }}
+                                            className={`w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center justify-between ${selectedModel === model.id ? 'bg-violet-500/10' : ''}`}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-lg">{model.icon}</span>
+                                                <div>
+                                                    <div className="text-white text-sm font-medium">{model.name}</div>
+                                                    <div className="text-white/40 text-xs">{model.provider}</div>
+                                                </div>
+                                            </div>
+                                            {model.badge && <span className={`text-[10px] px-2 py-0.5 rounded-full ${model.badge === 'Recommended' ? 'bg-green-500/20 text-green-400' : model.badge === 'Smartest' ? 'bg-blue-500/20 text-blue-400' : model.badge === 'Premium' ? 'bg-amber-500/20 text-amber-400' : 'bg-violet-500/20 text-violet-400'}`}>{model.badge}</span>}
+                                        </button>
+                                    ))}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
+                    {/* Inference Tier Dropdown */}
+                    <div className="relative hidden sm:block">
+                        <button
+                            onClick={() => { setShowTierDropdown(!showTierDropdown); setShowModelDropdown(false); }}
+                            className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-sm"
+                            title={INFERENCE_TIERS.find(t => t.id === inferenceTier)?.privacy}
                         >
                             {React.createElement(INFERENCE_TIERS.find(t => t.id === inferenceTier)?.icon || Cloud, { size: 14, className: 'text-white/60' })}
-                            <span className="text-white/70">{INFERENCE_TIERS.find(t => t.id === inferenceTier)?.model}</span>
-                            <ChevronDown size={14} className={`text-white/40 transition-transform ${showTierDropdown ? 'rotate-180' : ''}`} />
+                            <span className="text-white/50 text-xs">{INFERENCE_TIERS.find(t => t.id === inferenceTier)?.name}</span>
+                            <ChevronDown size={12} className={`text-white/40 transition-transform ${showTierDropdown ? 'rotate-180' : ''}`} />
                         </button>
                         <AnimatePresence>
                             {showTierDropdown && (
@@ -955,24 +955,26 @@ const MirrorAmbient = () => {
                                     initial={{ opacity: 0, y: -5 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -5 }}
-                                    className="absolute top-full left-0 mt-2 w-80 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50"
+                                    className="absolute top-full left-0 mt-2 w-72 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50"
                                 >
                                     <div className="px-4 py-2 border-b border-white/5">
                                         <p className="text-white/40 text-xs">Where should Mirror run?</p>
                                     </div>
                                     {INFERENCE_TIERS.map(tier => {
+                                        const isDisabled = tier.id === 'desktop' && !ollamaAvailable;
                                         const Icon = tier.icon;
                                         return (
                                             <button
                                                 key={tier.id}
-                                                onClick={() => { setInferenceTier(tier.id); setShowTierDropdown(false); }}
-                                                className={`w-full px-4 py-3 text-left transition-colors flex items-start gap-3 hover:bg-white/5 ${inferenceTier === tier.id ? 'bg-violet-500/10' : ''}`}
+                                                onClick={() => { if (!isDisabled) { setInferenceTier(tier.id); setShowTierDropdown(false); } }}
+                                                disabled={isDisabled}
+                                                className={`w-full px-4 py-3 text-left transition-colors flex items-start gap-3 ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white/5'} ${inferenceTier === tier.id ? 'bg-violet-500/10' : ''}`}
                                             >
                                                 <Icon size={18} className={inferenceTier === tier.id ? 'text-violet-400' : 'text-white/50'} />
                                                 <div className="flex-1">
                                                     <div className="text-white text-sm font-medium flex items-center gap-2">
                                                         {tier.name}
-                                                        <span className="text-white/40 text-xs font-normal">• {tier.model}</span>
+                                                        {tier.id === 'desktop' && !ollamaAvailable && <span className="text-[10px] text-red-400">(not detected)</span>}
                                                     </div>
                                                     <div className="text-white/40 text-xs">{tier.desc}</div>
                                                     <div className="text-white/30 text-[10px] mt-1 italic">{tier.privacy}</div>
@@ -1038,50 +1040,34 @@ const MirrorAmbient = () => {
             <main className="relative z-10 flex-1 overflow-y-auto px-4 py-4">
                 {messages.length === 0 ? (
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 1.5, delay: 0.5 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
                         className="h-full flex flex-col items-center justify-center text-center px-4"
                     >
-                        {/* Heartbeat Glyph Core */}
-                        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center max-w-lg mx-auto">
-                            <motion.div
-                                initial={{ scale: 0.8, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ duration: 1 }}
-                                className="relative mb-8"
-                            >
-                                <HeartbeatGlyph atmosphere={atmosphere} />
-                            </motion.div>
+                        <motion.div
+                            animate={{ scale: [1, 1.05, 1], opacity: [0.6, 1, 0.6] }}
+                            transition={{ duration: 4, repeat: Infinity }}
+                            className="text-6xl mb-6"
+                            style={{ color: atmosphere.primary, textShadow: `0 0 40px ${atmosphere.primary}` }}
+                        >
+                            ⟡
+                        </motion.div>
+                        <h2 className="text-white/70 text-xl font-light mb-2">{getGreeting()}</h2>
+                        <p className="text-white/30 text-sm max-w-xs mb-6">
+                            I'm here to chat, help think through ideas, answer questions, or just listen.
+                        </p>
 
-                            <motion.div
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.5 }}
-                            >
-                                <h1 className="text-3xl font-light tracking-[0.2em] mb-4 text-white/90">
-                                    ACTIVE MIRROR
-                                </h1>
-                                <p className="text-white/40 text-sm tracking-wide leading-relaxed font-light mb-8">
-                                    Cognitive sovereignty through reflected intelligence.<br />
-                                    <span className="mt-2 block italic opacity-50">"Silence is where the soul begins to listen."</span>
-                                </p>
-
-                                <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
-                                    {[
-                                        { icon: Zap, label: 'Intelligent', desc: 'Auto-routing' },
-                                        { icon: Shield, label: 'Sovereign', desc: 'Private-first' },
-                                    ].map((feature) => (
-                                        <div key={feature.label} className="p-4 rounded-xl bg-white/[0.03] border border-white/10 flex flex-col items-center gap-2">
-                                            <feature.icon size={18} className="text-white/40" />
-                                            <div>
-                                                <div className="text-[10px] uppercase tracking-widest font-semibold text-white/70">{feature.label}</div>
-                                                <div className="text-[9px] text-white/30 uppercase tracking-tighter">{feature.desc}</div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </motion.div>
+                        {/* Quick actions */}
+                        <div className="flex flex-wrap justify-center gap-2 max-w-md">
+                            {quickActions.map((action, i) => (
+                                <QuickAction
+                                    key={i}
+                                    icon={action.icon}
+                                    label={action.label}
+                                    onClick={() => handleQuickAction(action.prompt)}
+                                    atmosphere={atmosphere}
+                                />
+                            ))}
                         </div>
                     </motion.div>
                 ) : (
@@ -1157,14 +1143,9 @@ const MirrorAmbient = () => {
                             whileTap={{ scale: 0.9 }}
                         >
                             {isLoading ? (
-                                <motion.span
-                                    animate={{ opacity: [0.3, 0.8, 0.3], scale: [0.95, 1.05, 0.95] }}
-                                    transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-                                    className="text-lg"
-                                    style={{ color: atmosphere.primary }}
-                                >
-                                    ⟡
-                                </motion.span>
+                                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
+                                    <RotateCcw size={18} />
+                                </motion.div>
                             ) : (
                                 <Send size={18} />
                             )}
@@ -1188,31 +1169,20 @@ const MirrorAmbient = () => {
                         <Shield size={10} className="text-white/20" />
                         <p className="text-white/20 text-xs">MirrorGate</p>
                     </div>
-                    <span className="text-white/15 text-xs">•</span>
-                    <button
-                        onClick={() => setShowTierDropdown(!showTierDropdown)}
-                        className="text-white/15 text-xs hover:text-white/30 transition-colors"
-                    >
-                        {INFERENCE_TIERS.find(t => t.id === inferenceTier)?.model}
-                    </button>
-                    <span className="text-white/15 text-xs">•</span>
-                    <button
-                        onClick={() => {
-                            if (memory.consentGiven) {
+                    {memory.consentGiven && (
+                        <button
+                            onClick={() => {
                                 forgetMe();
                                 setMemory({ userName: null, preferences: {}, facts: [], sessionCount: 0, consentGiven: false });
-                            } else {
-                                giveMemoryConsent();
-                                const updated = { ...memory, consentGiven: true, sessionCount: 1, lastVisit: new Date().toISOString() };
-                                setMemory(updated);
-                                saveMemory(updated);
-                            }
-                        }}
-                        className={`flex items-center gap-1 text-xs transition-colors ${memory.consentGiven ? 'text-white/15 hover:text-red-400' : 'text-white/10 hover:text-green-400'}`}
-                        title={memory.consentGiven ? "Click to forget" : "Click to enable memory"}
-                    >
-                        <span>{memory.consentGiven ? 'memory on' : 'memory off'}</span>
-                    </button>
+                            }}
+                            className="flex items-center gap-1 text-white/20 hover:text-red-400 text-xs transition-colors group"
+                            title="Clear all local memory"
+                        >
+                            <Brain size={10} className="group-hover:text-red-400" />
+                            <span>Memory: local</span>
+                            <Trash size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
+                    )}
                 </div>
             </div>
 

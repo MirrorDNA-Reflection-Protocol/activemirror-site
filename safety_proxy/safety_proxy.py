@@ -28,6 +28,7 @@ from mirror_shield_public import pre_check, post_check, get_refusal_message, che
 from storage import create_storage
 from two_lane_router import TwoLaneRouter, SchemaValidator, ResponseType, IntentCategory
 from rewrite_engine import RewriteEngine, RewriteResult
+from model_router import ModelRouter, ModelRoute, ModelProvider, MODELS, create_router_with_available_keys
 
 load_dotenv()
 
@@ -56,6 +57,9 @@ PERMANENT_RECORD_PATH = Path.home() / ".mirrordna" / "CRIMINAL_RECORD.log"
 PERMANENT_RECORD_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 GROQ_MODEL = "llama-3.3-70b-versatile"
 
 VOICE_ENABLED = True
@@ -183,6 +187,13 @@ logger = logging.getLogger("mirror-judge")
 
 # Initialize storage backend (auto-selects file vs Supabase)
 store = create_storage()
+
+# ═══════════════════════════════════════════════════════════════
+# MODEL ROUTER — Smart routing across multiple models
+# ═══════════════════════════════════════════════════════════════
+
+model_router = create_router_with_available_keys()
+logger.info(f"⟡ MODEL ROUTER initialized with providers: {[p.value for p in model_router.available]}")
 
 # ═══════════════════════════════════════════════════════════════
 # SEMANTIC JUDGE — Cross-Encoder for Entailment
@@ -681,16 +692,84 @@ def check_rate(ip: str, request_id: str) -> Tuple[bool, str]:
     rate_limits[ip].append(now)
     return True, "ok"
 
+# ═══════════════════════════════════════════════════════════════
+# MULTI-MODEL STREAMING — Route to different providers
+# ═══════════════════════════════════════════════════════════════
+
+def get_model_config(model_id: str) -> dict:
+    """Get API configuration for a model."""
+    
+    # DeepSeek
+    if model_id == "deepseek-chat":
+        return {
+            "api_base": "https://api.deepseek.com/v1/chat/completions",
+            "api_key": DEEPSEEK_API_KEY,
+            "model": "deepseek-chat",
+            "provider": "deepseek"
+        }
+    
+    # Mistral
+    if model_id == "mistral-large-latest":
+        return {
+            "api_base": "https://api.mistral.ai/v1/chat/completions",
+            "api_key": MISTRAL_API_KEY,
+            "model": "mistral-large-latest",
+            "provider": "mistral"
+        }
+    
+    # OpenAI
+    if model_id == "gpt-4o-mini":
+        return {
+            "api_base": "https://api.openai.com/v1/chat/completions",
+            "api_key": OPENAI_API_KEY,
+            "model": "gpt-4o-mini",
+            "provider": "openai"
+        }
+    
+    # Local Ollama (Mac Mini)
+    if model_id.startswith("qwen") or model_id.startswith("llama") and ":" in model_id:
+        return {
+            "api_base": "http://localhost:11434/v1/chat/completions",
+            "api_key": None,  # No key needed
+            "model": model_id,
+            "provider": "local"
+        }
+    
+    # Default: Groq
+    return {
+        "api_base": "https://api.groq.com/openai/v1/chat/completions",
+        "api_key": GROQ_API_KEY,
+        "model": model_id or GROQ_MODEL,
+        "provider": "groq"
+    }
 
 # ═══════════════════════════════════════════════════════════════
 # STREAMING WITH EPISTEMIC JUDGE
 # ═══════════════════════════════════════════════════════════════
 
-async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_msg: str = None, routing=None):
-    """Stream with full Epistemic Judge + MirrorShield + Two-Lane enforcement."""
-    if not GROQ_API_KEY:
-        yield json.dumps({"status": "error", "content": "No API Key"}) + "\n"
-        return
+async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_msg: str = None, routing=None, model_override: str = None):
+    """Stream with full Epistemic Judge + MirrorShield + Two-Lane enforcement + Multi-Model Routing."""
+    
+    # Get model configuration
+    model_config = get_model_config(model_override or "")
+    api_key = model_config["api_key"]
+    api_base = model_config["api_base"]
+    model_name = model_config["model"]
+    provider = model_config["provider"]
+    
+    # Check for API key (not needed for local)
+    if provider != "local" and not api_key:
+        # Fallback to Groq if no key for selected provider
+        if GROQ_API_KEY:
+            model_config = get_model_config("")  # Default to Groq
+            api_key = model_config["api_key"]
+            api_base = model_config["api_base"]
+            model_name = model_config["model"]
+            provider = model_config["provider"]
+            record_event("ModelRouter", "FALLBACK", f"to:groq", "ANALYZING", {"request_id": request_id, "reason": "missing_key"})
+        else:
+            yield json.dumps({"status": "error", "content": "No API Key configured"}) + "\n"
+            return
 
     if superego.penance_active[ip]:
         yield json.dumps({
@@ -713,16 +792,24 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
         record_event("Superego", "REGRESSION", f"tokens:{max_tokens}", "ANALYZING", {"request_id": request_id})
 
     full_response = ""
-    record_event("Groq", "REQUEST", f"model:{GROQ_MODEL}", "ANALYZING", {"request_id": request_id, "max_tokens": max_tokens})
+    record_event(provider.title(), "REQUEST", f"model:{model_name}", "ANALYZING", {"request_id": request_id, "max_tokens": max_tokens})
     
     try:
-        async with httpx.AsyncClient(timeout=30.0) as c:
+        # Build headers
+        headers = {"Content-Type": "application/json"}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        
+        # Timeout longer for local models
+        timeout = 60.0 if provider == "local" else 30.0
+        
+        async with httpx.AsyncClient(timeout=timeout) as c:
             async with c.stream(
                 "POST",
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Content-Type": "application/json", "Authorization": f"Bearer {GROQ_API_KEY}"},
+                api_base,
+                headers=headers,
                 json={
-                    "model": GROQ_MODEL,
+                    "model": model_name,
                     "messages": messages,
                     "temperature": routing.temperature if routing else 0.7,
                     "max_tokens": max_tokens,
@@ -730,7 +817,13 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
                 }
             ) as response:
                 if response.status_code != 200:
-                    record_event("Groq", "ERROR", f"status:{response.status_code}", "ERROR", {})
+                    record_event(provider.title(), "ERROR", f"status:{response.status_code}", "ERROR", {})
+                    # Try fallback to Groq
+                    if provider != "groq" and GROQ_API_KEY:
+                        record_event("ModelRouter", "FALLBACK", f"to:groq", "ANALYZING", {"request_id": request_id, "reason": f"http_{response.status_code}"})
+                        async for chunk in stream_with_judge(messages, ip, request_id, boundary_msg, routing, None):
+                            yield chunk
+                        return
                     yield json.dumps({"status": "error", "content": "Mirror clouded."}) + "\n"
                     return
 
@@ -865,9 +958,20 @@ class MirrorRequest(BaseModel):
     history: List[ChatMessage] = Field(default_factory=list)
     dial: float = Field(default=0.5)
     mode: Optional[str] = Field(default=None, description="User preference: 'mirror_only' or 'tool_only'")
+    rag_context: Optional[str] = Field(default=None, description="Injected RAG context from vault")
+    model: Optional[str] = Field(default=None, description="Specific model to use (e.g. qwen2.5:7b)")
+    tier: Optional[str] = Field(default=None, description="Inference tier: 'hosted', 'browser', 'sovereign'")
+    smart_route: bool = Field(default=True, description="Enable intelligent model routing based on query type")
 
 class ReflectionRequest(BaseModel):
     reflection: str = Field(..., max_length=2000)
+
+class PrismRequest(BaseModel):
+    message: str
+    history: List[dict] = []
+    lens: str = "linear"
+    rag_context: Optional[str] = None
+    model: Optional[str] = None
 
 app = FastAPI(title="Active Mirror", version=RULE_VERSION)
 app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_methods=["*"], allow_headers=["*"])
@@ -890,6 +994,12 @@ async def health():
             "session_limit": 20,
             "reminder_at": 10
         },
+        "model_routing": {
+            "enabled": True,
+            "providers": [p.value for p in model_router.available],
+            "default": "groq",
+            "sovereign": "local" in [p.value for p in model_router.available]
+        },
         "stats": {
             "total_blocks": superego.total_blocks,
             "total_allows": superego.total_allows,
@@ -901,6 +1011,61 @@ async def health():
 async def get_flight_log(limit: int = 20):
     events = list(flight_log)[-limit:]
     return {"status": "ok", "version": RULE_VERSION, "event_count": len(events), "events": events}
+
+@app.get("/models")
+async def get_models():
+    """Return available models and their routing categories."""
+    return {
+        "status": "ok",
+        "version": RULE_VERSION,
+        "routing_enabled": True,
+        "available_providers": [p.value for p in model_router.available],
+        "models": [
+            {
+                "id": "llama-3.3-70b-versatile",
+                "name": "Llama 3.3 70B",
+                "provider": "groq",
+                "best_for": ["quick_fact", "conversational", "reflection"],
+                "available": ModelProvider.GROQ in model_router.available
+            },
+            {
+                "id": "deepseek-chat",
+                "name": "DeepSeek V3",
+                "provider": "deepseek",
+                "best_for": ["reasoning", "code", "analysis"],
+                "available": ModelProvider.DEEPSEEK in model_router.available
+            },
+            {
+                "id": "mistral-large-latest",
+                "name": "Mistral Large",
+                "provider": "mistral",
+                "best_for": ["creative", "writing"],
+                "available": ModelProvider.MISTRAL in model_router.available
+            },
+            {
+                "id": "gpt-4o-mini",
+                "name": "GPT-4o Mini",
+                "provider": "openai",
+                "best_for": ["fallback", "reliable"],
+                "available": ModelProvider.OPENAI in model_router.available
+            },
+            {
+                "id": "qwen2.5:7b",
+                "name": "Qwen 2.5 7B",
+                "provider": "local",
+                "best_for": ["private", "sovereign", "offline"],
+                "available": ModelProvider.LOCAL in model_router.available
+            }
+        ],
+        "routing_rules": {
+            "quick_fact": "groq",
+            "reasoning": "deepseek",
+            "creative": "mistral",
+            "private": "local",
+            "conversational": "groq",
+            "reflection": "groq"
+        }
+    }
 
 @app.get("/rules")
 async def get_rules():
@@ -1282,7 +1447,7 @@ async def mesh_status():
 # ═══════════════════════════════════════════════════════════════
 
 OLLAMA_URL = "http://localhost:11434"
-LOCAL_MODEL = "qwen2.5:14b"  # Best quality model installed
+LOCAL_MODEL = "qwen2.5:7b-32k"  # 32K context for stability (262K OOMs on large prompts)
 
 @app.post("/mirror-local")
 async def mirror_local(request: Request, body: MirrorRequest):
@@ -1307,6 +1472,8 @@ async def mirror_local(request: Request, body: MirrorRequest):
     
     # Build messages for Ollama
     system_prompt = get_system_prompt() + "\n\nYou are running on local infrastructure via Ollama. The user's data stays on their machine."
+    if body.rag_context:
+        system_prompt += f"\n\nCONTEXT FROM VAULT:\n{body.rag_context}"
     
     messages = [{"role": "system", "content": system_prompt}]
     for msg in body.history[-10:]:
@@ -1320,7 +1487,7 @@ async def mirror_local(request: Request, body: MirrorRequest):
                 async with client.stream(
                     "POST",
                     f"{OLLAMA_URL}/api/chat",
-                    json={"model": LOCAL_MODEL, "messages": messages, "stream": True},
+                    json={"model": body.model or LOCAL_MODEL, "messages": messages, "stream": True},
                     timeout=60.0
                 ) as response:
                     async for line in response.aiter_lines():
@@ -1369,6 +1536,27 @@ async def mirror(request: Request, body: MirrorRequest):
         return {"status": "blocked", "content": blocked_response, "audit": {"gate": "blocked", "reason": violation, "rules": matched_rules}}
 
     # ═══════════════════════════════════════════════════════════════
+    # ⟡ INTELLIGENT MODEL ROUTING — Route to best model for query type
+    # ═══════════════════════════════════════════════════════════════
+    model_route = None
+    selected_model = body.model  # User-specified model takes precedence
+    
+    if body.smart_route and not body.model:
+        # Smart routing enabled and no explicit model override
+        model_route = model_router.route(body.message, user_override=body.tier)
+        selected_model = model_route.model_id
+        
+        record_event("ModelRouter", "ROUTE", f"{model_route.provider.value}", "ANALYZING", {
+            "request_id": rid,
+            "model": model_route.model_name,
+            "reasoning": model_route.reasoning[:100]
+        })
+    elif body.tier == "sovereign":
+        # User explicitly selected sovereign tier
+        selected_model = "qwen2.5:7b"
+        record_event("ModelRouter", "MANUAL", "sovereign", "ANALYZING", {"request_id": rid})
+    
+    # ═══════════════════════════════════════════════════════════════
     # ⟡ TWO-LANE ROUTING — Classify intent and route appropriately
     # ═══════════════════════════════════════════════════════════════
     routing_decision = two_lane_router.route(body.message, user_preference=body.mode)
@@ -1383,13 +1571,37 @@ async def mirror(request: Request, body: MirrorRequest):
 
     # Build context with rap sheet awareness + Two-Lane suffix
     base_prompt = get_system_prompt()
+    if body.rag_context:
+        base_prompt += f"\n\nCONTEXT FROM VAULT:\n{body.rag_context}"
+
     messages = [{"role": "system", "content": base_prompt + system_suffix}]
     for msg in body.history[-20:]:
         messages.append({"role": msg.role, "content": msg.content})
     messages.append({"role": "user", "content": body.message})
 
+    # Stream response with model routing info in audit
+    async def stream_with_routing():
+        model_info = None
+        if model_route:
+            model_info = {
+                "provider": model_route.provider.value,
+                "model": model_route.model_name,
+                "reasoning": model_route.reasoning,
+                "atmosphere": model_route.atmosphere
+            }
+        
+        # Yield model routing info first so frontend can display
+        if model_info:
+            yield json.dumps({"status": "routing", "model_info": model_info}) + "\n"
+        
+        async for chunk in stream_with_judge(messages, ip, rid, boundary_msg=boundary_msg, routing=routing_decision, model_override=selected_model):
+            yield chunk
+        
+        # Final status with model used
+        yield json.dumps({"status": "done", "model_used": selected_model or GROQ_MODEL}) + "\n"
+    
     return StreamingResponse(
-        stream_with_judge(messages, ip, rid, boundary_msg=boundary_msg, routing=routing_decision),
+        stream_with_routing(),
         media_type="application/x-ndjson"
     )
 
@@ -1427,6 +1639,8 @@ class PrismRequest(BaseModel):
     message: str
     history: List[dict] = []
     lens: str = "linear"
+    rag_context: Optional[str] = None
+    model: Optional[str] = None
 
 
 @app.post("/mirror-prism")
@@ -1456,7 +1670,10 @@ async def mirror_prism(request: Request, body: PrismRequest):
         }}
 
     # Build messages with prism system prompt
-    messages = [{"role": "system", "content": get_prism_system_prompt(body.lens)}]
+    sys_prompt = get_prism_system_prompt(body.lens)
+    if body.rag_context:
+        sys_prompt += f"\n\nCONTEXT FROM VAULT:\n{body.rag_context}"
+    messages = [{"role": "system", "content": sys_prompt}]
 
     # Add history context (last few exchanges)
     for msg in body.history[-6:]:
@@ -1473,7 +1690,7 @@ async def mirror_prism(request: Request, body: PrismRequest):
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": GROQ_MODEL,
+                    "model": body.model or GROQ_MODEL,
                     "messages": messages,
                     "temperature": 0.7,
                     "max_tokens": 500
