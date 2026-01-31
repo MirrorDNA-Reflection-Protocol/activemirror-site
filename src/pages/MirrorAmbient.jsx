@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import ConsentGate from '../components/ConsentGate';
 import HeartbeatGlyph from '../components/HeartbeatGlyph';
+import Logo from '../components/Logo';
 
 const PROXY_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8082'
@@ -279,7 +280,7 @@ const MessageBubble = ({ message, atmosphere, onSpeak, voiceEnabled }) => {
                 {!isUser && !isSystem && (
                     <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-2">
-                            <span style={{ color: atmosphere.primary }} className="text-sm">⟡</span>
+                            <Logo size={18} theme="amber" className="opacity-80" />
                             <span className="text-white/40 text-xs">Mirror</span>
                             {message.model && (
                                 <span className="text-white/20 text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10">
@@ -929,14 +930,12 @@ const MirrorAmbient = () => {
                     <a href="/" className="p-2 rounded-full bg-white/10 text-white/60 active:scale-95 transition-transform">
                         <ArrowLeft size={18} />
                     </a>
-                    <motion.span
-                        animate={{ opacity: [0.5, 1, 0.5] }}
+                    <motion.div
+                        animate={{ opacity: [0.8, 1, 0.8] }}
                         transition={{ duration: 3, repeat: Infinity }}
-                        style={{ color: atmosphere.primary, textShadow: `0 0 20px ${atmosphere.primary}` }}
-                        className="text-xl"
                     >
-                        ⟡
-                    </motion.span>
+                        <Logo size={28} theme="amber" />
+                    </motion.div>
                     <span className="text-white/80 font-medium hidden sm:inline">Mirror</span>
 
                     {/* Single Tier + Model Selector */}
@@ -1157,14 +1156,7 @@ const MirrorAmbient = () => {
                             whileTap={{ scale: 0.9 }}
                         >
                             {isLoading ? (
-                                <motion.span
-                                    animate={{ opacity: [0.3, 0.8, 0.3], scale: [0.95, 1.05, 0.95] }}
-                                    transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-                                    className="text-lg"
-                                    style={{ color: atmosphere.primary }}
-                                >
-                                    ⟡
-                                </motion.span>
+                                <Logo size={20} theme="amber" />
                             ) : (
                                 <Send size={18} />
                             )}

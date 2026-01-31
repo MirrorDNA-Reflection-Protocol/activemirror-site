@@ -9,6 +9,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, AlertTriangle, ArrowRight, ExternalLink } from 'lucide-react';
+import Logo from './Logo';
 
 const ConsentGate = ({ onConsent }) => {
     const [isHovering, setIsHovering] = useState(false);
@@ -44,17 +45,11 @@ const ConsentGate = ({ onConsent }) => {
                             <div className="flex items-center gap-3 sm:gap-4 mb-4">
                                 <motion.div
                                     animate={{
-                                        scale: [1, 1.1, 1],
-                                        opacity: [0.7, 1, 0.7],
+                                        opacity: [0.8, 1, 0.8],
                                     }}
                                     transition={{ duration: 3, repeat: Infinity }}
-                                    className="text-3xl sm:text-4xl"
-                                    style={{
-                                        color: 'rgba(139, 92, 246, 0.9)',
-                                        textShadow: '0 0 30px rgba(139, 92, 246, 0.5)'
-                                    }}
                                 >
-                                    ⟡
+                                    <Logo size={56} theme="violet" />
                                 </motion.div>
                                 <div>
                                     <h1 className="text-lg sm:text-xl font-medium text-white">Active Mirror</h1>
