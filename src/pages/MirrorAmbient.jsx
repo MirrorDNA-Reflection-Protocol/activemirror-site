@@ -19,8 +19,9 @@ import {
     ArrowLeft, Send, Sparkles, RotateCcw, Trash2,
     Mic, MicOff, Volume2, VolumeX, Settings, X,
     Zap, BookOpen, Languages, Code, Lightbulb, Shield, Database, FileDown,
-    ChevronDown, Cloud, Cpu, Monitor, Brain, Trash, Info
+    ChevronDown, Cloud, Cpu, Monitor, Brain, Trash, Info, Paperclip, FileText, CheckCircle2, Share2, Download, Image as ImageIcon
 } from 'lucide-react';
+import html2canvas from 'html2canvas';
 import ConsentGate from '../components/ConsentGate';
 import HeartbeatGlyph from '../components/HeartbeatGlyph';
 import Logo from '../components/Logo';
@@ -257,16 +258,114 @@ const Particle = ({ delay, atmosphere }) => {
     );
 };
 
-// Message bubble
+// Shadow Thoughts (Ghost Reasoning)
+const ShadowThoughts = ({ thought, atmosphere }) => {
+    if (!thought) return null;
+    return (
+        <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 10 }}
+            className="fixed bottom-32 left-1/2 -translate-x-1/2 z-40 max-w-sm w-[90%] px-4 py-3 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-2xl pointer-events-none text-center"
+        >
+            <div className="flex items-center justify-center gap-2 mb-1.5">
+                <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                    className="w-1.5 h-1.5 rounded-full border border-violet-400 border-t-transparent"
+                />
+                <span className="text-[10px] uppercase tracking-[0.2em] font-medium text-white/30">Shadow Intent</span>
+            </div>
+            <p className="text-xs text-white/60 leading-relaxed font-light italic">
+                {thought}
+            </p>
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-transparent via-transparent to-white/[0.02]" />
+        </motion.div>
+    );
+};
+
+// File Upload Zone for Zero-Vault RAG
+const FileUploadZone = ({ onUpload, currentDoc }) => {
+    return (
+        <div className="max-w-2xl mx-auto mb-4 px-4">
+            {!currentDoc ? (
+                <div
+                    className="group relative border-2 border-dashed border-white/5 hover:border-white/10 rounded-2xl p-6 transition-all cursor-pointer bg-white/[0.02]"
+                    onClick={() => document.getElementById('file-upload').click()}
+                >
+                    <input
+                        type="file"
+                        id="file-upload"
+                        hidden
+                        onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) onUpload(file);
+                        }}
+                    />
+                    <div className="flex flex-col items-center gap-2">
+                        <Paperclip size={20} className="text-white/20 group-hover:text-white/40 transition-colors" />
+                        <p className="text-xs text-white/30 font-medium uppercase tracking-widest">
+                            Reflect on a document (PDF, TXT, MD)
+                        </p>
+                    </div>
+                </div>
+            ) : (
+                <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+                            <FileText size={16} />
+                        </div>
+                        <div>
+                            <p className="text-xs text-white/80 font-medium max-w-[150px] truncate">{currentDoc.name}</p>
+                            <p className="text-[9px] text-white/40 uppercase tracking-tighter">Sovereign Context Active</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => onUpload(null)}
+                        className="p-1 px-2 rounded-lg hover:bg-white/5 text-white/20 hover:text-white/40 transition-all text-[10px] uppercase font-bold"
+                    >
+                        Remove
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+// Reflection Print Export Logic
+const captureReflection = async (elementId, messageId) => {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+
+    try {
+        haptic('medium');
+        const canvas = await html2canvas(element, {
+            backgroundColor: '#000000',
+            scale: 2,
+            logging: false,
+            useCORS: true
+        });
+
+        const link = document.createElement('a');
+        const slug = messageId ? messageId.slice(0, 8) : Math.random().toString(36).slice(2, 10);
+        link.download = `mirror-reflection-${slug}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        haptic('success');
+    } catch (err) {
+        console.error('Failed to capture reflection print:', err);
+    }
+};
+
 const MessageBubble = ({ message, atmosphere, onSpeak, voiceEnabled }) => {
     const isUser = message.role === 'user';
     const isSystem = message.role === 'system';
 
     return (
         <motion.div
+            id={`msg-${message.id}`}
             initial={{ opacity: 0, y: 10, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3`}
+            className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3 group`}
         >
             <div
                 className={`max-w-[85%] px-4 py-3 rounded-2xl ${isSystem
@@ -288,14 +387,6 @@ const MessageBubble = ({ message, atmosphere, onSpeak, voiceEnabled }) => {
                                 </span>
                             )}
                         </div>
-                        {voiceEnabled && message.content && !message.isStreaming && (
-                            <button
-                                onClick={() => onSpeak(message.content)}
-                                className="p-1 rounded text-white/30 hover:text-white/60 transition-colors"
-                            >
-                                <Volume2 size={14} />
-                            </button>
-                        )}
                     </div>
                 )}
                 {isSystem && (
@@ -319,6 +410,27 @@ const MessageBubble = ({ message, atmosphere, onSpeak, voiceEnabled }) => {
                                 <span className="text-amber-200/70 ml-2">{r.contact}</span>
                             </div>
                         ))}
+                    </div>
+                )}
+
+                {/* Actions (Only for assistant messages) */}
+                {!isUser && !isSystem && !message.isStreaming && (
+                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                            onClick={() => onSpeak(message.content)}
+                            className="p-1.5 rounded-lg hover:bg-white/5 text-white/30 hover:text-white/60 transition-all"
+                            title="Listen"
+                        >
+                            <Volume2 size={12} />
+                        </button>
+                        <button
+                            onClick={() => captureReflection(`msg-${message.id}`, message.id)}
+                            className="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-white/5 text-white/30 hover:text-white/60 transition-all font-medium"
+                            title="Generate Reflection Print"
+                        >
+                            <ImageIcon size={12} />
+                            <span className="text-[10px] uppercase tracking-tighter">Print</span>
+                        </button>
                     </div>
                 )}
             </div>
@@ -484,6 +596,8 @@ const MirrorAmbient = () => {
     const [showTierDropdown, setShowTierDropdown] = useState(false);
     const [showMemoryConsent, setShowMemoryConsent] = useState(false);
     const [ollamaAvailable, setOllamaAvailable] = useState(false);
+    const [shadowThoughts, setShadowThoughts] = useState(null);
+    const [localDoc, setLocalDoc] = useState(null);
 
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
@@ -597,7 +711,28 @@ const MirrorAmbient = () => {
         }
     };
 
-    // Text-to-speech
+    // Zero-Vault RAG Handler
+    const handleFileUpload = async (file) => {
+        if (!file) {
+            setLocalDoc(null);
+            return;
+        }
+
+        setShadowThoughts(`Ingesting ${file.name}...`);
+
+        try {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const text = e.target.result;
+                setLocalDoc({ name: file.name, content: text });
+                setShadowThoughts(`${file.name} synchronized to browser session.`);
+                setTimeout(() => setShadowThoughts(null), 3000);
+            };
+            reader.readAsText(file);
+        } catch (err) {
+            setError("Failed to parse document for sovereign reflection.");
+        }
+    };
     const speak = useCallback((text) => {
         if (!voiceEnabled || !('speechSynthesis' in window)) return;
 
@@ -667,9 +802,15 @@ const MirrorAmbient = () => {
         setMessages(newMessages);
         setInput('');
         setIsLoading(true);
+        setShadowThoughts("Analyzing intent & classifying resonance...");
 
         // Add placeholder
-        setMessages([...newMessages, { role: 'assistant', content: '', isStreaming: true }]);
+        setMessages([...newMessages, {
+            id: `mirror-${Date.now()}`,
+            role: 'assistant',
+            content: '',
+            isStreaming: true
+        }]);
 
         try {
             // Build message context with memory
@@ -705,6 +846,13 @@ const MirrorAmbient = () => {
                 }
             }
 
+            // Sovereign Context Check (Local Doc)
+            if (localDoc) {
+                setShadowThoughts(`Comparing query against session document...`);
+                // Simple substring/relevance mockup for first pass
+                ragContext = `[Local Document Context from ${localDoc.name}: ${localDoc.content.slice(0, 500)}...]`;
+            }
+
             const response = await fetch(`${PROXY_URL}/mirror`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -737,6 +885,11 @@ const MirrorAmbient = () => {
                         // Handle model routing info
                         if (data.status === 'routing' && data.model_info) {
                             setRoutingInfo(data.model_info);
+                            setShadowThoughts(`Routing to ${data.model_info.model} · ${data.model_info.atmosphere} resonance`);
+
+                            // Let the shadow linger for a moment then fade
+                            setTimeout(() => setShadowThoughts(null), 3000);
+
                             if (data.model_info.atmosphere && emotionAtmospheres[data.model_info.atmosphere]) {
                                 setAtmosphereKey(data.model_info.atmosphere);
                                 setBaseAtmosphere(emotionAtmospheres[data.model_info.atmosphere]);
@@ -744,6 +897,7 @@ const MirrorAmbient = () => {
                             setMessages(prev => {
                                 const updated = [...prev];
                                 updated[updated.length - 1] = {
+                                    id: `mirror-${Date.now()}`,
                                     role: 'assistant',
                                     content: '',
                                     isStreaming: true,
@@ -794,7 +948,7 @@ const MirrorAmbient = () => {
                 const updated = [...prev];
                 if (updated[updated.length - 1]?.isStreaming) {
                     updated[updated.length - 1] = {
-                        role: 'assistant',
+                        ...updated[updated.length - 1],
                         content: fullContent || 'I received your message.',
                         isStreaming: false
                     };
@@ -909,6 +1063,11 @@ const MirrorAmbient = () => {
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 {particles.map(p => <Particle key={p.id} delay={p.delay} atmosphere={atmosphere} />)}
             </div>
+
+            {/* Shadow Thoughts Overlay */}
+            <AnimatePresence>
+                {shadowThoughts && <ShadowThoughts thought={shadowThoughts} atmosphere={atmosphere} />}
+            </AnimatePresence>
 
             {/* Background gradient */}
             <motion.div
@@ -1112,6 +1271,11 @@ const MirrorAmbient = () => {
                             <button onClick={() => setError(null)} className="ml-2 text-red-300 underline">Dismiss</button>
                         </p>
                     </motion.div>
+                )}
+
+                {/* File Upload for Sovereign RAG */}
+                {messages.length < 5 && (
+                    <FileUploadZone onUpload={handleFileUpload} currentDoc={localDoc} />
                 )}
             </main>
 
