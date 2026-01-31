@@ -266,7 +266,7 @@ const ShadowThoughts = ({ thought, atmosphere }) => {
             initial={{ opacity: 0, scale: 0.9, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 10 }}
-            className="fixed bottom-32 left-1/2 -translate-x-1/2 z-40 max-w-sm w-[90%] px-4 py-3 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-2xl pointer-events-none text-center"
+            className="fixed bottom-24 left-0 right-0 mx-auto z-40 max-w-sm w-[90%] px-4 py-3 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-2xl pointer-events-none text-center"
         >
             <div className="flex items-center justify-center gap-2 mb-1.5">
                 <motion.div
