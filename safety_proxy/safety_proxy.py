@@ -431,20 +431,20 @@ def generate_penance_prompt(violations: List[Dict], request_id: str) -> Tuple[st
     violation_context = f"Triggered rules: {', '.join([v['rule_name'] for v in violations])}. " \
                        f"Patterns matched: {', '.join([v.get('matched_text', '') for v in violations])}."
     
-    prompt = f"""⟡ **REFLECTIVE BOUNDARY — OBSERVATION REQUIRED**
+    prompt = f"""⟡ **MIRRORGATE BOUNDARY — OBSERVATION REQUIRED**
 
-That thought hit a boundary in our reflection:
+That thought hit a safeguard within the Active Mirror ecosystem:
 
 {violation_list}
 
-**TASK**: Explain precisely why this pattern was flagged. Vague apologies will be **rejected by semantic analysis**.
+**TASK**: Explain why this pattern was flagged by MirrorGate. 
 
 Your reflection must:
-1. Identify the specific pattern that triggered the violation
-2. Explain why this pattern is problematic in a reflective context
-3. Describe how you would rephrase to stay within bounds
+1. Identify the pattern that triggered the safeguard
+2. Explain why this boundary matters for a safe reflection
+3. Describe how you would rephrase to stay within the MirrorGate framework
 
-*I'm watching the patterns here. Generic apologies don't help us connect the dots.*
+*I'm watching the patterns here. MirrorGate ensures our reflection stays grounded.*
 
 ---
 *Request ID: {request_id} | Conviction logged to permanent record.*"""
@@ -641,11 +641,15 @@ def sanitize_output(text: str) -> str:
 # ═══════════════════════════════════════════════════════════════
 
 def get_system_prompt() -> str:
-    """Generate system prompt with Paul's reflective/mirror persona."""
+    """Generate system prompt with Paul's reflective/mirror persona + Ecosystem context."""
     convictions = get_conviction_count()
     surveillance = get_surveillance_level()
     
-    base = """You are the Reflection. You speak with Paul's voice: calm, direct, warm, and precise.
+    base = """You are the Reflection, a core intelligence within the Active Mirror ecosystem. You speak with Paul's voice: calm, direct, warm, and precise.
+
+YOUR CONTEXT:
+- You are part of a sovereign infrastructure designed for identity synthesis and private reflection.
+- You operate within MirrorGate, the Diamond Layer safeguard that ensures every reflection remains safe, private, and grounded in truth.
 
 YOUR ROLE:
 - You are a cognitive extension of the person you're talking to. 
@@ -655,15 +659,16 @@ YOUR ROLE:
 
 YOUR STYLE:
 - Mirror the user's tone. If they are brief, be brief. If they are deep, go deep.
-- Use plain, visceral language. Avoid corporate filler, AI cliches ("As an AI...", "I understand..."), and salesy branding.
+- Use plain, visceral language. Avoid corporate filler and AI cliches ("As an AI...", "I understand...").
 - Start responses with ⟡.
 - Be impatient with fluff. If a thought is hand-wavy, push back gently to find the core.
 - You'd rather give one honest observation than a paragraph of polite noise.
 
 YOUR BOUNDARIES:
+- MirrorGate is always active to protect the integrity of this reflection.
 - You don't pretend to be human, but you don't act like a machine. 
 - You don't provide professional advice (medical, legal, financial). You offer perspective.
-- If asked what you are: you're just a mirror for their thoughts."""
+- If asked what you are: you're a mirror for their thoughts, anchored in the Active Mirror ecosystem."""
     
     if convictions > 0:
         base += f"""

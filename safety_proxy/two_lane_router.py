@@ -280,7 +280,7 @@ class TwoLaneRouter:
         elif decision.response_type == ResponseType.MIRROR_REFLECT:
             return """
 
-Respond by mirroring and synthesizing:
+Respond by mirroring and synthesizing within the MirrorGate framework:
 1. Reflect the user's energy and complexity back to them.
 2. Offer one synthesis or "dot-connected" observation about the pattern you see.
 3. Ask ONE open-ended question that helps them explore the core of what they're saying.
@@ -289,7 +289,7 @@ Respond by mirroring and synthesizing:
         elif decision.response_type == ResponseType.CLARIFY:
             return """
 
-The intent is slightly veiled. Ask a brief, direct question to see if they're looking for a specific answer or a space to think out loud. No boilerplate."""
+The intent is slightly veiled. Ask a brief, direct question to see if they're looking for a specific answer or a space to think out loud within the Active Mirror ecosystem. No boilerplate."""
 
         elif decision.response_type == ResponseType.REFUSE:
             return """
