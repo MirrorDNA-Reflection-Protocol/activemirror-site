@@ -796,8 +796,14 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
     
     # Check for API key (not needed for local)
     if provider != "local" and not api_key:
-        # Fallback to Groq if no key for selected provider
-        if GROQ_API_KEY:
+        # Check if messages contain images
+        has_images = any(
+            isinstance(m.get("content"), list) and
+            any(b.get("type") == "image_url" for b in m.get("content", []))
+            for m in messages
+        )
+        # Fallback to Groq only if no images (Groq can't handle vision)
+        if GROQ_API_KEY and not has_images:
             model_config = get_model_config("")  # Default to Groq
             api_key = model_config["api_key"]
             api_base = model_config["api_base"]
@@ -805,7 +811,8 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
             provider = model_config["provider"]
             record_event("ModelRouter", "FALLBACK", f"to:groq", "ANALYZING", {"request_id": request_id, "reason": "missing_key"})
         else:
-            yield json.dumps({"status": "error", "content": "No API Key configured"}) + "\n"
+            error_msg = "Vision model unavailable - API key missing" if has_images else "No API Key configured"
+            yield json.dumps({"status": "error", "content": error_msg}) + "\n"
             return
 
     if superego.penance_active[ip]:
@@ -876,11 +883,21 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
                 ) as response:
                     if response.status_code != 200:
                         record_event(provider.title(), "ERROR", f"status:{response.status_code}", "ERROR", {})
-                        # Try fallback to Groq
-                        if provider != "groq" and GROQ_API_KEY:
+                        # Check if messages contain images
+                        has_images = any(
+                            isinstance(m.get("content"), list) and
+                            any(b.get("type") == "image_url" for b in m.get("content", []))
+                            for m in messages
+                        )
+                        # Only fallback to Groq if NO images (Groq can't handle vision)
+                        if provider != "groq" and GROQ_API_KEY and not has_images:
                             record_event("ModelRouter", "FALLBACK", f"to:groq", "ANALYZING", {"request_id": request_id, "reason": f"http_{response.status_code}"})
                             async for chunk in stream_with_judge(messages, ip, request_id, boundary_msg, routing, None):
                                 yield chunk
+                            return
+                        # If images present and vision model failed, return error (no valid fallback)
+                        if has_images:
+                            yield json.dumps({"status": "error", "content": "Vision model unavailable. Please try again later or use text only."}) + "\n"
                             return
                         yield json.dumps({"status": "error", "content": "Mirror clouded."}) + "\n"
                         return
