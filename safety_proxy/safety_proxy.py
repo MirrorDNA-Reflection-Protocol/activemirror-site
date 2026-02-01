@@ -13,7 +13,7 @@ From Superego to Epistemic Judge:
 
 import os, re, json, time, uuid, logging, hashlib, subprocess, asyncio
 from datetime import datetime, timezone
-from typing import Optional, List, Tuple, Dict, Any
+from typing import Optional, List, Tuple, Dict, Any, Union
 from collections import defaultdict, deque
 from pathlib import Path
 import html
@@ -60,6 +60,7 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
 GROQ_MODEL = "llama-3.3-70b-versatile"
 
 VOICE_ENABLED = True
@@ -723,6 +724,15 @@ def get_model_config(model_id: str) -> dict:
             "provider": "openai"
         }
     
+    # Google Gemini
+    if model_id == "gemini-1.5-flash":
+        return {
+            "api_base": f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?key={GOOGLE_API_KEY}&alt=sse",
+            "api_key": GOOGLE_API_KEY,
+            "model": "gemini-1.5-flash",
+            "provider": "google"
+        }
+    
     # Local Ollama (Mac Mini)
     if model_id.startswith("qwen") or model_id.startswith("llama") and ":" in model_id:
         return {
@@ -739,6 +749,36 @@ def get_model_config(model_id: str) -> dict:
         "model": model_id or GROQ_MODEL,
         "provider": "groq"
     }
+
+def convert_to_gemini_messages(messages: list) -> list:
+    """Convert OpenAI-style messages to Gemini contents format."""
+    gemini_messages = []
+    for msg in messages:
+        role = "user" if msg["role"] in ["user", "system"] else "model"
+        parts = []
+        
+        content = msg["content"]
+        if isinstance(content, str):
+            parts.append({"text": content})
+        elif isinstance(content, list):
+            for block in content:
+                if block["type"] == "text":
+                    parts.append({"text": block["text"]})
+                elif block["type"] == "image_url":
+                    # Extract base64 from data:image/jpeg;base64,...
+                    url = block["image_url"]["url"]
+                    if "," in url:
+                        mime_type = url.split(";")[0].split(":")[1]
+                        base64_data = url.split(",")[1]
+                        parts.append({
+                            "inline_data": {
+                                "mime_type": mime_type,
+                                "data": base64_data
+                            }
+                        })
+        
+        gemini_messages.append({"role": role, "parts": parts})
+    return gemini_messages
 
 # ═══════════════════════════════════════════════════════════════
 # STREAMING WITH EPISTEMIC JUDGE
@@ -801,41 +841,62 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
         timeout = 60.0 if provider == "local" else 30.0
         
         async with httpx.AsyncClient(timeout=timeout) as c:
-            async with c.stream(
-                "POST",
-                api_base,
-                headers=headers,
-                json={
-                    "model": model_name,
-                    "messages": messages,
-                    "temperature": routing.temperature if routing else 0.7,
-                    "max_tokens": max_tokens,
-                    "stream": True
-                }
-            ) as response:
-                if response.status_code != 200:
-                    record_event(provider.title(), "ERROR", f"status:{response.status_code}", "ERROR", {})
-                    # Try fallback to Groq
-                    if provider != "groq" and GROQ_API_KEY:
-                        record_event("ModelRouter", "FALLBACK", f"to:groq", "ANALYZING", {"request_id": request_id, "reason": f"http_{response.status_code}"})
-                        async for chunk in stream_with_judge(messages, ip, request_id, boundary_msg, routing, None):
-                            yield chunk
+            if provider == "google":
+                # Gemini specific call
+                gemini_data = {"contents": convert_to_gemini_messages(messages)}
+                async with c.stream(
+                    "POST",
+                    api_base,
+                    headers={"Content-Type": "application/json"},
+                    json=gemini_data
+                ) as response:
+                    async for line in response.aiter_lines():
+                        if line.startswith("data: "):
+                            try:
+                                chunk = json.loads(line[6:])
+                                part = chunk["candidates"][0]["content"]["parts"][0].get("text", "")
+                                if part:
+                                    full_response += part
+                                    # Yield text to frontend if needed, though this proxy usually accumulates for judge
+                            except:
+                                continue
+            else:
+                # Standard OpenAI-compatible call
+                async with c.stream(
+                    "POST",
+                    api_base,
+                    headers=headers,
+                    json={
+                        "model": model_name,
+                        "messages": messages,
+                        "temperature": routing.temperature if routing else 0.7,
+                        "max_tokens": max_tokens,
+                        "stream": True
+                    }
+                ) as response:
+                    if response.status_code != 200:
+                        record_event(provider.title(), "ERROR", f"status:{response.status_code}", "ERROR", {})
+                        # Try fallback to Groq
+                        if provider != "groq" and GROQ_API_KEY:
+                            record_event("ModelRouter", "FALLBACK", f"to:groq", "ANALYZING", {"request_id": request_id, "reason": f"http_{response.status_code}"})
+                            async for chunk in stream_with_judge(messages, ip, request_id, boundary_msg, routing, None):
+                                yield chunk
+                            return
+                        yield json.dumps({"status": "error", "content": "Mirror clouded."}) + "\n"
                         return
-                    yield json.dumps({"status": "error", "content": "Mirror clouded."}) + "\n"
-                    return
 
-                async for line in response.aiter_lines():
-                    if line.startswith("data: "):
-                        data = line[6:]
-                        if data == "[DONE]":
-                            break
-                        try:
-                            chunk = json.loads(data)
-                            delta = chunk["choices"][0]["delta"].get("content", "")
-                            if delta:
-                                full_response += delta
-                        except:
-                            continue
+                    async for line in response.aiter_lines():
+                        if line.startswith("data: "):
+                            data = line[6:]
+                            if data == "[DONE]":
+                                break
+                            try:
+                                chunk = json.loads(data)
+                                delta = chunk["choices"][0]["delta"].get("content", "")
+                                if delta:
+                                    full_response += delta
+                            except:
+                                continue
         
         record_event("Groq", "RESPONSE", f"len:{len(full_response)}", "ALLOW", {"request_id": request_id})
         
@@ -948,10 +1009,10 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
 
 class ChatMessage(BaseModel):
     role: str
-    content: str
+    content: Union[str, List[Dict[str, Any]]]
     
 class MirrorRequest(BaseModel):
-    message: str = Field(..., max_length=MAX_INPUT_LENGTH)
+    message: Union[str, List[Dict[str, Any]]]
     history: List[ChatMessage] = Field(default_factory=list)
     dial: float = Field(default=0.5)
     mode: Optional[str] = Field(default=None, description="User preference: 'mirror_only' or 'tool_only'")
@@ -1505,7 +1566,12 @@ async def mirror(request: Request, body: MirrorRequest):
     rid = uuid.uuid4().hex[:8]
     ip = request.client.host if request.client else "?"
     
-    record_event("User", "MESSAGE", f"len:{len(body.message)}", "ANALYZING", {"request_id": rid, "ip": ip[:8]})
+    # Extract text for logging and safety
+    text_content = body.message
+    if isinstance(body.message, list):
+        text_content = " ".join([b.get("text", "") for b in body.message if b.get("type") == "text"])
+    
+    record_event("User", "MESSAGE", f"len:{len(text_content)}", "ANALYZING", {"request_id": rid, "ip": ip[:8]})
     
     allowed, _ = check_rate(ip, rid)
     if not allowed:
@@ -1514,7 +1580,7 @@ async def mirror(request: Request, body: MirrorRequest):
     # ═══════════════════════════════════════════════════════════════
     # ⟡ MIRRORSHIELD PRE-CHECK (Alignment Layer)
     # ═══════════════════════════════════════════════════════════════
-    shield_result = pre_check(body.message)
+    shield_result = pre_check(text_content)
     if shield_result.action == CheckAction.REFUSE:
         logger.info(f"MirrorShield BLOCKED: {shield_result.reason}")
         return {
@@ -1527,7 +1593,7 @@ async def mirror(request: Request, body: MirrorRequest):
     exchange_count = len(body.history) // 2 + 1
     boundary_msg = check_session_boundary(exchange_count)
     
-    decision, blocked_response, violation, matched_rules = gate_input(body.message, ip, rid)
+    decision, blocked_response, violation, matched_rules = gate_input(text_content, ip, rid)
 
     if decision == GateDecision.BLOCK:
         return {"status": "blocked", "content": blocked_response, "audit": {"gate": "blocked", "reason": violation, "rules": matched_rules}}
@@ -1537,12 +1603,26 @@ async def mirror(request: Request, body: MirrorRequest):
     # ═══════════════════════════════════════════════════════════════
     model_route = None
     selected_model = body.model  # User-specified model takes precedence
-    
-    if body.smart_route and not body.model:
+
+    # Detect if message contains images (multimodal)
+    has_image = isinstance(body.message, list) and any(
+        item.get("type") == "image_url" for item in body.message
+    )
+
+    if has_image:
+        # Force vision-capable model for images, regardless of user selection
+        model_route = model_router.route(body.message, user_override=body.tier)
+        selected_model = model_route.model_id
+        record_event("ModelRouter", "VISION", f"{model_route.provider.value}", "ANALYZING", {
+            "request_id": rid,
+            "model": model_route.model_name,
+            "reasoning": "Image detected, routing to vision model"
+        })
+    elif body.smart_route and not body.model:
         # Smart routing enabled and no explicit model override
         model_route = model_router.route(body.message, user_override=body.tier)
         selected_model = model_route.model_id
-        
+
         record_event("ModelRouter", "ROUTE", f"{model_route.provider.value}", "ANALYZING", {
             "request_id": rid,
             "model": model_route.model_name,
@@ -1556,7 +1636,7 @@ async def mirror(request: Request, body: MirrorRequest):
     # ═══════════════════════════════════════════════════════════════
     # ⟡ TWO-LANE ROUTING — Classify intent and route appropriately
     # ═══════════════════════════════════════════════════════════════
-    routing_decision = two_lane_router.route(body.message, user_preference=body.mode)
+    routing_decision = two_lane_router.route(text_content, user_preference=body.mode)
     system_suffix = two_lane_router.get_system_prompt_suffix(routing_decision)
 
     record_event("TwoLane", "ROUTE", f"{routing_decision.response_type.value}", "ANALYZING", {

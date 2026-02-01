@@ -13,7 +13,7 @@ Part of MirrorGate v3.3 — Ultimate Reflection Experience
 
 import re
 from enum import Enum
-from typing import Optional, List, Tuple, Dict, Any
+from typing import Optional, List, Tuple, Dict, Any, Union
 from dataclasses import dataclass
 
 class ModelProvider(Enum):
@@ -21,6 +21,7 @@ class ModelProvider(Enum):
     DEEPSEEK = "deepseek"   # DeepSeek V3 - Best reasoning
     MISTRAL = "mistral"     # Mistral Large - Creative, European
     OPENAI = "openai"       # GPT-4o Mini - Frontier fallback
+    GOOGLE = "google"       # Gemini 1.5 Flash - Free Vision, Large Context
     LOCAL = "local"         # Mac Mini M4 Ollama - Sovereign
 
 class QueryCategory(Enum):
@@ -30,6 +31,7 @@ class QueryCategory(Enum):
     CONVERSATIONAL = "conversational" # Chat, casual, general
     PRIVATE = "private"              # Confidential, personal
     REFLECTION = "reflection"        # Introspection, feelings
+    VISUAL = "visual"                # Image analysis, multimodal
 
 @dataclass
 class ModelRoute:
@@ -82,6 +84,15 @@ MODELS = {
         "strengths": ["frontier", "reliable", "fallback"],
         "default_temp": 0.7,
         "max_tokens": 800
+    },
+    ModelProvider.GOOGLE: {
+        "name": "Gemini 1.5 Flash",
+        "id": "gemini-1.5-flash",
+        "api_base": "https://generativelanguage.googleapis.com/v1beta",
+        "env_key": "GOOGLE_API_KEY",
+        "strengths": ["vision", "multimodal", "free", "large_context"],
+        "default_temp": 0.7,
+        "max_tokens": 2048
     },
     ModelProvider.LOCAL: {
         "name": "Qwen 2.5 7B",
@@ -236,6 +247,7 @@ class ModelRouter:
             QueryCategory.CONVERSATIONAL: ModelProvider.GROQ,
             QueryCategory.PRIVATE: ModelProvider.LOCAL,
             QueryCategory.REFLECTION: ModelProvider.GROQ,  # Fast, good for reflection
+            QueryCategory.VISUAL: ModelProvider.OPENAI,   # Vision capable
         }
         
         preferred = category_to_model.get(category, ModelProvider.GROQ)
@@ -244,33 +256,54 @@ class ModelRouter:
         if preferred in self.available:
             return preferred
         
-        # Fallback to Groq, then OpenAI, then Local
-        fallback_order = [ModelProvider.GROQ, ModelProvider.OPENAI, ModelProvider.LOCAL]
+        # Fallback order for vision/multimodal
+        if category == QueryCategory.VISUAL:
+            fallback_order = [ModelProvider.GOOGLE, ModelProvider.OPENAI, ModelProvider.GROQ]
+        else:
+            # Fallback to Groq, then OpenAI, then Local
+            fallback_order = [ModelProvider.GROQ, ModelProvider.OPENAI, ModelProvider.LOCAL]
+        
         for fallback in fallback_order:
             if fallback in self.available:
                 return fallback
         
         return ModelProvider.GROQ  # Ultimate fallback
     
-    def route(self, query: str, user_override: Optional[str] = None) -> ModelRoute:
+    def route(self, query: Union[str, List[Dict[str, Any]]], user_override: Optional[str] = None) -> ModelRoute:
         """
         Route query to the best model.
         
         Args:
-            query: The user's message
+            query: The user's message (string or multimodal list)
             user_override: Force a specific tier ("hosted", "browser", "sovereign")
         
         Returns:
             ModelRoute with full routing information
         """
+        # Detect visual query
+        is_visual = False
+        if isinstance(query, list):
+            is_visual = any(item.get("type") == "image_url" for item in query)
+        
         # User override takes precedence
-        if user_override == "sovereign":
+        if user_override == "sovereign" and not is_visual:
             provider = ModelProvider.LOCAL
             category = QueryCategory.PRIVATE
             confidence = 1.0
             matched = ["user_override:sovereign"]
+        elif is_visual:
+            # Gemini Flash is free and has excellent vision - prefer it
+            provider = ModelProvider.GOOGLE
+            category = QueryCategory.VISUAL
+            confidence = 1.0
+            matched = ["multimodal_input:image"]
         else:
-            category, confidence, matched = self.classify_query(query)
+            # For list queries that are actually text-only (e.g. from a past multimodal turnaround)
+            text_query = query
+            if isinstance(query, list):
+                text_query = " ".join([b.get("text", "") for b in query if b.get("type") == "text"])
+            
+            category, confidence, matched = self.classify_query(text_query)
             provider = self.get_best_model(category)
         
         # Map category to atmosphere (Astrocyte Resonance)
