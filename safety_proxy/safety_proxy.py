@@ -725,11 +725,11 @@ def get_model_config(model_id: str) -> dict:
         }
     
     # Google Gemini
-    if model_id == "gemini-1.5-flash":
+    if model_id == "gemini-2.0-flash-exp":
         return {
-            "api_base": f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?key={GOOGLE_API_KEY}&alt=sse",
+            "api_base": f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:streamGenerateContent?key={GOOGLE_API_KEY}&alt=sse",
             "api_key": GOOGLE_API_KEY,
-            "model": "gemini-1.5-flash",
+            "model": "gemini-2.0-flash-exp",
             "provider": "google"
         }
     
@@ -923,10 +923,11 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
         rewrite_result = None
         if routing:
             rewrite_result = rewrite_engine.process_sync(full_response, routing.response_type)
-            if rewrite_result.was_rewritten:
-                logger.info(f"RewriteEngine: {rewrite_result.method} (violations: {rewrite_result.violations})")
+            was_rewritten = rewrite_result.result != RewriteResult.PASSED
+            if was_rewritten:
+                logger.info(f"RewriteEngine: {rewrite_result.result.value} (violations: {rewrite_result.violations_original})")
                 full_response = rewrite_result.final
-                record_event("RewriteEngine", rewrite_result.method.upper(), f"violations:{len(rewrite_result.violations)}", "REWRITE", {
+                record_event("RewriteEngine", rewrite_result.result.value, f"violations:{len(rewrite_result.violations_original)}", "REWRITE", {
                     "request_id": request_id,
                     "response_type": routing.response_type.value
                 })
@@ -979,10 +980,10 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
                 "confidence": routing.confidence,
                 "temperature": routing.temperature
             }
-            if rewrite_result and rewrite_result.was_rewritten:
+            if rewrite_result and rewrite_result.result != RewriteResult.PASSED:
                 audit["two_lane"]["rewrite"] = {
-                    "method": rewrite_result.method,
-                    "violation_count": len(rewrite_result.violations)
+                    "method": rewrite_result.result.value,
+                    "violation_count": len(rewrite_result.violations_original)
                 }
         yield json.dumps({"audit": audit}) + "\n"
         

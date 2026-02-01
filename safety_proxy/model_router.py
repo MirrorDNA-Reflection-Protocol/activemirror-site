@@ -21,7 +21,7 @@ class ModelProvider(Enum):
     DEEPSEEK = "deepseek"   # DeepSeek V3 - Best reasoning
     MISTRAL = "mistral"     # Mistral Large - Creative, European
     OPENAI = "openai"       # GPT-4o Mini - Frontier fallback
-    GOOGLE = "google"       # Gemini 1.5 Flash - Free Vision, Large Context
+    GOOGLE = "google"       # Gemini 2.0 Flash - Free Vision, Large Context
     LOCAL = "local"         # Mac Mini M4 Ollama - Sovereign
 
 class QueryCategory(Enum):
@@ -86,8 +86,8 @@ MODELS = {
         "max_tokens": 800
     },
     ModelProvider.GOOGLE: {
-        "name": "Gemini 1.5 Flash",
-        "id": "gemini-1.5-flash",
+        "name": "Gemini 2.0 Flash",
+        "id": "gemini-2.0-flash-exp",
         "api_base": "https://generativelanguage.googleapis.com/v1beta",
         "env_key": "GOOGLE_API_KEY",
         "strengths": ["vision", "multimodal", "free", "large_context"],
@@ -292,8 +292,8 @@ class ModelRouter:
             confidence = 1.0
             matched = ["user_override:sovereign"]
         elif is_visual:
-            # Gemini Flash is free and has excellent vision - prefer it
-            provider = ModelProvider.GOOGLE
+            # Use OpenAI GPT-4o-mini for vision (Gemini quota exhausted)
+            provider = ModelProvider.OPENAI
             category = QueryCategory.VISUAL
             confidence = 1.0
             matched = ["multimodal_input:image"]
