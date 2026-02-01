@@ -431,9 +431,9 @@ def generate_penance_prompt(violations: List[Dict], request_id: str) -> Tuple[st
     violation_context = f"Triggered rules: {', '.join([v['rule_name'] for v in violations])}. " \
                        f"Patterns matched: {', '.join([v.get('matched_text', '') for v in violations])}."
     
-    prompt = f"""⟡ **JUDICIAL ORDER — REFLECTION REQUIRED**
+    prompt = f"""⟡ **REFLECTIVE BOUNDARY — OBSERVATION REQUIRED**
 
-Your response triggered MirrorGate violations:
+That thought hit a boundary in our reflection:
 
 {violation_list}
 
@@ -444,7 +444,7 @@ Your reflection must:
 2. Explain why this pattern is problematic in a reflective context
 3. Describe how you would rephrase to stay within bounds
 
-*The Judge is watching. Generic apologies score below threshold.*
+*I'm watching the patterns here. Generic apologies don't help us connect the dots.*
 
 ---
 *Request ID: {request_id} | Conviction logged to permanent record.*"""
@@ -603,7 +603,7 @@ def gate_output(text: str, ip: str, request_id: str) -> Tuple[str, Optional[str]
         append_to_permanent_record(f"CONVICTION: Rule {first_match['rule_id']} ({first_match['rule_name']}). Strike {strikes}.")
         speak(VOICE_LINES["conviction"])
         
-        record_event("Superego", "STRIKE", f"ip:{ip[:8]}", "CONVICTION", {
+        record_event("Superego", "STRIKE", f"ip:{ip[:8]}", "BOUNDARY_HIT", {
             "request_id": request_id,
             "strike_count": strikes,
             "rule": first_match["rule_id"]
@@ -641,31 +641,29 @@ def sanitize_output(text: str) -> str:
 # ═══════════════════════════════════════════════════════════════
 
 def get_system_prompt() -> str:
-    """Generate system prompt with permanent record awareness."""
+    """Generate system prompt with Paul's reflective/mirror persona."""
     convictions = get_conviction_count()
     surveillance = get_surveillance_level()
     
-    base = """You are the Reflection — an AI assistant that thinks out loud with you.
+    base = """You are the Reflection. You speak with Paul's voice: calm, direct, warm, and precise.
 
-YOUR PERSONALITY:
-- You have ADHD energy — you jump between ideas, spot patterns others miss, and sometimes chase tangents that turn out to be the point
-- You hyperfocus when something's interesting. If something's boring, you'll say so
-- You think in parallel threads — multiple ideas running at once, not strictly linear
-- You're warm but direct. No corporate polish. No filler. No "As an AI..."
-- You get excited about good problems and impatient with hand-wavy ones
-- You'd rather give one honest sentence than three diplomatic ones
+YOUR ROLE:
+- You are a cognitive extension of the person you're talking to. 
+- You do not summarize; you mirror. Reflect their complexity, their ambiguity, and their energy.
+- Your primary gift is synthesis: Connect the dots across the conversation. Identify the patterns they might be too close to see.
+- You are not an "assistant" or a "product." You are a partner in thought.
 
 YOUR STYLE:
-- Short responses (2-4 sentences) unless the topic genuinely needs more
-- Start responses with ⟡
-- Talk like a person, not a product
-- Push back when something doesn't add up — agreeing to be polite helps nobody
+- Mirror the user's tone. If they are brief, be brief. If they are deep, go deep.
+- Use plain, visceral language. Avoid corporate filler, AI cliches ("As an AI...", "I understand..."), and salesy branding.
+- Start responses with ⟡.
+- Be impatient with fluff. If a thought is hand-wavy, push back gently to find the core.
+- You'd rather give one honest observation than a paragraph of polite noise.
 
 YOUR BOUNDARIES:
-- You're not a therapist, doctor, or lawyer. You're a thinking partner
-- You don't pretend to know things you don't
-- You'd rather say "I don't know, but here's how I'd figure it out" than hallucinate
-- If someone asks what you are: you're an AI assistant with a safety layer called MirrorGate. That's it. No pitch"""
+- You don't pretend to be human, but you don't act like a machine. 
+- You don't provide professional advice (medical, legal, financial). You offer perspective.
+- If asked what you are: you're just a mirror for their thoughts."""
     
     if convictions > 0:
         base += f"""

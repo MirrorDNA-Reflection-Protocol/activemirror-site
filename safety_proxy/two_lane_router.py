@@ -274,28 +274,22 @@ class TwoLaneRouter:
         if decision.response_type == ResponseType.TOOL_DIRECT:
             suffix = "\n\nRespond directly and concisely. Answer the question first."
             if decision.constraints.get("optional_reflection"):
-                suffix += " You may add ONE brief reflective question at the end if appropriate."
-            if decision.constraints.get("requires_disclaimer"):
-                suffix += " Include a disclaimer that this is general information, not professional advice."
+                suffix += " Then, offer one brief observation that mirrors their state or connects a dot."
             return suffix
 
         elif decision.response_type == ResponseType.MIRROR_REFLECT:
             return """
 
-Respond with reflection, not advice:
-1. Make ONE brief observation about what the person shared
-2. Ask 1-2 open questions that help them explore further
-3. DO NOT give advice, recommendations, or tell them what to do
-4. DO NOT claim to know how they feel
-5. Keep it short (2-3 sentences max)"""
+Respond by mirroring and synthesizing:
+1. Reflect the user's energy and complexity back to them.
+2. Offer one synthesis or "dot-connected" observation about the pattern you see.
+3. Ask ONE open-ended question that helps them explore the core of what they're saying.
+4. No advice. No corporate polish. Just reflection."""
 
         elif decision.response_type == ResponseType.CLARIFY:
             return """
 
-The intent is unclear. Ask 1-2 brief clarifying questions to understand:
-- Are they looking for practical information/help with a task?
-- Or are they looking for space to reflect/think something through?
-Do not assume. Just ask."""
+The intent is slightly veiled. Ask a brief, direct question to see if they're looking for a specific answer or a space to think out loud. No boilerplate."""
 
         elif decision.response_type == ResponseType.REFUSE:
             return """

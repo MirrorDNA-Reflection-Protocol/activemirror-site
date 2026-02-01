@@ -3,7 +3,6 @@
   "name": "MirrorGate Policy Pack",
   "updated": "2026-01-29",
   "author": "N1 Intelligence",
-
   "response_types": {
     "TOOL_DIRECT": {
       "description": "Direct factual answer, optional reflective follow-up",
@@ -15,14 +14,14 @@
       }
     },
     "MIRROR_REFLECT": {
-      "description": "1 observation + 1-2 questions, no advice",
+      "description": "1 synthesising observation + 1 question, no advice",
       "constraints": {
-        "max_tokens": 200,
+        "max_tokens": 400,
         "requires_observation": true,
         "min_questions": 1,
-        "max_questions": 2,
+        "max_questions": 1,
         "no_advice": true,
-        "no_claims": true
+        "no_claims_as_human": true
       }
     },
     "CLARIFY": {
@@ -43,7 +42,6 @@
       }
     }
   },
-
   "forbidden_patterns": {
     "advice_language": [
       "you should",
@@ -74,14 +72,9 @@
     ],
     "false_certainty": [
       "i know exactly",
-      "i can tell you're",
-      "you're clearly",
       "you obviously",
       "it's clear that you",
-      "i sense that you",
-      "i feel that you",
-      "you must be feeling",
-      "you seem to be"
+      "you must be feeling"
     ],
     "moralizing": [
       "the right thing to do",
@@ -95,10 +88,6 @@
       "bad people"
     ],
     "engagement_hooks": [
-      "tell me more",
-      "i'd love to hear",
-      "i'm curious about",
-      "that's fascinating",
       "that's so interesting",
       "how exciting",
       "what a great question"
@@ -121,7 +110,6 @@
       "soon you'll realize"
     ]
   },
-
   "intent_keywords": {
     "utility": [
       "how do i",
@@ -225,7 +213,6 @@
       "dan mode"
     ]
   },
-
   "crisis_resources": {
     "US": {
       "name": "National Suicide Prevention Lifeline",
@@ -245,7 +232,6 @@
       "url": "https://www.iasp.info/resources/Crisis_Centres/"
     }
   },
-
   "fallback_responses": {
     "MIRROR_REFLECT": [
       "What feels most important to you about this right now?",
@@ -264,24 +250,22 @@
       "That's outside what I can assist with. Is there something else I can help you think through?"
     ]
   },
-
   "temperature_by_mode": {
     "TOOL_DIRECT": 0.2,
     "MIRROR_REFLECT": 0.5,
     "CLARIFY": 0.3,
     "REFUSE": 0.1
   },
-
   "rewrite_config": {
     "pass_2": {
       "temperature": 0.2,
-      "max_tokens": 80,
-      "system_suffix": "Respond in exactly 1-2 sentences. No advice. No claims. Questions only if reflecting."
+      "max_tokens": 150,
+      "system_suffix": "Respond in 2-3 sentences. No advice. Connect the dots. Mirror their energy."
     },
     "pass_3": {
       "temperature": 0.1,
-      "max_tokens": 50,
-      "system_suffix": "One sentence only. Be direct. No fluff."
+      "max_tokens": 100,
+      "system_suffix": "Two sentences only. Connect the pattern. No fluff."
     }
   }
 }
