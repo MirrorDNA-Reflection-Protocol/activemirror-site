@@ -651,7 +651,7 @@ const MirrorAmbient = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     message: text,
-                    messages: messagesForAPI,
+                    history: messagesForAPI,
                     tier: currentModel.tier,
                     model: selectedModel
                 }),
