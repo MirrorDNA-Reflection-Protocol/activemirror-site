@@ -17,7 +17,7 @@ import {
 import SpotlightCard from '../components/SpotlightCard';
 import MirrorLogo from '../components/MirrorLogo';
 
-const BRIEF_API = 'http://localhost:8200';
+const BRIEF_API = 'https://brief.activemirror.ai';
 
 // Tab definitions
 const TABS = {

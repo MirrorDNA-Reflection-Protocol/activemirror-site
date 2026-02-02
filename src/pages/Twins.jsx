@@ -16,7 +16,7 @@ import {
 import SpotlightCard from '../components/SpotlightCard';
 import MirrorLogo from '../components/MirrorLogo';
 
-const BRAIN_API = 'http://localhost:8100';
+const BRAIN_API = 'https://brain.activemirror.ai';
 
 // Twin definitions with icons and colors
 const TWINS = {

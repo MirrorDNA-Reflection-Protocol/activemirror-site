@@ -12,7 +12,7 @@ import { ArrowRight, ArrowLeft, Brain, Sparkles, Share2, Home, Users } from 'luc
 import SpotlightCard from '../components/SpotlightCard';
 import MirrorLogo from '../components/MirrorLogo';
 
-const BRAIN_API = 'http://localhost:8100';
+const BRAIN_API = 'https://brain.activemirror.ai';
 
 // Archetype colors for results
 const ARCHETYPE_COLORS = {
