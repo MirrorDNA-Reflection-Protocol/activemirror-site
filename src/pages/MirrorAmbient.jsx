@@ -1320,7 +1320,13 @@ const MirrorAmbient = () => {
                             whileTap={{ scale: 0.9 }}
                         >
                             {isLoading ? (
-                                <Logo size={20} theme="amber" />
+                                <motion.div
+                                    initial={{ scale: 1, opacity: 0.6 }}
+                                    animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.8] }}
+                                    transition={{ duration: 0.6, ease: "easeOut" }}
+                                >
+                                    <Logo size={20} theme="amber" />
+                                </motion.div>
                             ) : (
                                 <Send size={18} />
                             )}
