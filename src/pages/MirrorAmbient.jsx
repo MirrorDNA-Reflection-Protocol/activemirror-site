@@ -621,6 +621,7 @@ const MirrorAmbient = () => {
     const [shadowThoughts, setShadowThoughts] = useState(null);
     const [localDoc, setLocalDoc] = useState(null);
     const [pastedImage, setPastedImage] = useState(null); // { dataUrl, file }
+    const [isDragging, setIsDragging] = useState(false);
 
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
@@ -786,6 +787,36 @@ const MirrorAmbient = () => {
         setPastedImage(null);
     }, []);
 
+    // Drag and drop handlers
+    const handleDragOver = useCallback((e) => {
+        e.preventDefault();
+        setIsDragging(true);
+    }, []);
+
+    const handleDragLeave = useCallback((e) => {
+        e.preventDefault();
+        if (e.currentTarget.contains(e.relatedTarget)) return;
+        setIsDragging(false);
+    }, []);
+
+    const handleDrop = useCallback((e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const file = e.dataTransfer.files?.[0];
+        if (!file) return;
+
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                setPastedImage({ dataUrl: ev.target.result, file });
+                haptic('medium');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            handleFileUpload(file);
+        }
+    }, [handleFileUpload]);
+
     const speak = useCallback((text) => {
         if (!voiceEnabled || !('speechSynthesis' in window)) return;
 
@@ -812,7 +843,10 @@ const MirrorAmbient = () => {
     // Submit message
     const handleSubmit = async () => {
         const text = input.trim();
-        if (!text || isLoading) return;
+        if ((!text && !pastedImage) || isLoading) return;
+
+        // Default message for image-only submissions
+        const messageText = text || "What's in this image?";
 
         haptic('medium');
         setError(null);
@@ -852,7 +886,7 @@ const MirrorAmbient = () => {
         // Add user message (with image if present)
         const userMessage = {
             role: 'user',
-            content: text,
+            content: messageText,
             image: pastedImage?.dataUrl || null
         };
         const newMessages = [...messages, userMessage];
@@ -912,7 +946,7 @@ const MirrorAmbient = () => {
 
             // Prepare request body
             const requestBody = {
-                message: text,
+                message: messageText,
                 history: messagesForAPI,
                 tier: currentModel.tier,
                 model: selectedModel,
@@ -1102,7 +1136,34 @@ const MirrorAmbient = () => {
     }
 
     return (
-        <div className="fixed inset-0 bg-black flex flex-col" style={{ height: '100dvh' }}>
+        <div
+            className="fixed inset-0 bg-black flex flex-col"
+            style={{ height: '100dvh' }}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+        >
+            {/* Drag Overlay */}
+            <AnimatePresence>
+                {isDragging && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9 }}
+                            animate={{ scale: 1 }}
+                            className="flex flex-col items-center gap-4 p-8 rounded-2xl border-2 border-dashed border-white/20"
+                        >
+                            <ImageIcon size={48} className="text-white/40" />
+                            <p className="text-white/60 text-lg">Drop image or document</p>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Strategy Panel Overlay */}
             <AnimatePresence>
                 {routingInfo && (
@@ -1344,14 +1405,6 @@ const MirrorAmbient = () => {
                     </motion.div>
                 )}
 
-                {/* File Upload for Sovereign RAG */}
-                {messages.length < 5 && !pastedImage && (
-                    <FileUploadZone
-                        onUpload={handleFileUpload}
-                        onImageUpload={setPastedImage}
-                        currentDoc={localDoc}
-                    />
-                )}
             </main>
 
             {/* Input area */}
@@ -1360,32 +1413,92 @@ const MirrorAmbient = () => {
                 style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)', background: 'linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.7))' }}
             >
                 <div className="max-w-2xl mx-auto relative flex flex-col gap-2">
-                    {/* Image Preview */}
-                    {pastedImage && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="relative w-full flex items-center gap-3 p-2 rounded-xl bg-white/5 border border-white/10"
-                        >
-                            <img
-                                src={pastedImage.dataUrl}
-                                alt="Pasted"
-                                className="h-16 w-16 object-cover rounded-lg"
-                            />
-                            <div className="flex-1">
-                                <p className="text-white/60 text-xs">Image ready to send</p>
-                                <p className="text-white/30 text-[10px]">Will be analyzed with your message</p>
-                            </div>
-                            <button
-                                onClick={clearPastedImage}
-                                className="p-2 rounded-lg hover:bg-white/10 text-white/40 hover:text-white/60 transition-colors"
+                    {/* Attachments Preview */}
+                    <AnimatePresence>
+                        {(pastedImage || localDoc) && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="flex gap-2 overflow-hidden"
                             >
-                                <X size={16} />
-                            </button>
-                        </motion.div>
-                    )}
+                                {/* Image Preview */}
+                                {pastedImage && (
+                                    <motion.div
+                                        initial={{ scale: 0.8, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        className="relative group"
+                                    >
+                                        <img
+                                            src={pastedImage.dataUrl}
+                                            alt="Attached"
+                                            className="h-20 w-20 object-cover rounded-xl border border-white/10"
+                                        />
+                                        <button
+                                            onClick={clearPastedImage}
+                                            className="absolute -top-2 -right-2 p-1 rounded-full bg-black/80 border border-white/10 text-white/60 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <X size={12} />
+                                        </button>
+                                        <div className="absolute bottom-1 left-1 right-1 text-center">
+                                            <span className="text-[8px] uppercase tracking-wider bg-black/60 px-1.5 py-0.5 rounded text-white/60">
+                                                Vision
+                                            </span>
+                                        </div>
+                                    </motion.div>
+                                )}
+                                {/* Document Preview */}
+                                {localDoc && (
+                                    <motion.div
+                                        initial={{ scale: 0.8, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        className="relative group flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10"
+                                    >
+                                        <FileText size={16} className="text-emerald-400" />
+                                        <div>
+                                            <p className="text-xs text-white/70 max-w-[100px] truncate">{localDoc.name}</p>
+                                            <p className="text-[9px] text-white/30">Context active</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setLocalDoc(null)}
+                                            className="p-1 rounded text-white/30 hover:text-white/60 transition-colors"
+                                        >
+                                            <X size={12} />
+                                        </button>
+                                    </motion.div>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     <div className="flex gap-2">
+                    {/* Attachment button */}
+                    <button
+                        onClick={() => document.getElementById('file-input').click()}
+                        className="p-3 rounded-xl bg-white/5 text-white/40 hover:text-white/60 hover:bg-white/10 transition-all"
+                        title="Attach image or document"
+                    >
+                        <Paperclip size={20} />
+                    </button>
+                    <input
+                        type="file"
+                        id="file-input"
+                        hidden
+                        accept="image/*,.pdf,.txt,.md,.doc,.docx"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (file.type.startsWith('image/')) {
+                                const reader = new FileReader();
+                                reader.onload = (ev) => setPastedImage({ dataUrl: ev.target.result, file });
+                                reader.readAsDataURL(file);
+                            } else {
+                                handleFileUpload(file);
+                            }
+                            e.target.value = '';
+                        }}
+                    />
+
                     {/* Voice input button */}
                     <button
                         onClick={toggleListening}
@@ -1405,7 +1518,7 @@ const MirrorAmbient = () => {
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={handleKeyDown}
                             onPaste={handlePaste}
-                            placeholder={isListening ? "Listening..." : pastedImage ? "Describe what you want to know about the image..." : "Ask anything..."}
+                            placeholder={isListening ? "Listening..." : pastedImage ? "Ask about the image..." : "Ask anything..."}
                             disabled={isLoading}
                             className="w-full px-4 py-3 pr-14 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/30 resize-none focus:outline-none focus:border-white/20 text-base transition-all disabled:opacity-50"
                             style={{
@@ -1416,9 +1529,9 @@ const MirrorAmbient = () => {
                         />
                         <motion.button
                             onClick={handleSubmit}
-                            disabled={!input.trim() || isLoading}
+                            disabled={(!input.trim() && !pastedImage) || isLoading}
                             className="absolute right-2 bottom-2 p-2.5 rounded-xl text-white/60 disabled:opacity-20 disabled:cursor-not-allowed transition-all"
-                            style={{ background: input.trim() && !isLoading ? `${atmosphere.primary}40` : 'rgba(255,255,255,0.1)' }}
+                            style={{ background: (input.trim() || pastedImage) && !isLoading ? `${atmosphere.primary}40` : 'rgba(255,255,255,0.1)' }}
                             whileTap={{ scale: 0.9 }}
                         >
                             {isLoading ? (
