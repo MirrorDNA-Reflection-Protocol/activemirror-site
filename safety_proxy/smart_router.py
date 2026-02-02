@@ -75,10 +75,10 @@ MODELS = {
         temperature_default=0.3
     ),
     ModelTier.IMAGE_GEN: ModelConfig(
-        name="Stable Diffusion XL",
-        provider="Replicate",
-        model_id="stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
-        api_base="https://api.replicate.com/v1",
+        name="FLUX Schnell",
+        provider="Pollinations",
+        model_id="flux",
+        api_base="https://pollinations.ai",
         tier=ModelTier.IMAGE_GEN,
         max_tokens=0,  # Not applicable for image gen
         temperature_default=0.0

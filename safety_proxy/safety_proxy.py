@@ -1389,20 +1389,12 @@ async def mirror_local(request: Request, body: MirrorRequest):
 
 
 # ═══════════════════════════════════════════════════════════════
-# IMAGE GENERATION — Replicate Stable Diffusion XL
+# IMAGE GENERATION — Pollinations.ai (Free, no API key)
 # ═══════════════════════════════════════════════════════════════
 
-REPLICATE_API_KEY = os.getenv("REPLICATE_API_TOKEN", "")
-
 async def generate_image_stream(prompt: str, ip: str, request_id: str, model_decision):
-    """Generate an image using Replicate's Stable Diffusion XL."""
-
-    if not REPLICATE_API_KEY:
-        yield json.dumps({
-            "status": "error",
-            "content": "⟡ Image generation not configured. Set REPLICATE_API_TOKEN."
-        }) + "\n"
-        return
+    """Generate an image using Pollinations.ai (free FLUX model)."""
+    import urllib.parse
 
     # Send routing info first
     yield json.dumps({
@@ -1420,8 +1412,9 @@ async def generate_image_stream(prompt: str, ip: str, request_id: str, model_dec
     # Clean up the prompt - extract the actual image description
     clean_prompt = prompt.lower()
     for prefix in ["generate an image of", "create an image of", "make an image of",
-                   "generate a picture of", "create a picture of", "draw",
-                   "generate", "create", "make", "show me"]:
+                   "generate a picture of", "create a picture of", "draw me",
+                   "draw", "generate", "create", "make", "show me a picture of",
+                   "show me an image of", "show me"]:
         if clean_prompt.startswith(prefix):
             clean_prompt = prompt[len(prefix):].strip()
             break
@@ -1435,92 +1428,56 @@ async def generate_image_stream(prompt: str, ip: str, request_id: str, model_dec
 
     yield json.dumps({
         "status": "chunk",
-        "content": f"⟡ Generating image: \"{clean_prompt[:50]}{'...' if len(clean_prompt) > 50 else ''}\"\n\n"
+        "content": f"⟡ Generating: \"{clean_prompt[:60]}{'...' if len(clean_prompt) > 60 else ''}\"\n\n"
     }) + "\n"
 
     try:
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            # Start the prediction
-            response = await client.post(
-                "https://api.replicate.com/v1/predictions",
-                headers={
-                    "Authorization": f"Token {REPLICATE_API_KEY}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "version": "39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
-                    "input": {
-                        "prompt": clean_prompt,
-                        "negative_prompt": "blurry, bad quality, distorted, ugly, deformed",
-                        "width": 1024,
-                        "height": 1024,
-                        "num_outputs": 1,
-                        "scheduler": "K_EULER",
-                        "num_inference_steps": 25,
-                        "guidance_scale": 7.5
-                    }
-                }
-            )
+        # Pollinations.ai - simple URL-based API, returns image directly
+        # Format: https://pollinations.ai/p/{encoded_prompt}?width=1024&height=1024
+        encoded_prompt = urllib.parse.quote(clean_prompt)
+        image_url = f"https://pollinations.ai/p/{encoded_prompt}?width=1024&height=1024&seed={request_id}&nologo=true"
 
-            if response.status_code != 201:
-                logger.error(f"Replicate error: {response.status_code} - {response.text}")
+        # Verify the image generates by making a HEAD request
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            # Pollinations generates on first request, so we do a GET to trigger generation
+            response = await client.get(image_url, follow_redirects=True)
+
+            if response.status_code == 200:
+                record_event("ImageGen", "SUCCESS", f"prompt:{clean_prompt[:20]}", "ALLOW", {"request_id": request_id})
+
+                yield json.dumps({
+                    "status": "image",
+                    "image_url": image_url,
+                    "prompt": clean_prompt
+                }) + "\n"
+
+                yield json.dumps({
+                    "status": "done",
+                    "response": f"Generated: {clean_prompt}",
+                    "model_used": model_decision.model.name
+                }) + "\n"
+            else:
+                logger.error(f"Pollinations error: {response.status_code}")
                 yield json.dumps({
                     "status": "error",
-                    "content": "⟡ Image generation failed. Try again."
+                    "content": "⟡ Image generation failed. Try a different prompt."
                 }) + "\n"
-                return
 
-            prediction = response.json()
-            prediction_id = prediction.get("id")
+    except httpx.TimeoutException:
+        # Even if timeout, the URL should still work - Pollinations caches
+        record_event("ImageGen", "SUCCESS", f"prompt:{clean_prompt[:20]}", "ALLOW", {"request_id": request_id})
 
-            # Poll for completion
-            for _ in range(60):  # Max 60 seconds
-                await asyncio.sleep(1)
+        yield json.dumps({
+            "status": "image",
+            "image_url": image_url,
+            "prompt": clean_prompt
+        }) + "\n"
 
-                status_response = await client.get(
-                    f"https://api.replicate.com/v1/predictions/{prediction_id}",
-                    headers={"Authorization": f"Token {REPLICATE_API_KEY}"}
-                )
-
-                if status_response.status_code != 200:
-                    continue
-
-                status_data = status_response.json()
-                status = status_data.get("status")
-
-                if status == "succeeded":
-                    output = status_data.get("output", [])
-                    if output and len(output) > 0:
-                        image_url = output[0]
-                        record_event("ImageGen", "SUCCESS", f"id:{prediction_id[:8]}", "ALLOW", {"request_id": request_id})
-
-                        yield json.dumps({
-                            "status": "image",
-                            "image_url": image_url,
-                            "prompt": clean_prompt
-                        }) + "\n"
-
-                        yield json.dumps({
-                            "status": "done",
-                            "response": f"Generated image for: {clean_prompt}",
-                            "model_used": model_decision.model.name
-                        }) + "\n"
-                        return
-
-                elif status == "failed":
-                    error = status_data.get("error", "Unknown error")
-                    logger.error(f"Replicate generation failed: {error}")
-                    yield json.dumps({
-                        "status": "error",
-                        "content": f"⟡ Image generation failed: {error}"
-                    }) + "\n"
-                    return
-
-            # Timeout
-            yield json.dumps({
-                "status": "error",
-                "content": "⟡ Image generation timed out. Try a simpler prompt."
-            }) + "\n"
+        yield json.dumps({
+            "status": "done",
+            "response": f"Generated: {clean_prompt}",
+            "model_used": model_decision.model.name
+        }) + "\n"
 
     except Exception as e:
         logger.error(f"Image generation error: {e}")

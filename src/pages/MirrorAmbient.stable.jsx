@@ -19,7 +19,8 @@ import {
     ArrowLeft, Send, Sparkles, RotateCcw, Trash2,
     Mic, MicOff, Volume2, VolumeX, Settings, X,
     Zap, BookOpen, Languages, Code, Lightbulb, Shield, Database, FileDown,
-    ChevronDown, Cloud, Cpu, Monitor, Brain, Trash, Info, Paperclip, FileText, CheckCircle2, Share2, Download, Image as ImageIcon
+    ChevronDown, Cloud, Cpu, Monitor, Brain, Trash, Info, Paperclip, FileText, CheckCircle2, Share2, Download, Image as ImageIcon,
+    Copy, Check, RefreshCw, AlertCircle, Sparkle
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import ConsentGate from '../components/ConsentGate';
@@ -285,7 +286,21 @@ const ShadowThoughts = ({ thought, atmosphere }) => {
 };
 
 // File Upload Zone for Zero-Vault RAG
-const FileUploadZone = ({ onUpload, currentDoc }) => {
+const FileUploadZone = ({ onUpload, onImageUpload, currentDoc }) => {
+    const handleFile = (file) => {
+        if (!file) return;
+        // Route images to image handler, documents to doc handler
+        if (file.type.startsWith('image/')) {
+            if (onImageUpload) {
+                const reader = new FileReader();
+                reader.onload = (e) => onImageUpload({ dataUrl: e.target.result, file });
+                reader.readAsDataURL(file);
+            }
+        } else {
+            onUpload(file);
+        }
+    };
+
     return (
         <div className="max-w-2xl mx-auto mb-4 px-4">
             {!currentDoc ? (
@@ -297,15 +312,13 @@ const FileUploadZone = ({ onUpload, currentDoc }) => {
                         type="file"
                         id="file-upload"
                         hidden
-                        onChange={(e) => {
-                            const file = e.target.files[0];
-                            if (file) onUpload(file);
-                        }}
+                        accept=".pdf,.txt,.md,.doc,.docx,image/*"
+                        onChange={(e) => handleFile(e.target.files[0])}
                     />
                     <div className="flex flex-col items-center gap-2">
                         <Paperclip size={20} className="text-white/20 group-hover:text-white/40 transition-colors" />
                         <p className="text-xs text-white/30 font-medium uppercase tracking-widest">
-                            Reflect on a document (PDF, TXT, MD)
+                            Upload image or document
                         </p>
                     </div>
                 </div>
@@ -356,9 +369,21 @@ const captureReflection = async (elementId, messageId) => {
     }
 };
 
-const MessageBubble = ({ message, atmosphere, onSpeak, voiceEnabled }) => {
+const MessageBubble = ({ message, atmosphere, onSpeak, onRegenerate, voiceEnabled, isLast }) => {
     const isUser = message.role === 'user';
     const isSystem = message.role === 'system';
+    const [copied, setCopied] = useState(false);
+
+    const copyToClipboard = async () => {
+        try {
+            await navigator.clipboard.writeText(message.content);
+            setCopied(true);
+            haptic('light');
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error('Failed to copy:', err);
+        }
+    };
 
     return (
         <motion.div
@@ -395,7 +420,7 @@ const MessageBubble = ({ message, atmosphere, onSpeak, voiceEnabled }) => {
                         <span className="text-amber-400 text-xs">Safety Notice</span>
                     </div>
                 )}
-                {/* Image attachment */}
+                {/* Image attachment (user uploaded) */}
                 {message.image && (
                     <div className="mb-2">
                         <img
@@ -403,6 +428,33 @@ const MessageBubble = ({ message, atmosphere, onSpeak, voiceEnabled }) => {
                             alt="Attached"
                             className="max-w-full max-h-48 rounded-lg object-contain"
                         />
+                    </div>
+                )}
+                {/* Generated image (AI created) */}
+                {message.generatedImage && (
+                    <div className="mb-3">
+                        <div className="relative group">
+                            <img
+                                src={message.generatedImage}
+                                alt={message.imagePrompt || "Generated image"}
+                                className="max-w-full rounded-xl border border-white/10"
+                            />
+                            <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a
+                                    href={message.generatedImage}
+                                    download={`mirror-gen-${Date.now()}.png`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2 rounded-lg bg-black/60 text-white/70 hover:text-white transition-colors"
+                                    title="Download"
+                                >
+                                    <Download size={14} />
+                                </a>
+                            </div>
+                        </div>
+                        {message.imagePrompt && (
+                            <p className="text-[10px] text-white/30 mt-1 italic">"{message.imagePrompt}"</p>
+                        )}
                     </div>
                 )}
                 <p className={`text-sm leading-relaxed whitespace-pre-wrap ${isSystem ? 'text-amber-200/90' : isUser ? 'text-white' : 'text-white/85'
@@ -425,7 +477,16 @@ const MessageBubble = ({ message, atmosphere, onSpeak, voiceEnabled }) => {
 
                 {/* Actions (Only for assistant messages) */}
                 {!isUser && !isSystem && !message.isStreaming && (
-                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1 mt-2 pt-2 border-t border-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {/* Copy */}
+                        <button
+                            onClick={copyToClipboard}
+                            className="p-1.5 rounded-lg hover:bg-white/5 text-white/30 hover:text-white/60 transition-all"
+                            title="Copy"
+                        >
+                            {copied ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                        </button>
+                        {/* Listen */}
                         <button
                             onClick={() => onSpeak(message.content)}
                             className="p-1.5 rounded-lg hover:bg-white/5 text-white/30 hover:text-white/60 transition-all"
@@ -433,13 +494,23 @@ const MessageBubble = ({ message, atmosphere, onSpeak, voiceEnabled }) => {
                         >
                             <Volume2 size={12} />
                         </button>
+                        {/* Regenerate (only on last message) */}
+                        {isLast && onRegenerate && (
+                            <button
+                                onClick={onRegenerate}
+                                className="p-1.5 rounded-lg hover:bg-white/5 text-white/30 hover:text-white/60 transition-all"
+                                title="Regenerate"
+                            >
+                                <RefreshCw size={12} />
+                            </button>
+                        )}
+                        {/* Print */}
                         <button
                             onClick={() => captureReflection(`msg-${message.id}`, message.id)}
-                            className="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-white/5 text-white/30 hover:text-white/60 transition-all font-medium"
-                            title="Generate Reflection Print"
+                            className="p-1.5 rounded-lg hover:bg-white/5 text-white/30 hover:text-white/60 transition-all"
+                            title="Save as image"
                         >
                             <ImageIcon size={12} />
-                            <span className="text-[10px] uppercase tracking-tighter">Print</span>
                         </button>
                     </div>
                 )}
@@ -609,6 +680,7 @@ const MirrorAmbient = () => {
     const [shadowThoughts, setShadowThoughts] = useState(null);
     const [localDoc, setLocalDoc] = useState(null);
     const [pastedImage, setPastedImage] = useState(null); // { dataUrl, file }
+    const [isDragging, setIsDragging] = useState(false);
 
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
@@ -774,6 +846,36 @@ const MirrorAmbient = () => {
         setPastedImage(null);
     }, []);
 
+    // Drag and drop handlers
+    const handleDragOver = useCallback((e) => {
+        e.preventDefault();
+        setIsDragging(true);
+    }, []);
+
+    const handleDragLeave = useCallback((e) => {
+        e.preventDefault();
+        if (e.currentTarget.contains(e.relatedTarget)) return;
+        setIsDragging(false);
+    }, []);
+
+    const handleDrop = useCallback((e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const file = e.dataTransfer.files?.[0];
+        if (!file) return;
+
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                setPastedImage({ dataUrl: ev.target.result, file });
+                haptic('medium');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            handleFileUpload(file);
+        }
+    }, [handleFileUpload]);
+
     const speak = useCallback((text) => {
         if (!voiceEnabled || !('speechSynthesis' in window)) return;
 
@@ -800,7 +902,10 @@ const MirrorAmbient = () => {
     // Submit message
     const handleSubmit = async () => {
         const text = input.trim();
-        if (!text || isLoading) return;
+        if ((!text && !pastedImage) || isLoading) return;
+
+        // Default message for image-only submissions
+        const messageText = text || "What's in this image?";
 
         haptic('medium');
         setError(null);
@@ -840,7 +945,7 @@ const MirrorAmbient = () => {
         // Add user message (with image if present)
         const userMessage = {
             role: 'user',
-            content: text,
+            content: messageText,
             image: pastedImage?.dataUrl || null
         };
         const newMessages = [...messages, userMessage];
@@ -900,7 +1005,7 @@ const MirrorAmbient = () => {
 
             // Prepare request body
             const requestBody = {
-                message: text,
+                message: messageText,
                 history: messagesForAPI,
                 tier: currentModel.tier,
                 model: selectedModel,
@@ -981,6 +1086,20 @@ const MirrorAmbient = () => {
                                 };
                                 return updated;
                             });
+                        } else if (data.status === 'image') {
+                            // Generated image received
+                            setMessages(prev => {
+                                const updated = [...prev];
+                                updated[updated.length - 1] = {
+                                    ...updated[updated.length - 1],
+                                    role: 'assistant',
+                                    content: fullContent,
+                                    generatedImage: data.image_url,
+                                    imagePrompt: data.prompt,
+                                    isStreaming: true
+                                };
+                                return updated;
+                            });
                         } else if (data.status === 'done') {
                             setMessages(prev => {
                                 const updated = [...prev];
@@ -1051,6 +1170,9 @@ const MirrorAmbient = () => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSubmit();
+        } else if (e.key === 'Escape') {
+            setInput('');
+            clearPastedImage();
         }
     };
 
@@ -1060,6 +1182,30 @@ const MirrorAmbient = () => {
         window.speechSynthesis?.cancel();
         haptic('light');
     };
+
+    // Regenerate last response - removes last assistant message and re-sends
+    const regenerateLastResponse = useCallback(async () => {
+        if (messages.length < 2 || isLoading) return;
+
+        // Find the last user message index
+        let lastUserIndex = -1;
+        for (let i = messages.length - 1; i >= 0; i--) {
+            if (messages[i].role === 'user') {
+                lastUserIndex = i;
+                break;
+            }
+        }
+        if (lastUserIndex === -1) return;
+
+        const lastUserMessage = messages[lastUserIndex];
+        // Keep messages up to and including the user message, remove assistant response
+        const newMessages = messages.slice(0, lastUserIndex + 1);
+        setMessages(newMessages);
+
+        // Set input to last user message and trigger submit
+        setInput(lastUserMessage.content);
+        haptic('medium');
+    }, [messages, isLoading]);
 
     // Quick actions
     const quickActions = [
@@ -1090,7 +1236,34 @@ const MirrorAmbient = () => {
     }
 
     return (
-        <div className="fixed inset-0 bg-black flex flex-col" style={{ height: '100dvh' }}>
+        <div
+            className="fixed inset-0 bg-black flex flex-col"
+            style={{ height: '100dvh' }}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+        >
+            {/* Drag Overlay */}
+            <AnimatePresence>
+                {isDragging && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9 }}
+                            animate={{ scale: 1 }}
+                            className="flex flex-col items-center gap-4 p-8 rounded-2xl border-2 border-dashed border-white/20"
+                        >
+                            <ImageIcon size={48} className="text-white/40" />
+                            <p className="text-white/60 text-lg">Drop image or document</p>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Strategy Panel Overlay */}
             <AnimatePresence>
                 {routingInfo && (
@@ -1306,11 +1479,13 @@ const MirrorAmbient = () => {
                         <AnimatePresence>
                             {messages.map((message, index) => (
                                 <MessageBubble
-                                    key={index}
+                                    key={message.id || index}
                                     message={message}
                                     atmosphere={atmosphere}
                                     onSpeak={speak}
+                                    onRegenerate={regenerateLastResponse}
                                     voiceEnabled={voiceEnabled}
+                                    isLast={index === messages.length - 1}
                                 />
                             ))}
                         </AnimatePresence>
@@ -1318,24 +1493,36 @@ const MirrorAmbient = () => {
                     </div>
                 )}
 
-                {/* Error */}
+                {/* Error Toast */}
                 {error && (
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="max-w-2xl mx-auto mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20"
                     >
-                        <p className="text-red-400 text-sm text-center">
-                            {error}
-                            <button onClick={() => setError(null)} className="ml-2 text-red-300 underline">Dismiss</button>
-                        </p>
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2">
+                                <AlertCircle size={16} className="text-red-400" />
+                                <p className="text-red-400 text-sm">{error}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={regenerateLastResponse}
+                                    className="px-2 py-1 text-xs rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors flex items-center gap-1"
+                                >
+                                    <RefreshCw size={12} /> Retry
+                                </button>
+                                <button
+                                    onClick={() => setError(null)}
+                                    className="p-1 text-red-400/60 hover:text-red-400 transition-colors"
+                                >
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        </div>
                     </motion.div>
                 )}
 
-                {/* File Upload for Sovereign RAG */}
-                {messages.length < 5 && (
-                    <FileUploadZone onUpload={handleFileUpload} currentDoc={localDoc} />
-                )}
             </main>
 
             {/* Input area */}
@@ -1344,32 +1531,92 @@ const MirrorAmbient = () => {
                 style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)', background: 'linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.7))' }}
             >
                 <div className="max-w-2xl mx-auto relative flex flex-col gap-2">
-                    {/* Image Preview */}
-                    {pastedImage && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="relative w-full flex items-center gap-3 p-2 rounded-xl bg-white/5 border border-white/10"
-                        >
-                            <img
-                                src={pastedImage.dataUrl}
-                                alt="Pasted"
-                                className="h-16 w-16 object-cover rounded-lg"
-                            />
-                            <div className="flex-1">
-                                <p className="text-white/60 text-xs">Image ready to send</p>
-                                <p className="text-white/30 text-[10px]">Will be analyzed with your message</p>
-                            </div>
-                            <button
-                                onClick={clearPastedImage}
-                                className="p-2 rounded-lg hover:bg-white/10 text-white/40 hover:text-white/60 transition-colors"
+                    {/* Attachments Preview */}
+                    <AnimatePresence>
+                        {(pastedImage || localDoc) && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="flex gap-2 overflow-hidden"
                             >
-                                <X size={16} />
-                            </button>
-                        </motion.div>
-                    )}
+                                {/* Image Preview */}
+                                {pastedImage && (
+                                    <motion.div
+                                        initial={{ scale: 0.8, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        className="relative group"
+                                    >
+                                        <img
+                                            src={pastedImage.dataUrl}
+                                            alt="Attached"
+                                            className="h-20 w-20 object-cover rounded-xl border border-white/10"
+                                        />
+                                        <button
+                                            onClick={clearPastedImage}
+                                            className="absolute -top-2 -right-2 p-1 rounded-full bg-black/80 border border-white/10 text-white/60 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <X size={12} />
+                                        </button>
+                                        <div className="absolute bottom-1 left-1 right-1 text-center">
+                                            <span className="text-[8px] uppercase tracking-wider bg-black/60 px-1.5 py-0.5 rounded text-white/60">
+                                                Vision
+                                            </span>
+                                        </div>
+                                    </motion.div>
+                                )}
+                                {/* Document Preview */}
+                                {localDoc && (
+                                    <motion.div
+                                        initial={{ scale: 0.8, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        className="relative group flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10"
+                                    >
+                                        <FileText size={16} className="text-emerald-400" />
+                                        <div>
+                                            <p className="text-xs text-white/70 max-w-[100px] truncate">{localDoc.name}</p>
+                                            <p className="text-[9px] text-white/30">Context active</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setLocalDoc(null)}
+                                            className="p-1 rounded text-white/30 hover:text-white/60 transition-colors"
+                                        >
+                                            <X size={12} />
+                                        </button>
+                                    </motion.div>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     <div className="flex gap-2">
+                    {/* Attachment button */}
+                    <button
+                        onClick={() => document.getElementById('file-input').click()}
+                        className="p-3 rounded-xl bg-white/5 text-white/40 hover:text-white/60 hover:bg-white/10 transition-all"
+                        title="Attach image or document"
+                    >
+                        <Paperclip size={20} />
+                    </button>
+                    <input
+                        type="file"
+                        id="file-input"
+                        hidden
+                        accept="image/*,.pdf,.txt,.md,.doc,.docx"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (file.type.startsWith('image/')) {
+                                const reader = new FileReader();
+                                reader.onload = (ev) => setPastedImage({ dataUrl: ev.target.result, file });
+                                reader.readAsDataURL(file);
+                            } else {
+                                handleFileUpload(file);
+                            }
+                            e.target.value = '';
+                        }}
+                    />
+
                     {/* Voice input button */}
                     <button
                         onClick={toggleListening}
@@ -1389,7 +1636,7 @@ const MirrorAmbient = () => {
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={handleKeyDown}
                             onPaste={handlePaste}
-                            placeholder={isListening ? "Listening..." : pastedImage ? "Describe what you want to know about the image..." : "Ask anything..."}
+                            placeholder={isListening ? "Listening..." : pastedImage ? "Ask about the image..." : "Ask anything..."}
                             disabled={isLoading}
                             className="w-full px-4 py-3 pr-14 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/30 resize-none focus:outline-none focus:border-white/20 text-base transition-all disabled:opacity-50"
                             style={{
@@ -1400,9 +1647,9 @@ const MirrorAmbient = () => {
                         />
                         <motion.button
                             onClick={handleSubmit}
-                            disabled={!input.trim() || isLoading}
+                            disabled={(!input.trim() && !pastedImage) || isLoading}
                             className="absolute right-2 bottom-2 p-2.5 rounded-xl text-white/60 disabled:opacity-20 disabled:cursor-not-allowed transition-all"
-                            style={{ background: input.trim() && !isLoading ? `${atmosphere.primary}40` : 'rgba(255,255,255,0.1)' }}
+                            style={{ background: (input.trim() || pastedImage) && !isLoading ? `${atmosphere.primary}40` : 'rgba(255,255,255,0.1)' }}
                             whileTap={{ scale: 0.9 }}
                         >
                             {isLoading ? (
@@ -1417,6 +1664,12 @@ const MirrorAmbient = () => {
                                 <Send size={18} />
                             )}
                         </motion.button>
+                        {/* Character count */}
+                        {input.length > 0 && (
+                            <span className={`absolute left-3 bottom-1 text-[10px] ${input.length > 1800 ? 'text-amber-400' : 'text-white/20'}`}>
+                                {input.length}/2000
+                            </span>
+                        )}
                     </div>
 
                     {/* Voice output toggle */}

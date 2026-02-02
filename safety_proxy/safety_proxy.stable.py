@@ -1384,8 +1384,152 @@ async def mirror_local(request: Request, body: MirrorRequest):
                                 pass
         except Exception as e:
             yield f"⟡ Local inference error: {str(e)}"
-    
+
     return StreamingResponse(generate(), media_type="text/plain")
+
+
+# ═══════════════════════════════════════════════════════════════
+# IMAGE GENERATION — Replicate Stable Diffusion XL
+# ═══════════════════════════════════════════════════════════════
+
+REPLICATE_API_KEY = os.getenv("REPLICATE_API_TOKEN", "")
+
+async def generate_image_stream(prompt: str, ip: str, request_id: str, model_decision):
+    """Generate an image using Replicate's Stable Diffusion XL."""
+
+    if not REPLICATE_API_KEY:
+        yield json.dumps({
+            "status": "error",
+            "content": "⟡ Image generation not configured. Set REPLICATE_API_TOKEN."
+        }) + "\n"
+        return
+
+    # Send routing info first
+    yield json.dumps({
+        "status": "routing",
+        "model_info": {
+            "model": model_decision.model.name,
+            "provider": model_decision.model.provider,
+            "tier": model_decision.model.tier.value,
+            "reasoning": model_decision.reasoning,
+            "atmosphere": model_decision.atmosphere,
+            "query_type": model_decision.query_type
+        }
+    }) + "\n"
+
+    # Clean up the prompt - extract the actual image description
+    clean_prompt = prompt.lower()
+    for prefix in ["generate an image of", "create an image of", "make an image of",
+                   "generate a picture of", "create a picture of", "draw",
+                   "generate", "create", "make", "show me"]:
+        if clean_prompt.startswith(prefix):
+            clean_prompt = prompt[len(prefix):].strip()
+            break
+    else:
+        clean_prompt = prompt
+
+    # Remove common filler words at the start
+    clean_prompt = clean_prompt.lstrip("a ").lstrip("an ").lstrip("the ")
+
+    record_event("ImageGen", "REQUEST", f"prompt:{clean_prompt[:30]}...", "ANALYZING", {"request_id": request_id})
+
+    yield json.dumps({
+        "status": "chunk",
+        "content": f"⟡ Generating image: \"{clean_prompt[:50]}{'...' if len(clean_prompt) > 50 else ''}\"\n\n"
+    }) + "\n"
+
+    try:
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            # Start the prediction
+            response = await client.post(
+                "https://api.replicate.com/v1/predictions",
+                headers={
+                    "Authorization": f"Token {REPLICATE_API_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "version": "39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+                    "input": {
+                        "prompt": clean_prompt,
+                        "negative_prompt": "blurry, bad quality, distorted, ugly, deformed",
+                        "width": 1024,
+                        "height": 1024,
+                        "num_outputs": 1,
+                        "scheduler": "K_EULER",
+                        "num_inference_steps": 25,
+                        "guidance_scale": 7.5
+                    }
+                }
+            )
+
+            if response.status_code != 201:
+                logger.error(f"Replicate error: {response.status_code} - {response.text}")
+                yield json.dumps({
+                    "status": "error",
+                    "content": "⟡ Image generation failed. Try again."
+                }) + "\n"
+                return
+
+            prediction = response.json()
+            prediction_id = prediction.get("id")
+
+            # Poll for completion
+            for _ in range(60):  # Max 60 seconds
+                await asyncio.sleep(1)
+
+                status_response = await client.get(
+                    f"https://api.replicate.com/v1/predictions/{prediction_id}",
+                    headers={"Authorization": f"Token {REPLICATE_API_KEY}"}
+                )
+
+                if status_response.status_code != 200:
+                    continue
+
+                status_data = status_response.json()
+                status = status_data.get("status")
+
+                if status == "succeeded":
+                    output = status_data.get("output", [])
+                    if output and len(output) > 0:
+                        image_url = output[0]
+                        record_event("ImageGen", "SUCCESS", f"id:{prediction_id[:8]}", "ALLOW", {"request_id": request_id})
+
+                        yield json.dumps({
+                            "status": "image",
+                            "image_url": image_url,
+                            "prompt": clean_prompt
+                        }) + "\n"
+
+                        yield json.dumps({
+                            "status": "done",
+                            "response": f"Generated image for: {clean_prompt}",
+                            "model_used": model_decision.model.name
+                        }) + "\n"
+                        return
+
+                elif status == "failed":
+                    error = status_data.get("error", "Unknown error")
+                    logger.error(f"Replicate generation failed: {error}")
+                    yield json.dumps({
+                        "status": "error",
+                        "content": f"⟡ Image generation failed: {error}"
+                    }) + "\n"
+                    return
+
+            # Timeout
+            yield json.dumps({
+                "status": "error",
+                "content": "⟡ Image generation timed out. Try a simpler prompt."
+            }) + "\n"
+
+    except Exception as e:
+        logger.error(f"Image generation error: {e}")
+        record_event("ImageGen", "ERROR", str(e)[:30], "ERROR", {"request_id": request_id})
+        yield json.dumps({
+            "status": "error",
+            "content": "⟡ Image generation error. Try again."
+        }) + "\n"
+
 
 @app.post("/mirror")
 async def mirror(request: Request, body: MirrorRequest):
@@ -1444,6 +1588,15 @@ async def mirror(request: Request, body: MirrorRequest):
         "atmosphere": model_decision.atmosphere,
         "confidence": model_decision.confidence
     })
+
+    # ═══════════════════════════════════════════════════════════════
+    # ⟡ IMAGE GENERATION — Route to Replicate if image gen detected
+    # ═══════════════════════════════════════════════════════════════
+    if model_decision.model.tier == ModelTier.IMAGE_GEN:
+        return StreamingResponse(
+            generate_image_stream(body.message, ip, rid, model_decision),
+            media_type="application/x-ndjson"
+        )
 
     # Build context with rap sheet awareness + Two-Lane suffix
     base_prompt = get_system_prompt()
