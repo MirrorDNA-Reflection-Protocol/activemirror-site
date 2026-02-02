@@ -104,66 +104,6 @@ const checkSafety = (text) => {
 };
 
 // ============================================
-// BINAURAL SCAPING: Procedural Audio Engine
-// ============================================
-const useBinauralScaping = (isActive, atmosphere) => {
-    const audioCtx = useRef(null);
-    const nodes = useRef({});
-
-    useEffect(() => {
-        if (isActive && !audioCtx.current) {
-            audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
-            const ctx = audioCtx.current;
-
-            // Oscillators for Binaural Beat
-            const oscL = ctx.createOscillator();
-            const oscR = ctx.createOscillator();
-            const pannerL = ctx.createPanner();
-            const pannerR = ctx.createPanner();
-            const gainNode = ctx.createGain();
-
-            pannerL.positionX.setValueAtTime(-1, ctx.currentTime);
-            pannerR.positionX.setValueAtTime(1, ctx.currentTime);
-            gainNode.gain.setValueAtTime(0, ctx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 2);
-
-            oscL.connect(pannerL).connect(gainNode).connect(ctx.destination);
-            oscR.connect(pannerR).connect(gainNode).connect(ctx.destination);
-
-            oscL.start();
-            oscR.start();
-
-            nodes.current = { oscL, oscR, gainNode };
-        }
-
-        if (audioCtx.current) {
-            const { oscL, oscR, gainNode } = nodes.current;
-            const baseFreq = 110; // Low frequency base
-            const beatFreq = atmosphere?.primary === '#8b5cf6' ? 10 : 40; // Alpha (10Hz) for calm, Gamma (40Hz) for focus
-
-            if (oscL && oscR) {
-                oscL.frequency.exponentialRampToValueAtTime(baseFreq, audioCtx.current.currentTime + 1);
-                oscR.frequency.exponentialRampToValueAtTime(baseFreq + beatFreq, audioCtx.current.currentTime + 1);
-            }
-
-            if (gainNode) {
-                if (!isActive) {
-                    gainNode.gain.linearRampToValueAtTime(0, audioCtx.current.currentTime + 1);
-                } else {
-                    gainNode.gain.linearRampToValueAtTime(0.05, audioCtx.current.currentTime + 1);
-                }
-            }
-        }
-
-        return () => {
-            if (!isActive && audioCtx.current) {
-                // Keep it for now
-            }
-        };
-    }, [isActive, atmosphere]);
-};
-
-// ============================================
 // MEMORY: Persistent user preferences
 // ============================================
 const MEMORY_KEY = 'mirror_ambient_memory';
@@ -318,58 +258,6 @@ const Particle = ({ delay, atmosphere }) => {
     );
 };
 
-// Sovereign Shard (Visual Synthesis)
-const SovereignShard = ({ messages, atmosphere }) => {
-    const shards = useMemo(() => {
-        const count = Math.min(messages.length || 5, 12);
-        return Array.from({ length: count }, (_, i) => ({
-            id: i,
-            rotate: Math.random() * 360,
-            scale: 0.8 + Math.random() * 1.2,
-            delay: i * 0.1
-        }));
-    }, [messages.length]);
-
-    return (
-        <div className="relative w-48 h-48 flex items-center justify-center pointer-events-none">
-            {shards.map(s => (
-                <motion.div
-                    key={s.id}
-                    className="absolute w-12 h-12 opacity-30 border border-white/10"
-                    style={{
-                        clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
-                        background: `linear-gradient(45deg, ${atmosphere.primary}, ${atmosphere.secondary})`,
-                        boxShadow: `0 0 20px ${atmosphere.glow}`
-                    }}
-                    initial={{ scale: 0, rotate: 0 }}
-                    animate={{ scale: s.scale, rotate: s.rotate }}
-                    transition={{ type: "spring", stiffness: 50, delay: s.delay }}
-                />
-            ))}
-            <motion.div
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 4, repeat: Infinity }}
-                className="absolute w-4 h-4 rounded-full bg-white/20 blur-md"
-            />
-        </div>
-    );
-};
-
-// Resilience Pulse (Presence indicator)
-const ResonancePulse = ({ atmosphere }) => {
-    return (
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/5 backdrop-blur-md">
-            <motion.div
-                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="w-2 h-2 rounded-full"
-                style={{ backgroundColor: atmosphere.primary, boxShadow: `0 0 10px ${atmosphere.primary}` }}
-            />
-            <span className="text-[10px] uppercase tracking-widest text-white/30 font-medium">Pulse Active</span>
-        </div>
-    );
-};
-
 // Shadow Thoughts (Ghost Reasoning)
 const ShadowThoughts = ({ thought, atmosphere }) => {
     if (!thought) return null;
@@ -378,7 +266,7 @@ const ShadowThoughts = ({ thought, atmosphere }) => {
             initial={{ opacity: 0, scale: 0.9, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 10 }}
-            className="fixed bottom-28 left-0 right-0 mx-auto z-40 max-w-sm w-[90%] px-4 py-3 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-2xl pointer-events-none text-center"
+            className="fixed bottom-24 left-0 right-0 mx-auto z-40 max-w-sm w-[90%] px-4 py-3 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-2xl pointer-events-none text-center"
         >
             <div className="flex items-center justify-center gap-2 mb-1.5">
                 <motion.div
@@ -399,12 +287,10 @@ const ShadowThoughts = ({ thought, atmosphere }) => {
 // File Upload Zone for Zero-Vault RAG
 const FileUploadZone = ({ onUpload, currentDoc }) => {
     return (
-        <div className="fixed bottom-32 right-6 z-40 hidden sm:block">
+        <div className="max-w-2xl mx-auto mb-4 px-4">
             {!currentDoc ? (
-                <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="group relative flex items-center gap-2 p-2 px-3 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 hover:border-violet-500/50 hover:bg-violet-500/5 transition-all cursor-pointer shadow-2xl"
+                <div
+                    className="group relative border-2 border-dashed border-white/5 hover:border-white/10 rounded-2xl p-6 transition-all cursor-pointer bg-white/[0.02]"
                     onClick={() => document.getElementById('file-upload').click()}
                 >
                     <input
@@ -416,26 +302,31 @@ const FileUploadZone = ({ onUpload, currentDoc }) => {
                             if (file) onUpload(file);
                         }}
                     />
-                    <Paperclip size={16} className="text-white/40 group-hover:text-violet-400 transition-colors" />
-                    <span className="text-[10px] uppercase tracking-widest font-medium text-white/20 group-hover:text-white/40 transition-colors">Sovereign Context</span>
-                </motion.div>
+                    <div className="flex flex-col items-center gap-2">
+                        <Paperclip size={20} className="text-white/20 group-hover:text-white/40 transition-colors" />
+                        <p className="text-xs text-white/30 font-medium uppercase tracking-widest">
+                            Reflect on a document (PDF, TXT, MD)
+                        </p>
+                    </div>
+                </div>
             ) : (
-                <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="flex items-center gap-3 p-2 px-4 rounded-full bg-emerald-500/10 backdrop-blur-xl border border-emerald-500/20 shadow-2xl"
-                >
-                    <div className="text-emerald-400 flex items-center gap-2">
-                        <FileText size={14} />
-                        <p className="text-[10px] text-emerald-400/90 font-medium max-w-[100px] truncate uppercase tracking-tighter">{currentDoc.name}</p>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+                            <FileText size={16} />
+                        </div>
+                        <div>
+                            <p className="text-xs text-white/80 font-medium max-w-[150px] truncate">{currentDoc.name}</p>
+                            <p className="text-[9px] text-white/40 uppercase tracking-tighter">Sovereign Context Active</p>
+                        </div>
                     </div>
                     <button
                         onClick={() => onUpload(null)}
-                        className="p-1 hover:bg-white/5 rounded-full text-white/20 hover:text-white/40 transition-all"
+                        className="p-1 px-2 rounded-lg hover:bg-white/5 text-white/20 hover:text-white/40 transition-all text-[10px] uppercase font-bold"
                     >
-                        <X size={12} />
+                        Remove
                     </button>
-                </motion.div>
+                </div>
             )}
         </div>
     );
@@ -504,29 +395,13 @@ const MessageBubble = ({ message, atmosphere, onSpeak, voiceEnabled }) => {
                         <span className="text-amber-400 text-xs">Safety Notice</span>
                     </div>
                 )}
-                <div className={`text-sm leading-relaxed ${isSystem ? 'text-amber-200/90' : isUser ? 'text-white' : 'text-white/85'}`}>
-                    {Array.isArray(message.content) ? (
-                        message.content.map((block, i) => (
-                            <div key={i} className="mb-2 last:mb-0">
-                                {block.type === 'text' && (
-                                    <p className="whitespace-pre-wrap">{block.text}</p>
-                                )}
-                                {block.type === 'image_url' && (
-                                    <img
-                                        src={block.image_url.url}
-                                        alt="Shared"
-                                        className="max-w-full rounded-lg border border-white/10 mt-2"
-                                    />
-                                )}
-                            </div>
-                        ))
-                    ) : (
-                        <p className="whitespace-pre-wrap">{message.content}</p>
-                    )}
+                <p className={`text-sm leading-relaxed whitespace-pre-wrap ${isSystem ? 'text-amber-200/90' : isUser ? 'text-white' : 'text-white/85'
+                    }`}>
+                    {message.content}
                     {message.isStreaming && (
                         <span className="inline-block w-2 h-4 ml-1 bg-white/50 animate-pulse" />
                     )}
-                </div>
+                </p>
                 {message.resources && (
                     <div className="mt-3 pt-3 border-t border-amber-500/20 space-y-2">
                         {message.resources.map((r, i) => (
@@ -723,12 +598,6 @@ const MirrorAmbient = () => {
     const [ollamaAvailable, setOllamaAvailable] = useState(false);
     const [shadowThoughts, setShadowThoughts] = useState(null);
     const [localDoc, setLocalDoc] = useState(null);
-    const [attachedImage, setAttachedImage] = useState(null);
-    const [isDeepReflection, setIsDeepReflection] = useState(false);
-    const [showShard, setShowShard] = useState(false);
-
-    // Initialize Binaural Scaper
-    useBinauralScaping(isDeepReflection, baseAtmosphere);
 
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
@@ -796,18 +665,16 @@ const MirrorAmbient = () => {
         inputRef.current?.focus();
     }, []);
 
-    // Local node discovery is triggered manually or by tier selection to avoid privacy prompts
+    // Check for Ollama availability
     useEffect(() => {
-        if (inferenceTier === 'sovereign' || showTierDropdown) {
-            const checkLocalServices = async () => {
-                try {
-                    const res = await fetch('http://localhost:11434/api/tags', { method: 'GET' });
-                    setOllamaAvailable(res.ok);
-                } catch { setOllamaAvailable(false); }
-            };
-            checkLocalServices();
-        }
-    }, [inferenceTier, showTierDropdown]);
+        const checkOllama = async () => {
+            try {
+                const res = await fetch('http://localhost:11434/api/tags', { method: 'GET' });
+                setOllamaAvailable(res.ok);
+            } catch { setOllamaAvailable(false); }
+        };
+        checkOllama();
+    }, []);
 
     // Show memory consent on first visit if not decided
     useEffect(() => {
@@ -892,27 +759,7 @@ const MirrorAmbient = () => {
     // Submit message
     const handleSubmit = async () => {
         const text = input.trim();
-        const hasImage = attachedImage !== null;
-        if ((!text && !hasImage) || isLoading) return;
-
-        // Command: Vault for the curator
-        if (text.startsWith('/vault ')) {
-            const vaultMsg = text.substring(7);
-            setShadowThoughts("Vaulting insight for the Curator...");
-            setTimeout(() => {
-                setMessages(prev => [...prev,
-                { role: 'user', content: text, id: Date.now() },
-                {
-                    role: 'assistant',
-                    content: `⟡ **Signal Sent.** Your insight has been securely vaulted for the Curator. No response required.`,
-                    id: Date.now() + 1
-                }
-                ]);
-                setShadowThoughts(null);
-                setInput("");
-            }, 1200);
-            return;
-        }
+        if (!text || isLoading) return;
 
         haptic('medium');
         setError(null);
@@ -950,20 +797,12 @@ const MirrorAmbient = () => {
         setBaseAtmosphere(emotionAtmospheres[emotion]);
 
         // Add user message
-        const userMessage = {
-            role: 'user',
-            content: hasImage ? [
-                { type: "text", text: text || "Analyze this image" },
-                { type: "image_url", image_url: { url: attachedImage } }
-            ] : text
-        };
+        const userMessage = { role: 'user', content: text };
         const newMessages = [...messages, userMessage];
         setMessages(newMessages);
         setInput('');
-        setAttachedImage(null);
         setIsLoading(true);
         setShadowThoughts("Analyzing intent & classifying resonance...");
-        setTimeout(() => inputRef.current?.focus(), 100);
 
         // Add placeholder
         setMessages([...newMessages, {
@@ -976,7 +815,7 @@ const MirrorAmbient = () => {
         try {
             // Build message context with memory
             const contextPrefix = buildContext();
-            const messagesForAPI = messages.slice(-10).map(m => ({
+            const messagesForAPI = newMessages.slice(-10).map(m => ({
                 role: m.role === 'system' ? 'user' : m.role, // Convert system to user for API
                 content: m.content
             }));
@@ -989,9 +828,9 @@ const MirrorAmbient = () => {
                 };
             }
 
-            // Fetch RAG context if enabled (only for local dev or explicit local mode)
+            // Fetch RAG context if enabled
             let ragContext = null;
-            if (includeRagContext && PROXY_URL.includes('localhost')) {
+            if (includeRagContext) {
                 try {
                     const ragRes = await fetch('http://localhost:8081/chat/context', {
                         method: 'POST',
@@ -1018,8 +857,8 @@ const MirrorAmbient = () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    message: userMessage.content,
-                    history: messagesForAPI,
+                    message: text,
+                    messages: messagesForAPI,
                     tier: currentModel.tier,
                     model: selectedModel,
                     rag_context: ragContext
@@ -1146,7 +985,6 @@ const MirrorAmbient = () => {
             haptic('error');
         } finally {
             setIsLoading(false);
-            setTimeout(() => inputRef.current?.focus(), 100);
         }
     };
 
@@ -1157,44 +995,11 @@ const MirrorAmbient = () => {
         }
     };
 
-    const handlePaste = useCallback((e) => {
-        const items = e.clipboardData?.items;
-        if (!items) return;
-
-        for (const item of items) {
-            if (item.type.indexOf('image') !== -1) {
-                const file = item.getAsFile();
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        setAttachedImage(event.target.result);
-                        haptic('light');
-                    };
-                    reader.readAsDataURL(file);
-                }
-            }
-        }
-    }, []);
-
-    const handleImageSelect = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                setAttachedImage(event.target.result);
-                haptic('light');
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
-    const clearChat = (e) => {
-        e?.preventDefault?.();
+    const clearChat = () => {
         setMessages([]);
         setError(null);
         window.speechSynthesis?.cancel();
         haptic('light');
-        setTimeout(() => inputRef.current?.focus(), 200);
     };
 
     // Quick actions
@@ -1208,7 +1013,7 @@ const MirrorAmbient = () => {
 
     const handleQuickAction = (prompt) => {
         setInput(prompt);
-        setTimeout(() => inputRef.current?.focus(), 100);
+        inputRef.current?.focus();
     };
 
     // Greeting based on memory
@@ -1226,10 +1031,7 @@ const MirrorAmbient = () => {
     }
 
     return (
-        <div className={`fixed inset-0 flex flex-col transition-colors duration-1000 ${isDeepReflection ? 'bg-black' : 'bg-[#0a0a0c]'}`} style={{ height: '100dvh' }}>
-            <div className={`absolute inset-0 flex items-center justify-center pointer-events-none z-0 transition-opacity duration-1000 ${showShard ? 'opacity-100' : 'opacity-0'}`}>
-                <SovereignShard messages={messages} atmosphere={atmosphere} />
-            </div>
+        <div className="fixed inset-0 bg-black flex flex-col" style={{ height: '100dvh' }}>
             {/* Strategy Panel Overlay */}
             <AnimatePresence>
                 {routingInfo && (
@@ -1282,7 +1084,7 @@ const MirrorAmbient = () => {
             />
 
             {/* Header */}
-            <header className={`relative z-20 flex items-center justify-between p-4 border-b border-white/5 transition-opacity duration-1000 ${isDeepReflection ? 'opacity-10' : 'opacity-100'}`}>
+            <header className="relative z-20 flex items-center justify-between p-4 border-b border-white/5">
                 <div className="flex items-center gap-3">
                     <a href="/" className="p-2 rounded-full bg-white/10 text-white/60 active:scale-95 transition-transform">
                         <ArrowLeft size={18} />
@@ -1353,50 +1155,23 @@ const MirrorAmbient = () => {
                     </button>
                     {/* Export */}
                     {messages.length > 0 && (
-                        <div className="flex items-center gap-1.5 mr-2">
-                            <button
-                                onClick={() => {
-                                    setIsDeepReflection(!isDeepReflection);
-                                    haptic('medium');
-                                }}
-                                className={`p-2 rounded-full transition-all ${isDeepReflection ? 'bg-violet-500/30 text-violet-400' : 'bg-white/5 text-white/40 hover:text-white/60'}`}
-                                title="Deep Reflection Mode (Audio)"
-                            >
-                                <Zap size={14} className={isDeepReflection ? "animate-pulse" : ""} />
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setShadowThoughts("Crystalizing reflection into a Sovereign Shard...");
-                                    haptic('medium');
-                                    setTimeout(() => {
-                                        setShadowThoughts(null);
-                                        setShowShard(true);
-                                        haptic('success');
-                                    }, 2000);
-                                }}
-                                className={`p-2 rounded-full transition-all ${showShard ? 'bg-amber-500/30 text-amber-400' : 'bg-white/5 text-white/40 hover:text-white/60'}`}
-                                title="Crystalize (Sovereign Shard)"
-                            >
-                                <Sparkles size={14} className={showShard ? "animate-spin" : ""} />
-                            </button>
-                            <button
-                                onClick={() => {
-                                    const timestamp = new Date().toLocaleString();
-                                    const md = `# ⟡ Mirror Reflection\n**Date:** ${timestamp}\n\n---\n\n${messages.map(m => `### ${m.role === 'user' ? '👤 YOU' : '⟡ MIRROR'}\n\n${m.content}`).join('\n\n---\n\n')}\n\n---\n\n*Exported from [Active Mirror](https://activemirror.ai)*`;
-                                    const blob = new Blob([md], { type: 'text/markdown' });
-                                    const url = URL.createObjectURL(blob);
-                                    const a = document.createElement('a');
-                                    a.href = url;
-                                    a.download = `mirror-chat-${new Date().toISOString().slice(0, 10)}.md`;
-                                    a.click();
-                                    URL.revokeObjectURL(url);
-                                }}
-                                className="p-2 rounded-full bg-white/5 text-white/40 hover:text-white/60 transition-colors"
-                                title="Export Chat"
-                            >
-                                <FileDown size={14} />
-                            </button>
-                        </div>
+                        <button
+                            onClick={() => {
+                                const timestamp = new Date().toLocaleString();
+                                const md = `# ⟡ Mirror Reflection\n**Date:** ${timestamp}\n\n---\n\n${messages.map(m => `### ${m.role === 'user' ? '👤 YOU' : '⟡ MIRROR'}\n\n${m.content}`).join('\n\n---\n\n')}\n\n---\n\n*Exported from [Active Mirror](https://activemirror.ai)*`;
+                                const blob = new Blob([md], { type: 'text/markdown' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `mirror-chat-${new Date().toISOString().slice(0, 10)}.md`;
+                                a.click();
+                                URL.revokeObjectURL(url);
+                            }}
+                            className="p-2 rounded-full bg-white/5 text-white/40 hover:text-white/60 transition-colors"
+                            title="Export Chat"
+                        >
+                            <FileDown size={14} />
+                        </button>
                     )}
                     <Sparkles size={12} style={{ color: atmosphere.primary }} className="animate-pulse" />
                     <span className="text-white/30 text-xs uppercase tracking-widest hidden sm:inline">{atmosphere.phase}</span>
@@ -1468,7 +1243,7 @@ const MirrorAmbient = () => {
                         </div>
                     </motion.div>
                 ) : (
-                    <div className="max-w-2xl mx-auto pb-32">
+                    <div className="max-w-2xl mx-auto">
                         <AnimatePresence>
                             {messages.map((message, index) => (
                                 <MessageBubble
@@ -1498,13 +1273,15 @@ const MirrorAmbient = () => {
                     </motion.div>
                 )}
 
-                {/* File Upload for Sovereign RAG (Persistent FAB) */}
-                <FileUploadZone onUpload={handleFileUpload} currentDoc={localDoc} />
+                {/* File Upload for Sovereign RAG */}
+                {messages.length < 5 && (
+                    <FileUploadZone onUpload={handleFileUpload} currentDoc={localDoc} />
+                )}
             </main>
 
             {/* Input area */}
             <div
-                className={`relative z-20 p-4 border-t border-white/5 transition-opacity duration-1000 ${isDeepReflection ? 'opacity-20' : 'opacity-100'}`}
+                className="relative z-20 p-4 border-t border-white/5"
                 style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)', background: 'linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.7))' }}
             >
                 <div className="max-w-2xl mx-auto relative flex gap-2">
@@ -1519,72 +1296,35 @@ const MirrorAmbient = () => {
                         {isListening ? <MicOff size={20} /> : <Mic size={20} />}
                     </button>
 
-                    {/* Input Area */}
-                    <div className="relative max-w-2xl mx-auto px-4 mb-4">
-                        {/* Image Preview */}
-                        <AnimatePresence>
-                            {attachedImage && (
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                                    className="absolute -top-24 left-6 z-10 w-24 h-24 rounded-xl border border-white/20 overflow-hidden shadow-2xl group"
-                                >
-                                    <img src={attachedImage} alt="Attachment" className="w-full h-full object-cover" />
-                                    <button
-                                        onClick={() => setAttachedImage(null)}
-                                        className="absolute top-1 right-1 p-1 bg-black/60 rounded-full text-white/80 hover:text-white"
-                                    >
-                                        <X size={12} />
-                                    </button>
-                                </motion.div>
+                    {/* Input */}
+                    <div className="flex-1 relative">
+                        <textarea
+                            ref={inputRef}
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder={isListening ? "Listening..." : "Ask anything..."}
+                            disabled={isLoading}
+                            className="w-full px-4 py-3 pr-14 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/30 resize-none focus:outline-none focus:border-white/20 text-base transition-all disabled:opacity-50"
+                            style={{
+                                minHeight: '52px', maxHeight: '150px',
+                                borderColor: input.length > 10 ? `${atmosphere.primary}40` : undefined
+                            }}
+                            rows={1}
+                        />
+                        <motion.button
+                            onClick={handleSubmit}
+                            disabled={!input.trim() || isLoading}
+                            className="absolute right-2 bottom-2 p-2.5 rounded-xl text-white/60 disabled:opacity-20 disabled:cursor-not-allowed transition-all"
+                            style={{ background: input.trim() && !isLoading ? `${atmosphere.primary}40` : 'rgba(255,255,255,0.1)' }}
+                            whileTap={{ scale: 0.9 }}
+                        >
+                            {isLoading ? (
+                                <Logo size={20} theme="amber" />
+                            ) : (
+                                <Send size={18} />
                             )}
-                        </AnimatePresence>
-
-                        <div className="relative flex items-center">
-                            <textarea
-                                ref={inputRef}
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                onPaste={handlePaste}
-                                placeholder={isListening ? "Listening..." : attachedImage ? "What about this image?" : "Ask anything..."}
-                                className="w-full px-4 py-3 pl-12 pr-14 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/30 resize-none focus:outline-none focus:border-white/20 text-base transition-all"
-                                style={{
-                                    minHeight: '52px', maxHeight: '150px',
-                                    borderColor: input.length > 10 ? `${atmosphere.primary}40` : undefined
-                                }}
-                                rows={1}
-                            />
-
-                            <button
-                                onClick={() => document.getElementById('image-upload').click()}
-                                className="absolute left-3 p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-all"
-                            >
-                                <ImageIcon size={20} />
-                                <input
-                                    type="file"
-                                    id="image-upload"
-                                    hidden
-                                    accept="image/*"
-                                    onChange={handleImageSelect}
-                                />
-                            </button>
-
-                            <motion.button
-                                onClick={handleSubmit}
-                                disabled={!input.trim() && !attachedImage || isLoading}
-                                className="absolute right-3 p-1.5 rounded-lg text-white/30 disabled:opacity-20 disabled:cursor-not-allowed transition-all"
-                                style={{ background: (input.trim() || attachedImage) && !isLoading ? `${atmosphere.primary}40` : 'rgba(255,255,255,0.1)' }}
-                                whileTap={{ scale: 0.9 }}
-                            >
-                                {isLoading ? (
-                                    <Logo size={20} theme="amber" />
-                                ) : (
-                                    <Send size={20} />
-                                )}
-                            </motion.button>
-                        </div>
+                        </motion.button>
                     </div>
 
                     {/* Voice output toggle */}
@@ -1600,8 +1340,6 @@ const MirrorAmbient = () => {
                     </button>
                 </div>
                 <div className="max-w-2xl mx-auto flex items-center justify-center gap-4 mt-2">
-                    <ResonancePulse atmosphere={atmosphere} />
-                    <span className="text-white/15 text-xs">•</span>
                     <div className="flex items-center gap-1.5">
                         <Shield size={10} className="text-white/20" />
                         <p className="text-white/20 text-xs">MirrorGate</p>
