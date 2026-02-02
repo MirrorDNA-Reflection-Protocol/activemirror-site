@@ -19,7 +19,8 @@ import {
     ArrowLeft, Send, Sparkles, RotateCcw, Trash2,
     Mic, MicOff, Volume2, VolumeX, Settings, X,
     Zap, BookOpen, Languages, Code, Lightbulb, Shield, Database, FileDown,
-    ChevronDown, Cloud, Cpu, Monitor, Brain, Trash, Info, Paperclip, FileText, CheckCircle2, Share2, Download, Image as ImageIcon
+    ChevronDown, Cloud, Cpu, Monitor, Brain, Trash, Info, Paperclip, FileText, CheckCircle2, Share2, Download, Image as ImageIcon,
+    Copy, Check, RefreshCw, AlertCircle, Sparkle
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import ConsentGate from '../components/ConsentGate';
@@ -368,9 +369,21 @@ const captureReflection = async (elementId, messageId) => {
     }
 };
 
-const MessageBubble = ({ message, atmosphere, onSpeak, voiceEnabled }) => {
+const MessageBubble = ({ message, atmosphere, onSpeak, onRegenerate, voiceEnabled, isLast }) => {
     const isUser = message.role === 'user';
     const isSystem = message.role === 'system';
+    const [copied, setCopied] = useState(false);
+
+    const copyToClipboard = async () => {
+        try {
+            await navigator.clipboard.writeText(message.content);
+            setCopied(true);
+            haptic('light');
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error('Failed to copy:', err);
+        }
+    };
 
     return (
         <motion.div
@@ -437,7 +450,16 @@ const MessageBubble = ({ message, atmosphere, onSpeak, voiceEnabled }) => {
 
                 {/* Actions (Only for assistant messages) */}
                 {!isUser && !isSystem && !message.isStreaming && (
-                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1 mt-2 pt-2 border-t border-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {/* Copy */}
+                        <button
+                            onClick={copyToClipboard}
+                            className="p-1.5 rounded-lg hover:bg-white/5 text-white/30 hover:text-white/60 transition-all"
+                            title="Copy"
+                        >
+                            {copied ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                        </button>
+                        {/* Listen */}
                         <button
                             onClick={() => onSpeak(message.content)}
                             className="p-1.5 rounded-lg hover:bg-white/5 text-white/30 hover:text-white/60 transition-all"
@@ -445,13 +467,23 @@ const MessageBubble = ({ message, atmosphere, onSpeak, voiceEnabled }) => {
                         >
                             <Volume2 size={12} />
                         </button>
+                        {/* Regenerate (only on last message) */}
+                        {isLast && onRegenerate && (
+                            <button
+                                onClick={onRegenerate}
+                                className="p-1.5 rounded-lg hover:bg-white/5 text-white/30 hover:text-white/60 transition-all"
+                                title="Regenerate"
+                            >
+                                <RefreshCw size={12} />
+                            </button>
+                        )}
+                        {/* Print */}
                         <button
                             onClick={() => captureReflection(`msg-${message.id}`, message.id)}
-                            className="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-white/5 text-white/30 hover:text-white/60 transition-all font-medium"
-                            title="Generate Reflection Print"
+                            className="p-1.5 rounded-lg hover:bg-white/5 text-white/30 hover:text-white/60 transition-all"
+                            title="Save as image"
                         >
                             <ImageIcon size={12} />
-                            <span className="text-[10px] uppercase tracking-tighter">Print</span>
                         </button>
                     </div>
                 )}
@@ -1097,6 +1129,9 @@ const MirrorAmbient = () => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSubmit();
+        } else if (e.key === 'Escape') {
+            setInput('');
+            clearPastedImage();
         }
     };
 
@@ -1106,6 +1141,30 @@ const MirrorAmbient = () => {
         window.speechSynthesis?.cancel();
         haptic('light');
     };
+
+    // Regenerate last response - removes last assistant message and re-sends
+    const regenerateLastResponse = useCallback(async () => {
+        if (messages.length < 2 || isLoading) return;
+
+        // Find the last user message index
+        let lastUserIndex = -1;
+        for (let i = messages.length - 1; i >= 0; i--) {
+            if (messages[i].role === 'user') {
+                lastUserIndex = i;
+                break;
+            }
+        }
+        if (lastUserIndex === -1) return;
+
+        const lastUserMessage = messages[lastUserIndex];
+        // Keep messages up to and including the user message, remove assistant response
+        const newMessages = messages.slice(0, lastUserIndex + 1);
+        setMessages(newMessages);
+
+        // Set input to last user message and trigger submit
+        setInput(lastUserMessage.content);
+        haptic('medium');
+    }, [messages, isLoading]);
 
     // Quick actions
     const quickActions = [
@@ -1379,11 +1438,13 @@ const MirrorAmbient = () => {
                         <AnimatePresence>
                             {messages.map((message, index) => (
                                 <MessageBubble
-                                    key={index}
+                                    key={message.id || index}
                                     message={message}
                                     atmosphere={atmosphere}
                                     onSpeak={speak}
+                                    onRegenerate={regenerateLastResponse}
                                     voiceEnabled={voiceEnabled}
+                                    isLast={index === messages.length - 1}
                                 />
                             ))}
                         </AnimatePresence>
@@ -1391,17 +1452,33 @@ const MirrorAmbient = () => {
                     </div>
                 )}
 
-                {/* Error */}
+                {/* Error Toast */}
                 {error && (
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="max-w-2xl mx-auto mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20"
                     >
-                        <p className="text-red-400 text-sm text-center">
-                            {error}
-                            <button onClick={() => setError(null)} className="ml-2 text-red-300 underline">Dismiss</button>
-                        </p>
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2">
+                                <AlertCircle size={16} className="text-red-400" />
+                                <p className="text-red-400 text-sm">{error}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={regenerateLastResponse}
+                                    className="px-2 py-1 text-xs rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors flex items-center gap-1"
+                                >
+                                    <RefreshCw size={12} /> Retry
+                                </button>
+                                <button
+                                    onClick={() => setError(null)}
+                                    className="p-1 text-red-400/60 hover:text-red-400 transition-colors"
+                                >
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        </div>
                     </motion.div>
                 )}
 
@@ -1546,6 +1623,12 @@ const MirrorAmbient = () => {
                                 <Send size={18} />
                             )}
                         </motion.button>
+                        {/* Character count */}
+                        {input.length > 0 && (
+                            <span className={`absolute left-3 bottom-1 text-[10px] ${input.length > 1800 ? 'text-amber-400' : 'text-white/20'}`}>
+                                {input.length}/2000
+                            </span>
+                        )}
                     </div>
 
                     {/* Voice output toggle */}
