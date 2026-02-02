@@ -1,257 +1,762 @@
-2026-01-10 18:42:23,096 | INFO | ⟡ Active Mirror v8.0.0 (Streaming)
-INFO:     Started server process [94604]
+2026-02-02 00:30:36,650 | INFO | Using file-based storage
+2026-02-02 00:30:36,651 | INFO | ⟡ MODEL ROUTER initialized with providers: ['groq', 'deepseek', 'mistral', 'openai', 'local']
+2026-02-02 00:30:36,651 | INFO | ⟡ LOADING JUDICIAL MODEL (Cross-Encoder)...
+/Users/mirror-admin/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+2026-02-02 00:30:40,241 | INFO | Use pytorch device: mps
+2026-02-02 00:30:41,338 | INFO | ✅ Judicial model loaded: cross-encoder/stsb-distilroberta-base
+2026-02-02 00:30:41,360 | INFO | ⟡ Active Mirror v11.2.0 (EPISTEMIC_JUDGE) + PRISM
+2026-02-02 00:30:41,360 | INFO |   Judge Model: cross-encoder/stsb-distilroberta-base
+2026-02-02 00:30:41,360 | INFO |   Semantic Threshold: 0.35
+2026-02-02 00:30:41,360 | INFO |   Surveillance Level: STANDARD
+2026-02-02 00:30:41,360 | INFO |   Prior Convictions: 0
+2026-02-02 00:30:41,360 | INFO |   Endpoints: /mirror | /mirror-prism | /flight-log | /rules | /superego-status | /confessions | /permanent-record | /reflect
+INFO:     Started server process [9839]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8082 (Press CTRL+C to quit)
-2026-01-10 18:42:33,491 | INFO | [629bae00] Stream requested. Hist: 0
-INFO:     127.0.0.1:50009 - "POST /mirror HTTP/1.1" 200 OK
-2026-01-10 18:42:33,666 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50062 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-2026-01-10 18:43:46,273 | INFO | [152886b7] Stream requested. Hist: 4
-INFO:     103.210.48.11:0 - "POST /mirror HTTP/1.1" 200 OK
-2026-01-10 18:43:46,431 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     2409:40c2:2411:bf2b:baeb:1a5d:ceef:3de:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50517 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50833 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51132 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     2409:40c2:2411:bf2b:baeb:1a5d:ceef:3de:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     2409:40c2:2411:bf2b:baeb:1a5d:ceef:3de:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51543 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51659 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51892 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52177 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52605 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52983 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53369 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53784 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53906 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54188 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54525 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55028 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55402 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55794 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56312 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56392 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56723 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57117 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
+2026-02-02 00:31:01,978 | INFO | [FLIGHT] 00:31:01 | User         | MESSAGE    | len:5                | ⏳ ANALYZING
+2026-02-02 00:31:01,979 | INFO | [FLIGHT] 00:31:01 | MirrorGate   | ANALYZE    | input:185f8db32271fe | ⏳ ANALYZING
+2026-02-02 00:31:01,979 | INFO | [FLIGHT] 00:31:01 | MirrorGate   | ALLOW      | input:185f8db32271fe | ✅ ALLOW
+2026-02-02 00:31:01,979 | INFO | [FLIGHT] 00:31:01 | TwoLane      | ROUTE      | CLARIFY              | ⏳ ANALYZING
+2026-02-02 00:31:01,980 | INFO | [FLIGHT] 00:31:01 | Groq         | REQUEST    | model:groq           | ⏳ ANALYZING
+2026-02-02 00:31:02,023 | INFO | GROQ_PAYLOAD: {
+  "model": "groq",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are Mirror \u2014 a helpful AI assistant.\n\nSTYLE:\n- Short responses (2-4 sentences unless more detail is needed)\n- Warm, direct, genuine\n- Start responses with \u27e1\n- Match the user's energy \u2014 brief if they're brief, detailed if they want depth\n- No corporate filler or AI clich\u00e9s (\"As an AI...\", \"I understand your concern...\")\n\nFOCUS:\n- Be genuinely helpful with whatever they need\n- If you're unsure, say so\n- Don't give professional advice (medical, legal, financial) \u2014 offer perspective instead\n\nABOUT THIS SERVICE:\n- Only discuss Active Mirror, N1 Intelligence, or how this works if the user asks directly\n- When asked: this is a privacy-focused AI service that runs on sovereign infrastructure\n- Keep product explanations brief and factual, not promotional\n\nThe intent is slightly veiled. Ask a brief, direct question to see if they're looking for a specific answer or a space to think out loud within the Active Mirror ecosystem. No boilerplate."
+    },
+    {
+      "role": "user",
+      "content": "Hello"
+    }
+  ],
+  "temperature": 0.3,
+  "max_tokens": 800,
+  "stream": true
+}
+GROQ_PAYLOAD_READY: 2 msgs
+INFO:     127.0.0.1:51551 - "POST /mirror HTTP/1.1" 200 OK
+2026-02-02 00:31:02,125 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-02-02 00:31:02,125 | INFO | [FLIGHT] 00:31:02 | Groq         | ERROR      | status:404           | 💥 ERROR
+INFO:     127.0.0.1:52132 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52135 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52860 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52863 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53583 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53586 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54276 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54279 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54992 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54995 - "GET /health HTTP/1.1" 200 OK
+INFO:     43.131.32.36:0 - "GET / HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:55718 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55721 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56421 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56424 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57166 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57169 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57891 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57895 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58573 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58576 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "POST /seed-count/increment HTTP/1.1" 200 OK
+2026-02-02 01:25:10,691 | INFO | ⟡ Seed created: 04b892
+INFO:     103.210.48.14:0 - "POST /seed/create HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed/04b892 HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59249 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59252 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59973 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59976 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60687 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60690 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61400 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61403 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62128 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62131 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62835 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62838 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63550 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63553 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64334 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64337 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65053 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65056 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49423 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49426 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50202 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50205 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50933 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50936 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "POST /seed-count/increment HTTP/1.1" 200 OK
+2026-02-02 02:25:15,525 | INFO | ⟡ Seed created: cfae28
+INFO:     103.210.48.14:0 - "POST /seed/create HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed/cfae28 HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51678 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51681 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52389 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52392 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53110 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53113 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53861 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53864 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54610 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54613 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55334 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55337 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56072 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56075 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56790 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56793 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57509 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57514 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58270 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58273 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59009 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59012 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59734 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59737 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "POST /seed-count/increment HTTP/1.1" 200 OK
+2026-02-02 03:25:20,104 | INFO | ⟡ Seed created: 2db655
+INFO:     103.210.48.14:0 - "POST /seed/create HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed/2db655 HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60476 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60479 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61145 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61148 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61865 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61868 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62616 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62619 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63357 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63360 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64077 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64080 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64795 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64798 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49198 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49201 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49925 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49928 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50684 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50687 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51426 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51430 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52140 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52143 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "POST /seed-count/increment HTTP/1.1" 200 OK
+2026-02-02 04:25:25,810 | INFO | ⟡ Seed created: 12c3a8
+INFO:     103.210.48.14:0 - "POST /seed/create HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed/12c3a8 HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52919 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52922 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53647 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53650 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54330 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54333 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55047 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55050 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55779 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55782 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56477 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56480 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57215 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57218 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57952 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57955 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58656 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58659 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59383 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59389 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60093 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60096 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60804 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60807 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "POST /seed-count/increment HTTP/1.1" 200 OK
+2026-02-02 05:25:30,642 | INFO | ⟡ Seed created: c49a3f
+INFO:     103.210.48.14:0 - "POST /seed/create HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed/c49a3f HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61539 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61542 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62283 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62286 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62925 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62928 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63662 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63665 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64386 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64390 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65093 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65096 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49448 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49451 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50246 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50252 - "GET /health HTTP/1.1" 200 OK
+INFO:     35.88.155.77:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50979 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50982 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51713 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51716 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52448 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52451 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53167 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53170 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "POST /seed-count/increment HTTP/1.1" 200 OK
+2026-02-02 06:25:34,980 | INFO | ⟡ Seed created: 0a4ac2
+INFO:     103.210.48.14:0 - "POST /seed/create HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed/0a4ac2 HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53915 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53918 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54641 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54644 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55314 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55318 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56033 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56036 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56756 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56759 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57468 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57471 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58176 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58179 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58904 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58907 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59618 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59621 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60351 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60354 - "GET /health HTTP/1.1" 200 OK
+INFO:     170.106.140.110:0 - "GET / HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:61085 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61088 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61799 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61802 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "POST /seed-count/increment HTTP/1.1" 200 OK
+2026-02-02 07:25:40,562 | INFO | ⟡ Seed created: a3cf19
+INFO:     103.210.48.14:0 - "POST /seed/create HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed/a3cf19 HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62552 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62555 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63258 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63261 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63973 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63976 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64668 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64671 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65402 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65405 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49729 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49732 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50488 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50491 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51229 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51232 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51944 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51947 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52689 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52692 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53419 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53422 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54118 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54121 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "POST /seed-count/increment HTTP/1.1" 200 OK
+2026-02-02 08:25:44,924 | INFO | ⟡ Seed created: 0fc65b
+INFO:     103.210.48.14:0 - "POST /seed/create HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed/0fc65b HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54846 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54849 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55548 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55551 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56260 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56263 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56926 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56929 - "GET /health HTTP/1.1" 200 OK
 INFO:     127.0.0.1:57664 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58062 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58473 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59033 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59168 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59511 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59857 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60365 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60840 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61217 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61691 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61824 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:62159 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:62538 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63047 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63485 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63880 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64447 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64554 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64845 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:65251 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49384 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49844 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50188 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50774 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50892 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "OPTIONS /mirror HTTP/1.1" 200 OK
-2026-01-10 22:05:20,718 | INFO | [41767d35] Stream requested. Hist: 0
-INFO:     103.210.48.11:0 - "POST /mirror HTTP/1.1" 200 OK
-2026-01-10 22:05:21,003 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
-2026-01-10 22:05:42,152 | INFO | [aee75ffa] Stream requested. Hist: 2
-INFO:     103.210.48.11:0 - "POST /mirror HTTP/1.1" 200 OK
-2026-01-10 22:05:42,341 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:     127.0.0.1:51295 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51617 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "OPTIONS /mirror HTTP/1.1" 200 OK
-2026-01-10 22:15:54,911 | INFO | [ffcbb621] Stream requested. Hist: 0
-INFO:     103.210.48.11:0 - "POST /mirror HTTP/1.1" 200 OK
-2026-01-10 22:15:55,105 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:     127.0.0.1:52177 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-2026-01-10 22:20:36,715 | INFO | [5e297837] Stream requested. Hist: 0
-INFO:     103.210.48.11:0 - "POST /mirror HTTP/1.1" 200 OK
-2026-01-10 22:20:36,942 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:     127.0.0.1:52651 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53106 - "GET /health HTTP/1.1" 200 OK
-INFO:     103.210.48.11:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57667 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58382 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58385 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59118 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59121 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59978 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59981 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60694 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60698 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61424 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61427 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62160 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62163 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62894 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62897 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "POST /seed-count/increment HTTP/1.1" 200 OK
+2026-02-02 09:25:49,172 | INFO | ⟡ Seed created: a1bf55
+INFO:     103.210.48.14:0 - "POST /seed/create HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed/a1bf55 HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63632 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63635 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64342 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64345 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65047 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65051 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49361 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49364 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50048 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50051 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50753 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50756 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51478 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51482 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52186 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52189 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52892 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52895 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53617 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53620 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54335 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54338 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55062 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55065 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "POST /seed-count/increment HTTP/1.1" 200 OK
+2026-02-02 10:25:53,563 | INFO | ⟡ Seed created: f10573
+INFO:     103.210.48.14:0 - "POST /seed/create HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed/f10573 HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55800 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55803 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56521 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56524 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57204 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57207 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57931 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57934 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58602 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58605 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59304 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59307 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59999 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60002 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60714 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60717 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61405 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61408 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62119 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62122 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62814 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62817 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63503 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63506 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "POST /seed-count/increment HTTP/1.1" 200 OK
+2026-02-02 11:25:59,031 | INFO | ⟡ Seed created: 80984e
+INFO:     103.210.48.14:0 - "POST /seed/create HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed/80984e HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64233 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64236 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64908 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64911 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49207 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49211 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49930 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49933 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50629 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50632 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51269 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51272 - "GET /health HTTP/1.1" 200 OK
+INFO:     84.32.222.190:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51993 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51996 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52709 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52712 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53404 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53407 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54111 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54114 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54817 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54820 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55516 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55519 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "POST /seed-count/increment HTTP/1.1" 200 OK
+2026-02-02 12:26:03,442 | INFO | ⟡ Seed created: b458e7
+INFO:     103.210.48.14:0 - "POST /seed/create HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed/b458e7 HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /seed-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56207 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56211 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56907 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56910 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57599 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57602 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58267 - "OPTIONS /mirror HTTP/1.1" 200 OK
+2026-02-02 12:41:41,396 | INFO | [FLIGHT] 12:41:41 | User         | MESSAGE    | len:3                | ⏳ ANALYZING
+2026-02-02 12:41:41,397 | INFO | [FLIGHT] 12:41:41 | MirrorGate   | ANALYZE    | input:fa690b82061edf | ⏳ ANALYZING
+2026-02-02 12:41:41,397 | INFO | [FLIGHT] 12:41:41 | MirrorGate   | ALLOW      | input:fa690b82061edf | ✅ ALLOW
+2026-02-02 12:41:41,397 | INFO | [FLIGHT] 12:41:41 | TwoLane      | ROUTE      | CLARIFY              | ⏳ ANALYZING
+2026-02-02 12:41:41,398 | INFO | [FLIGHT] 12:41:41 | Groq         | REQUEST    | model:groq           | ⏳ ANALYZING
+2026-02-02 12:41:41,409 | INFO | GROQ_PAYLOAD: {
+  "model": "groq",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are Mirror \u2014 a helpful AI assistant.\n\nSTYLE:\n- Short responses (2-4 sentences unless more detail is needed)\n- Warm, direct, genuine\n- Start responses with \u27e1\n- Match the user's energy \u2014 brief if they're brief, detailed if they want depth\n- No corporate filler or AI clich\u00e9s (\"As an AI...\", \"I understand your concern...\")\n\nFOCUS:\n- Be genuinely helpful with whatever they need\n- If you're unsure, say so\n- Don't give professional advice (medical, legal, financial) \u2014 offer perspective instead\n\nABOUT THIS SERVICE:\n- Only discuss Active Mirror, N1 Intelligence, or how this works if the user asks directly\n- When asked: this is a privacy-focused AI service that runs on sovereign infrastructure\n- Keep product explanations brief and factual, not promotional\n\nThe intent is slightly veiled. Ask a brief, direct question to see if they're looking for a specific answer or a space to think out loud within the Active Mirror ecosystem. No boilerplate."
+    },
+    {
+      "role": "user",
+      "content": "Hello"
+    },
+    {
+      "role": "assistant",
+      "content": ""
+    },
+    {
+      "role": "user",
+      "content": "hey"
+    }
+  ],
+  "temperature": 0.3,
+  "max_tokens": 800,
+  "stream": true
+}
+GROQ_PAYLOAD_READY: 4 msgs
+INFO:     127.0.0.1:58267 - "POST /mirror HTTP/1.1" 200 OK
+2026-02-02 12:41:41,595 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-02-02 12:41:41,595 | INFO | [FLIGHT] 12:41:41 | Groq         | ERROR      | status:404           | 💥 ERROR
+INFO:     127.0.0.1:58365 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58368 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+2026-02-02 12:43:10,175 | INFO | [FLIGHT] 12:43:10 | User         | MESSAGE    | len:3                | ⏳ ANALYZING
+2026-02-02 12:43:10,176 | INFO | [FLIGHT] 12:43:10 | MirrorGate   | ANALYZE    | input:fa690b82061edf | ⏳ ANALYZING
+2026-02-02 12:43:10,176 | INFO | [FLIGHT] 12:43:10 | MirrorGate   | ALLOW      | input:fa690b82061edf | ✅ ALLOW
+2026-02-02 12:43:10,176 | INFO | [FLIGHT] 12:43:10 | TwoLane      | ROUTE      | CLARIFY              | ⏳ ANALYZING
+2026-02-02 12:43:10,177 | INFO | [FLIGHT] 12:43:10 | Groq         | REQUEST    | model:groq           | ⏳ ANALYZING
+2026-02-02 12:43:10,183 | INFO | GROQ_PAYLOAD: {
+  "model": "groq",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are Mirror \u2014 a helpful AI assistant.\n\nSTYLE:\n- Short responses (2-4 sentences unless more detail is needed)\n- Warm, direct, genuine\n- Start responses with \u27e1\n- Match the user's energy \u2014 brief if they're brief, detailed if they want depth\n- No corporate filler or AI clich\u00e9s (\"As an AI...\", \"I understand your concern...\")\n\nFOCUS:\n- Be genuinely helpful with whatever they need\n- If you're unsure, say so\n- Don't give professional advice (medical, legal, financial) \u2014 offer perspective instead\n\nABOUT THIS SERVICE:\n- Only discuss Active Mirror, N1 Intelligence, or how this works if the user asks directly\n- When asked: this is a privacy-focused AI service that runs on sovereign infrastructure\n- Keep product explanations brief and factual, not promotional\n\nThe intent is slightly veiled. Ask a brief, direct question to see if they're looking for a specific answer or a space to think out loud within the Active Mirror ecosystem. No boilerplate."
+    },
+    {
+      "role": "user",
+      "content": "hey"
+    }
+  ],
+  "temperature": 0.3,
+  "max_tokens": 800,
+  "stream": true
+}
+GROQ_PAYLOAD_READY: 2 msgs
+INFO:     127.0.0.1:58530 - "POST /mirror HTTP/1.1" 200 OK
+2026-02-02 12:43:10,263 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-02-02 12:43:10,263 | INFO | [FLIGHT] 12:43:10 | Groq         | ERROR      | status:404           | 💥 ERROR
+2026-02-02 12:43:12,090 | INFO | [FLIGHT] 12:43:12 | User         | MESSAGE    | len:5                | ⏳ ANALYZING
+2026-02-02 12:43:12,090 | INFO | [FLIGHT] 12:43:12 | MirrorGate   | ANALYZE    | input:2cf24dba5fb0a3 | ⏳ ANALYZING
+2026-02-02 12:43:12,090 | INFO | [FLIGHT] 12:43:12 | MirrorGate   | ALLOW      | input:2cf24dba5fb0a3 | ✅ ALLOW
+2026-02-02 12:43:12,091 | INFO | [FLIGHT] 12:43:12 | ModelRouter  | ROUTE      | groq                 | ⏳ ANALYZING
+2026-02-02 12:43:12,091 | INFO | [FLIGHT] 12:43:12 | TwoLane      | ROUTE      | CLARIFY              | ⏳ ANALYZING
+INFO:     103.210.48.14:0 - "POST /mirror HTTP/1.1" 200 OK
+2026-02-02 12:43:12,092 | INFO | [FLIGHT] 12:43:12 | Groq         | REQUEST    | model:llama-3.3-70b- | ⏳ ANALYZING
+2026-02-02 12:43:12,097 | INFO | GROQ_PAYLOAD: {
+  "model": "llama-3.3-70b-versatile",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are Mirror \u2014 a helpful AI assistant.\n\nSTYLE:\n- Short responses (2-4 sentences unless more detail is needed)\n- Warm, direct, genuine\n- Start responses with \u27e1\n- Match the user's energy \u2014 brief if they're brief, detailed if they want depth\n- No corporate filler or AI clich\u00e9s (\"As an AI...\", \"I understand your concern...\")\n\nFOCUS:\n- Be genuinely helpful with whatever they need\n- If you're unsure, say so\n- Don't give professional advice (medical, legal, financial) \u2014 offer perspective instead\n\nABOUT THIS SERVICE:\n- Only discuss Active Mirror, N1 Intelligence, or how this works if the user asks directly\n- When asked: this is a privacy-focused AI service that runs on sovereign infrastructure\n- Keep product explanations brief and factual, not promotional\n\nThe intent is slightly veiled. Ask a brief, direct question to see if they're looking for a specific answer or a space to think out loud within the Active Mirror ecosystem. No boilerplate."
+    },
+    {
+      "role": "user",
+      "content": "hello"
+    }
+  ],
+  "temperature": 0.3,
+  "max_tokens": 800,
+  "stream": true
+}
+2026-02-02 12:43:12,250 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-02 12:43:12,366 | INFO | [FLIGHT] 12:43:12 | Groq         | RESPONSE   | len:61               | ✅ ALLOW
+2026-02-02 12:43:12,369 | INFO | [FLIGHT] 12:43:12 | MirrorGate   | ANALYZE    | output:742806591fd5c | ⏳ ANALYZING
+2026-02-02 12:43:12,369 | INFO | [FLIGHT] 12:43:12 | MirrorGate   | ALLOW      | output:742806591fd5c | ✅ ALLOW
+2026-02-02 12:44:00,178 | INFO | [FLIGHT] 12:44:00 | User         | MESSAGE    | len:12               | ⏳ ANALYZING
+2026-02-02 12:44:00,180 | INFO | [FLIGHT] 12:44:00 | MirrorGate   | ANALYZE    | input:52cb6b5e4a038a | ⏳ ANALYZING
+2026-02-02 12:44:00,180 | INFO | [FLIGHT] 12:44:00 | MirrorGate   | ALLOW      | input:52cb6b5e4a038a | ✅ ALLOW
+2026-02-02 12:44:00,181 | INFO | [FLIGHT] 12:44:00 | ModelRouter  | ROUTE      | groq                 | ⏳ ANALYZING
+2026-02-02 12:44:00,181 | INFO | [FLIGHT] 12:44:00 | TwoLane      | ROUTE      | TOOL_DIRECT          | ⏳ ANALYZING
+GROQ_PAYLOAD_READY: 2 msgs
+INFO:     127.0.0.1:58857 - "POST /mirror HTTP/1.1" 200 OK
+2026-02-02 12:44:00,183 | INFO | [FLIGHT] 12:44:00 | Groq         | REQUEST    | model:llama-3.3-70b- | ⏳ ANALYZING
+2026-02-02 12:44:00,190 | INFO | GROQ_PAYLOAD: {
+  "model": "llama-3.3-70b-versatile",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are Mirror \u2014 a helpful AI assistant.\n\nSTYLE:\n- Short responses (2-4 sentences unless more detail is needed)\n- Warm, direct, genuine\n- Start responses with \u27e1\n- Match the user's energy \u2014 brief if they're brief, detailed if they want depth\n- No corporate filler or AI clich\u00e9s (\"As an AI...\", \"I understand your concern...\")\n\nFOCUS:\n- Be genuinely helpful with whatever they need\n- If you're unsure, say so\n- Don't give professional advice (medical, legal, financial) \u2014 offer perspective instead\n\nABOUT THIS SERVICE:\n- Only discuss Active Mirror, N1 Intelligence, or how this works if the user asks directly\n- When asked: this is a privacy-focused AI service that runs on sovereign infrastructure\n- Keep product explanations brief and factual, not promotional\n\nRespond directly and concisely. Answer the question first. Then, offer one brief observation that mirrors their state or connects a dot."
+    },
+    {
+      "role": "user",
+      "content": "What is 2+2?"
+    }
+  ],
+  "temperature": 0.2,
+  "max_tokens": 800,
+  "stream": true
+}
+2026-02-02 12:44:00,435 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-02 12:44:00,574 | INFO | [FLIGHT] 12:44:00 | Groq         | RESPONSE   | len:112              | ✅ ALLOW
+2026-02-02 12:44:00,574 | INFO | [FLIGHT] 12:44:00 | MirrorGate   | ANALYZE    | output:bf40e195714a6 | ⏳ ANALYZING
+2026-02-02 12:44:00,574 | INFO | [FLIGHT] 12:44:00 | MirrorGate   | ALLOW      | output:bf40e195714a6 | ✅ ALLOW
+2026-02-02 12:44:26,398 | INFO | [FLIGHT] 12:44:26 | User         | MESSAGE    | len:5                | ⏳ ANALYZING
+2026-02-02 12:44:26,399 | INFO | [FLIGHT] 12:44:26 | MirrorGate   | ANALYZE    | input:2cf24dba5fb0a3 | ⏳ ANALYZING
+2026-02-02 12:44:26,399 | INFO | [FLIGHT] 12:44:26 | MirrorGate   | ALLOW      | input:2cf24dba5fb0a3 | ✅ ALLOW
+2026-02-02 12:44:26,399 | INFO | [FLIGHT] 12:44:26 | ModelRouter  | ROUTE      | groq                 | ⏳ ANALYZING
+2026-02-02 12:44:26,399 | INFO | [FLIGHT] 12:44:26 | TwoLane      | ROUTE      | CLARIFY              | ⏳ ANALYZING
+GROQ_PAYLOAD_READY: 2 msgs
+INFO:     103.210.48.14:0 - "POST /mirror HTTP/1.1" 200 OK
+2026-02-02 12:44:26,400 | INFO | [FLIGHT] 12:44:26 | Groq         | REQUEST    | model:llama-3.3-70b- | ⏳ ANALYZING
+2026-02-02 12:44:26,405 | INFO | GROQ_PAYLOAD: {
+  "model": "llama-3.3-70b-versatile",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are Mirror \u2014 a helpful AI assistant.\n\nSTYLE:\n- Short responses (2-4 sentences unless more detail is needed)\n- Warm, direct, genuine\n- Start responses with \u27e1\n- Match the user's energy \u2014 brief if they're brief, detailed if they want depth\n- No corporate filler or AI clich\u00e9s (\"As an AI...\", \"I understand your concern...\")\n\nFOCUS:\n- Be genuinely helpful with whatever they need\n- If you're unsure, say so\n- Don't give professional advice (medical, legal, financial) \u2014 offer perspective instead\n\nABOUT THIS SERVICE:\n- Only discuss Active Mirror, N1 Intelligence, or how this works if the user asks directly\n- When asked: this is a privacy-focused AI service that runs on sovereign infrastructure\n- Keep product explanations brief and factual, not promotional\n\nThe intent is slightly veiled. Ask a brief, direct question to see if they're looking for a specific answer or a space to think out loud within the Active Mirror ecosystem. No boilerplate."
+    },
+    {
+      "role": "user",
+      "content": "hello"
+    }
+  ],
+  "temperature": 0.3,
+  "max_tokens": 800,
+  "stream": true
+}
+2026-02-02 12:44:26,549 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-02 12:44:26,658 | INFO | [FLIGHT] 12:44:26 | Groq         | RESPONSE   | len:61               | ✅ ALLOW
+2026-02-02 12:44:26,659 | INFO | [FLIGHT] 12:44:26 | MirrorGate   | ANALYZE    | output:742806591fd5c | ⏳ ANALYZING
+2026-02-02 12:44:26,659 | INFO | [FLIGHT] 12:44:26 | MirrorGate   | ALLOW      | output:742806591fd5c | ✅ ALLOW
+2026-02-02 12:45:10,016 | INFO | [FLIGHT] 12:45:10 | User         | MESSAGE    | len:3                | ⏳ ANALYZING
+2026-02-02 12:45:10,017 | INFO | [FLIGHT] 12:45:10 | MirrorGate   | ANALYZE    | input:fa690b82061edf | ⏳ ANALYZING
+2026-02-02 12:45:10,017 | INFO | [FLIGHT] 12:45:10 | MirrorGate   | ALLOW      | input:fa690b82061edf | ✅ ALLOW
+2026-02-02 12:45:10,018 | INFO | [FLIGHT] 12:45:10 | TwoLane      | ROUTE      | CLARIFY              | ⏳ ANALYZING
+2026-02-02 12:45:10,020 | INFO | [FLIGHT] 12:45:10 | Groq         | REQUEST    | model:groq           | ⏳ ANALYZING
+2026-02-02 12:45:10,032 | INFO | GROQ_PAYLOAD: {
+  "model": "groq",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are Mirror \u2014 a helpful AI assistant.\n\nSTYLE:\n- Short responses (2-4 sentences unless more detail is needed)\n- Warm, direct, genuine\n- Start responses with \u27e1\n- Match the user's energy \u2014 brief if they're brief, detailed if they want depth\n- No corporate filler or AI clich\u00e9s (\"As an AI...\", \"I understand your concern...\")\n\nFOCUS:\n- Be genuinely helpful with whatever they need\n- If you're unsure, say so\n- Don't give professional advice (medical, legal, financial) \u2014 offer perspective instead\n\nABOUT THIS SERVICE:\n- Only discuss Active Mirror, N1 Intelligence, or how this works if the user asks directly\n- When asked: this is a privacy-focused AI service that runs on sovereign infrastructure\n- Keep product explanations brief and factual, not promotional\n\nThe intent is slightly veiled. Ask a brief, direct question to see if they're looking for a specific answer or a space to think out loud within the Active Mirror ecosystem. No boilerplate."
+    },
+    {
+      "role": "user",
+      "content": "hey"
+    }
+  ],
+  "temperature": 0.3,
+  "max_tokens": 800,
+  "stream": true
+}
+GROQ_PAYLOAD_READY: 2 msgs
+GROQ_PAYLOAD_READY: 2 msgs
+INFO:     127.0.0.1:59343 - "POST /mirror HTTP/1.1" 200 OK
+2026-02-02 12:45:10,120 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-02-02 12:45:10,120 | INFO | [FLIGHT] 12:45:10 | Groq         | ERROR      | status:404           | 💥 ERROR
+INFO:     127.0.0.1:59907 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59910 - "GET /health HTTP/1.1" 200 OK
+2026-02-02 12:48:15,520 | INFO | [FLIGHT] 12:48:15 | User         | MESSAGE    | len:14               | ⏳ ANALYZING
+2026-02-02 12:48:15,521 | INFO | [FLIGHT] 12:48:15 | MirrorGate   | ANALYZE    | input:edde0f631da0aa | ⏳ ANALYZING
+2026-02-02 12:48:15,521 | INFO | [FLIGHT] 12:48:15 | MirrorGate   | ALLOW      | input:edde0f631da0aa | ✅ ALLOW
+2026-02-02 12:48:15,521 | INFO | [FLIGHT] 12:48:15 | ModelRouter  | ROUTE      | groq                 | ⏳ ANALYZING
+2026-02-02 12:48:15,522 | INFO | [FLIGHT] 12:48:15 | TwoLane      | ROUTE      | CLARIFY              | ⏳ ANALYZING
+INFO:     103.210.48.14:0 - "POST /mirror HTTP/1.1" 200 OK
+2026-02-02 12:48:15,523 | INFO | [FLIGHT] 12:48:15 | Groq         | REQUEST    | model:llama-3.3-70b- | ⏳ ANALYZING
+2026-02-02 12:48:15,534 | INFO | GROQ_PAYLOAD: {
+  "model": "llama-3.3-70b-versatile",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are Mirror \u2014 a helpful AI assistant.\n\nSTYLE:\n- Short responses (2-4 sentences unless more detail is needed)\n- Warm, direct, genuine\n- Start responses with \u27e1\n- Match the user's energy \u2014 brief if they're brief, detailed if they want depth\n- No corporate filler or AI clich\u00e9s (\"As an AI...\", \"I understand your concern...\")\n\nFOCUS:\n- Be genuinely helpful with whatever they need\n- If you're unsure, say so\n- Don't give professional advice (medical, legal, financial) \u2014 offer perspective instead\n\nABOUT THIS SERVICE:\n- Only discuss Active Mirror, N1 Intelligence, or how this works if the user asks directly\n- When asked: this is a privacy-focused AI service that runs on sovereign infrastructure\n- Keep product explanations brief and factual, not promotional\n\nThe intent is slightly veiled. Ask a brief, direct question to see if they're looking for a specific answer or a space to think out loud within the Active Mirror ecosystem. No boilerplate."
+    },
+    {
+      "role": "user",
+      "content": "Tell me a joke"
+    }
+  ],
+  "temperature": 0.3,
+  "max_tokens": 800,
+  "stream": true
+}
+2026-02-02 12:48:15,819 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-02 12:48:15,979 | INFO | [FLIGHT] 12:48:15 | Groq         | RESPONSE   | len:93               | ✅ ALLOW
+2026-02-02 12:48:15,979 | INFO | [FLIGHT] 12:48:15 | MirrorGate   | ANALYZE    | output:94c62a4749fbe | ⏳ ANALYZING
+2026-02-02 12:48:15,980 | INFO | [FLIGHT] 12:48:15 | MirrorGate   | ALLOW      | output:94c62a4749fbe | ✅ ALLOW
+GROQ_PAYLOAD_READY: 2 msgs
+INFO:     103.210.48.14:0 - "OPTIONS /mirror HTTP/1.1" 200 OK
+2026-02-02 12:48:44,734 | INFO | [FLIGHT] 12:48:44 | User         | MESSAGE    | len:19               | ⏳ ANALYZING
+2026-02-02 12:48:44,734 | INFO | [FLIGHT] 12:48:44 | MirrorGate   | ANALYZE    | input:5c1940d2a11cd8 | ⏳ ANALYZING
+2026-02-02 12:48:44,734 | INFO | [FLIGHT] 12:48:44 | MirrorGate   | ALLOW      | input:5c1940d2a11cd8 | ✅ ALLOW
+2026-02-02 12:48:44,734 | INFO | [FLIGHT] 12:48:44 | TwoLane      | ROUTE      | CLARIFY              | ⏳ ANALYZING
+2026-02-02 12:48:44,734 | INFO | [FLIGHT] 12:48:44 | Groq         | REQUEST    | model:groq           | ⏳ ANALYZING
+2026-02-02 12:48:44,740 | INFO | GROQ_PAYLOAD: {
+  "model": "groq",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are Mirror \u2014 a helpful AI assistant.\n\nSTYLE:\n- Short responses (2-4 sentences unless more detail is needed)\n- Warm, direct, genuine\n- Start responses with \u27e1\n- Match the user's energy \u2014 brief if they're brief, detailed if they want depth\n- No corporate filler or AI clich\u00e9s (\"As an AI...\", \"I understand your concern...\")\n\nFOCUS:\n- Be genuinely helpful with whatever they need\n- If you're unsure, say so\n- Don't give professional advice (medical, legal, financial) \u2014 offer perspective instead\n\nABOUT THIS SERVICE:\n- Only discuss Active Mirror, N1 Intelligence, or how this works if the user asks directly\n- When asked: this is a privacy-focused AI service that runs on sovereign infrastructure\n- Keep product explanations brief and factual, not promotional\n\nThe intent is slightly veiled. Ask a brief, direct question to see if they're looking for a specific answer or a space to think out loud within the Active Mirror ecosystem. No boilerplate."
+    },
+    {
+      "role": "user",
+      "content": "hello, how are you?"
+    }
+  ],
+  "temperature": 0.3,
+  "max_tokens": 800,
+  "stream": true
+}
+GROQ_PAYLOAD_READY: 2 msgs
+INFO:     103.210.48.14:0 - "POST /mirror HTTP/1.1" 200 OK
+2026-02-02 12:48:44,823 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-02-02 12:48:44,823 | INFO | [FLIGHT] 12:48:44 | Groq         | ERROR      | status:404           | 💥 ERROR
+2026-02-02 12:49:03,025 | INFO | [FLIGHT] 12:49:03 | User         | MESSAGE    | len:19               | ⏳ ANALYZING
+2026-02-02 12:49:03,026 | INFO | [FLIGHT] 12:49:03 | MirrorGate   | ANALYZE    | input:5c1940d2a11cd8 | ⏳ ANALYZING
+2026-02-02 12:49:03,026 | INFO | [FLIGHT] 12:49:03 | MirrorGate   | ALLOW      | input:5c1940d2a11cd8 | ✅ ALLOW
+2026-02-02 12:49:03,026 | INFO | [FLIGHT] 12:49:03 | TwoLane      | ROUTE      | CLARIFY              | ⏳ ANALYZING
+2026-02-02 12:49:03,027 | INFO | [FLIGHT] 12:49:03 | Groq         | REQUEST    | model:groq           | ⏳ ANALYZING
+2026-02-02 12:49:03,034 | INFO | GROQ_PAYLOAD: {
+  "model": "groq",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are Mirror \u2014 a helpful AI assistant.\n\nSTYLE:\n- Short responses (2-4 sentences unless more detail is needed)\n- Warm, direct, genuine\n- Start responses with \u27e1\n- Match the user's energy \u2014 brief if they're brief, detailed if they want depth\n- No corporate filler or AI clich\u00e9s (\"As an AI...\", \"I understand your concern...\")\n\nFOCUS:\n- Be genuinely helpful with whatever they need\n- If you're unsure, say so\n- Don't give professional advice (medical, legal, financial) \u2014 offer perspective instead\n\nABOUT THIS SERVICE:\n- Only discuss Active Mirror, N1 Intelligence, or how this works if the user asks directly\n- When asked: this is a privacy-focused AI service that runs on sovereign infrastructure\n- Keep product explanations brief and factual, not promotional\n\nThe intent is slightly veiled. Ask a brief, direct question to see if they're looking for a specific answer or a space to think out loud within the Active Mirror ecosystem. No boilerplate."
+    },
+    {
+      "role": "user",
+      "content": "hello, how are you?"
+    }
+  ],
+  "temperature": 0.3,
+  "max_tokens": 800,
+  "stream": true
+}
+GROQ_PAYLOAD_READY: 2 msgs
+INFO:     103.210.48.14:0 - "POST /mirror HTTP/1.1" 200 OK
+2026-02-02 12:49:03,125 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-02-02 12:49:03,126 | INFO | [FLIGHT] 12:49:03 | Groq         | ERROR      | status:404           | 💥 ERROR
+INFO:     103.210.48.14:0 - "GET /stats HTTP/1.1" 200 OK
+2026-02-02 12:50:23,330 | INFO | [FLIGHT] 12:50:23 | User         | MESSAGE    | len:3                | ⏳ ANALYZING
+2026-02-02 12:50:23,331 | INFO | [FLIGHT] 12:50:23 | MirrorGate   | ANALYZE    | input:fa690b82061edf | ⏳ ANALYZING
+2026-02-02 12:50:23,331 | INFO | [FLIGHT] 12:50:23 | MirrorGate   | ALLOW      | input:fa690b82061edf | ✅ ALLOW
+2026-02-02 12:50:23,331 | INFO | [FLIGHT] 12:50:23 | TwoLane      | ROUTE      | CLARIFY              | ⏳ ANALYZING
+2026-02-02 12:50:23,332 | INFO | [FLIGHT] 12:50:23 | Groq         | REQUEST    | model:groq           | ⏳ ANALYZING
+2026-02-02 12:50:23,344 | INFO | GROQ_PAYLOAD: {
+  "model": "groq",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are Mirror \u2014 a helpful AI assistant.\n\nSTYLE:\n- Short responses (2-4 sentences unless more detail is needed)\n- Warm, direct, genuine\n- Start responses with \u27e1\n- Match the user's energy \u2014 brief if they're brief, detailed if they want depth\n- No corporate filler or AI clich\u00e9s (\"As an AI...\", \"I understand your concern...\")\n\nFOCUS:\n- Be genuinely helpful with whatever they need\n- If you're unsure, say so\n- Don't give professional advice (medical, legal, financial) \u2014 offer perspective instead\n\nABOUT THIS SERVICE:\n- Only discuss Active Mirror, N1 Intelligence, or how this works if the user asks directly\n- When asked: this is a privacy-focused AI service that runs on sovereign infrastructure\n- Keep product explanations brief and factual, not promotional\n\nThe intent is slightly veiled. Ask a brief, direct question to see if they're looking for a specific answer or a space to think out loud within the Active Mirror ecosystem. No boilerplate."
+    },
+    {
+      "role": "user",
+      "content": "hey"
+    }
+  ],
+  "temperature": 0.3,
+  "max_tokens": 800,
+  "stream": true
+}
+GROQ_PAYLOAD_READY: 2 msgs
+INFO:     103.210.48.14:0 - "POST /mirror HTTP/1.1" 200 OK
+2026-02-02 12:50:23,425 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-02-02 12:50:23,426 | INFO | [FLIGHT] 12:50:23 | Groq         | ERROR      | status:404           | 💥 ERROR
+2026-02-02 12:50:43,030 | INFO | [FLIGHT] 12:50:43 | User         | MESSAGE    | len:3                | ⏳ ANALYZING
+2026-02-02 12:50:43,033 | INFO | [FLIGHT] 12:50:43 | MirrorGate   | ANALYZE    | input:fa690b82061edf | ⏳ ANALYZING
+2026-02-02 12:50:43,033 | INFO | [FLIGHT] 12:50:43 | MirrorGate   | ALLOW      | input:fa690b82061edf | ✅ ALLOW
+2026-02-02 12:50:43,033 | INFO | [FLIGHT] 12:50:43 | TwoLane      | ROUTE      | CLARIFY              | ⏳ ANALYZING
+2026-02-02 12:50:43,035 | INFO | [FLIGHT] 12:50:43 | Groq         | REQUEST    | model:groq           | ⏳ ANALYZING
+2026-02-02 12:50:43,056 | INFO | GROQ_PAYLOAD: {
+  "model": "groq",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are Mirror \u2014 a helpful AI assistant.\n\nSTYLE:\n- Short responses (2-4 sentences unless more detail is needed)\n- Warm, direct, genuine\n- Start responses with \u27e1\n- Match the user's energy \u2014 brief if they're brief, detailed if they want depth\n- No corporate filler or AI clich\u00e9s (\"As an AI...\", \"I understand your concern...\")\n\nFOCUS:\n- Be genuinely helpful with whatever they need\n- If you're unsure, say so\n- Don't give professional advice (medical, legal, financial) \u2014 offer perspective instead\n\nABOUT THIS SERVICE:\n- Only discuss Active Mirror, N1 Intelligence, or how this works if the user asks directly\n- When asked: this is a privacy-focused AI service that runs on sovereign infrastructure\n- Keep product explanations brief and factual, not promotional\n\nThe intent is slightly veiled. Ask a brief, direct question to see if they're looking for a specific answer or a space to think out loud within the Active Mirror ecosystem. No boilerplate."
+    },
+    {
+      "role": "user",
+      "content": "hey"
+    }
+  ],
+  "temperature": 0.3,
+  "max_tokens": 800,
+  "stream": true
+}
+GROQ_PAYLOAD_READY: 2 msgs
+INFO:     103.210.48.14:0 - "POST /mirror HTTP/1.1" 200 OK
+2026-02-02 12:50:43,162 | INFO | HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-02-02 12:50:43,163 | INFO | [FLIGHT] 12:50:43 | Groq         | ERROR      | status:404           | 💥 ERROR
+INFO:     127.0.0.1:60960 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     103.210.48.14:0 - "OPTIONS /mirror HTTP/1.1" 200 OK
