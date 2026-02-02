@@ -19,6 +19,7 @@ import Research from './pages/Research';
 import Scan from './pages/Scan';
 import Twins from './pages/Twins';
 import Brief from './pages/Brief';
+import Cast from './pages/Cast';
 
 export default function App() {
     return (
@@ -42,6 +43,7 @@ export default function App() {
                 <Route path="/scan" element={<Scan />} />
                 <Route path="/twins" element={<Twins />} />
                 <Route path="/brief" element={<Brief />} />
+                <Route path="/cast" element={<Cast />} />
                 <Route path="*" element={<NotFound />} />
             </Routes>
         </BrowserRouter>
