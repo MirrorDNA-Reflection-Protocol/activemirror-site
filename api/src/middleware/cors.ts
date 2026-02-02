@@ -13,8 +13,10 @@ export const corsMiddleware = cors({
   origin: (origin) => {
     if (!origin) return ALLOWED_ORIGINS[0]
     if (ALLOWED_ORIGINS.includes(origin)) return origin
-    // Allow any localhost port for development
-    if (origin.startsWith('http://localhost:')) return origin
+    // Allow any localhost port for development only
+    if (process.env.NODE_ENV !== 'production' && origin.startsWith('http://localhost:')) {
+      return origin
+    }
     return ALLOWED_ORIGINS[0]
   },
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

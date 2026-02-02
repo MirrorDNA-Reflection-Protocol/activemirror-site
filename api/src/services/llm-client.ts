@@ -23,6 +23,7 @@ function getClient(provider: string): OpenAI {
 
   const config = configs[provider]
   if (!config) throw new Error(`Unknown provider: ${provider}`)
+  if (!config.apiKey) throw new Error(`API key not configured for provider: ${provider}`)
 
   clients[provider] = new OpenAI({
     apiKey: config.apiKey,

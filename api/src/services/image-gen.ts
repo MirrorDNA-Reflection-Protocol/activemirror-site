@@ -49,7 +49,12 @@ export interface ImageGenResult {
   seed: string
 }
 
+const MAX_PROMPT_LENGTH = 500
+
 export async function generateImage(prompt: string): Promise<ImageGenResult> {
+  if (prompt.length > MAX_PROMPT_LENGTH) {
+    throw new Error(`Prompt too long (max ${MAX_PROMPT_LENGTH} characters)`)
+  }
   const cleanedPrompt = cleanPrompt(prompt)
   const seed = generateSeed()
 

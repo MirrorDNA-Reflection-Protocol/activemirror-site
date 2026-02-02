@@ -21,9 +21,14 @@ app = FastAPI(title="Mirror Judge Service")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=[
+        "https://activemirror.ai",
+        "https://proxy.activemirror.ai",
+        "http://localhost:8082",
+        "http://localhost:8084",
+    ],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 # Load cross-encoder model
