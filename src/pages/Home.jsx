@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Github, Book, Globe, FileText, Zap } from 'lucide-react';
+import { ArrowRight, Github, Book, Globe, FileText, Zap, Brain } from 'lucide-react';
 import SpotlightCard from '../components/SpotlightCard';
 import MirrorLogo from '../components/MirrorLogo';
 import Lenis from '@studio-freight/lenis';
@@ -69,11 +69,11 @@ export default function Home() {
 
                         {/* 4. QUICK LINKS - 2x2 Grid */}
                         <div className="grid grid-cols-2 gap-2 sm:gap-4 mt-1 sm:mt-2">
+                            <Link to="/scan" className="py-2 sm:py-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/10 hover:border-cyan-500/30 transition-colors flex items-center justify-center gap-2 text-cyan-400 hover:text-cyan-300 text-xs sm:text-sm font-medium">
+                                <Brain size={14} /> BrainScan
+                            </Link>
                             <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="py-2 sm:py-3 rounded-xl border border-purple-500/10 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500/20 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-purple-400 text-xs sm:text-sm font-medium">
                                 <Github size={14} /> Protocol
-                            </a>
-                            <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/research/" className="py-2 sm:py-3 rounded-xl border border-purple-500/10 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500/20 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-purple-400 text-xs sm:text-sm font-medium" target="_blank" rel="noopener noreferrer">
-                                <FileText size={14} /> Research
                             </a>
                             <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/story/" className="py-2 sm:py-3 rounded-xl border border-purple-500/10 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500/20 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-purple-400 text-xs sm:text-sm font-medium" target="_blank" rel="noopener noreferrer">
                                 <Book size={14} /> The Story

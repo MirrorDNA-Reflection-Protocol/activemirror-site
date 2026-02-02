@@ -13,7 +13,8 @@ const SPA_ROUTES = [
     'hub',
     'lab',
     'mirror-beta',
-    'ambient'
+    'ambient',
+    'scan'
 ];
 
 // Plugin to copy index.html for SPA routing on GitHub Pages
