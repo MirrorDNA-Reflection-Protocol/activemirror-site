@@ -285,7 +285,21 @@ const ShadowThoughts = ({ thought, atmosphere }) => {
 };
 
 // File Upload Zone for Zero-Vault RAG
-const FileUploadZone = ({ onUpload, currentDoc }) => {
+const FileUploadZone = ({ onUpload, onImageUpload, currentDoc }) => {
+    const handleFile = (file) => {
+        if (!file) return;
+        // Route images to image handler, documents to doc handler
+        if (file.type.startsWith('image/')) {
+            if (onImageUpload) {
+                const reader = new FileReader();
+                reader.onload = (e) => onImageUpload({ dataUrl: e.target.result, file });
+                reader.readAsDataURL(file);
+            }
+        } else {
+            onUpload(file);
+        }
+    };
+
     return (
         <div className="max-w-2xl mx-auto mb-4 px-4">
             {!currentDoc ? (
@@ -297,15 +311,13 @@ const FileUploadZone = ({ onUpload, currentDoc }) => {
                         type="file"
                         id="file-upload"
                         hidden
-                        onChange={(e) => {
-                            const file = e.target.files[0];
-                            if (file) onUpload(file);
-                        }}
+                        accept=".pdf,.txt,.md,.doc,.docx,image/*"
+                        onChange={(e) => handleFile(e.target.files[0])}
                     />
                     <div className="flex flex-col items-center gap-2">
                         <Paperclip size={20} className="text-white/20 group-hover:text-white/40 transition-colors" />
                         <p className="text-xs text-white/30 font-medium uppercase tracking-widest">
-                            Reflect on a document (PDF, TXT, MD)
+                            Upload image or document
                         </p>
                     </div>
                 </div>
@@ -1333,8 +1345,12 @@ const MirrorAmbient = () => {
                 )}
 
                 {/* File Upload for Sovereign RAG */}
-                {messages.length < 5 && (
-                    <FileUploadZone onUpload={handleFileUpload} currentDoc={localDoc} />
+                {messages.length < 5 && !pastedImage && (
+                    <FileUploadZone
+                        onUpload={handleFileUpload}
+                        onImageUpload={setPastedImage}
+                        currentDoc={localDoc}
+                    />
                 )}
             </main>
 

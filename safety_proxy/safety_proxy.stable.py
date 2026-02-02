@@ -28,6 +28,7 @@ from mirror_shield_public import pre_check, post_check, get_refusal_message, che
 from storage import create_storage
 from two_lane_router import TwoLaneRouter, SchemaValidator, ResponseType, IntentCategory
 from rewrite_engine import RewriteEngine, RewriteResult
+from smart_router import smart_router, ModelTier, MODELS
 
 load_dotenv()
 
@@ -688,11 +689,35 @@ def check_rate(ip: str, request_id: str) -> Tuple[bool, str]:
 
 GROQ_VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"  # Groq's vision model (Llama 4 Scout)
 
-async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_msg: str = None, routing=None, has_image: bool = False):
-    """Stream with full Epistemic Judge + MirrorShield + Two-Lane enforcement."""
-    if not GROQ_API_KEY:
+async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_msg: str = None, routing=None, model_decision=None):
+    """Stream with full Epistemic Judge + MirrorShield + Two-Lane + Smart Model Routing."""
+
+    # Get model config from smart router decision
+    model_config = model_decision.model if model_decision else MODELS[ModelTier.FAST]
+    api_key = smart_router.get_api_key(model_config)
+
+    if not api_key:
+        # Fallback to Groq if selected model's API unavailable
+        model_config = MODELS[ModelTier.FAST]
+        api_key = os.getenv("GROQ_API_KEY")
+
+    if not api_key:
         yield json.dumps({"status": "error", "content": "No API Key"}) + "\n"
         return
+
+    # Send routing info to frontend FIRST
+    if model_decision:
+        yield json.dumps({
+            "status": "routing",
+            "model_info": {
+                "model": model_config.name,
+                "provider": model_config.provider,
+                "tier": model_config.tier.value,
+                "reasoning": model_decision.reasoning,
+                "atmosphere": model_decision.atmosphere,
+                "query_type": model_decision.query_type
+            }
+        }) + "\n"
 
     if superego.penance_active[ip]:
         yield json.dumps({
@@ -709,35 +734,39 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
         yield json.dumps({"status": "delay", "seconds": delay, "reason": "Time dilation active"}) + "\n"
         await asyncio.sleep(delay)
 
-    # Regression Mode
-    max_tokens = superego.get_token_limit(ip)
-    if max_tokens < 800:
+    # Regression Mode (but respect model's default max_tokens)
+    superego_limit = superego.get_token_limit(ip)
+    max_tokens = min(superego_limit, model_config.max_tokens)
+    if superego_limit < 800:
         record_event("Superego", "REGRESSION", f"tokens:{max_tokens}", "ANALYZING", {"request_id": request_id})
 
     full_response = ""
+    has_image = model_config.tier == ModelTier.VISION
 
-    # Use vision model if image attached
-    model_to_use = GROQ_VISION_MODEL if has_image else GROQ_MODEL
-    record_event("Groq", "REQUEST", f"model:{model_to_use}", "ANALYZING", {"request_id": request_id, "max_tokens": max_tokens, "has_image": has_image})
+    record_event(model_config.provider, "REQUEST", f"model:{model_config.name}", "ANALYZING", {
+        "request_id": request_id,
+        "max_tokens": max_tokens,
+        "tier": model_config.tier.value
+    })
 
     try:
         async with httpx.AsyncClient(timeout=60.0 if has_image else 30.0) as c:
             async with c.stream(
                 "POST",
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Content-Type": "application/json", "Authorization": f"Bearer {GROQ_API_KEY}"},
+                f"{model_config.api_base}/chat/completions",
+                headers={"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"},
                 json={
-                    "model": model_to_use,
+                    "model": model_config.model_id,
                     "messages": messages,
-                    "temperature": routing.temperature if routing else 0.7,
+                    "temperature": routing.temperature if routing else model_config.temperature_default,
                     "max_tokens": max_tokens,
                     "stream": True
                 }
             ) as response:
                 if response.status_code != 200:
                     error_body = await response.aread()
-                    logger.error(f"Groq API error: {response.status_code} - {error_body.decode()}")
-                    record_event("Groq", "ERROR", f"status:{response.status_code}", "ERROR", {"body": error_body.decode()[:200]})
+                    logger.error(f"{model_config.provider} API error: {response.status_code} - {error_body.decode()}")
+                    record_event(model_config.provider, "ERROR", f"status:{response.status_code}", "ERROR", {"body": error_body.decode()[:200]})
                     yield json.dumps({"status": "error", "content": "Mirror clouded."}) + "\n"
                     return
 
@@ -754,7 +783,7 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
                         except:
                             continue
         
-        record_event("Groq", "RESPONSE", f"len:{len(full_response)}", "ALLOW", {"request_id": request_id})
+        record_event(model_config.provider, "RESPONSE", f"len:{len(full_response)}", "ALLOW", {"request_id": request_id, "model": model_config.name})
         
         # ═══════════════════════════════════════════════════════════════
         # ⟡ MIRRORSHIELD POST-CHECK (Alignment Layer)
@@ -1403,6 +1432,19 @@ async def mirror(request: Request, body: MirrorRequest):
         "temperature": routing_decision.temperature
     })
 
+    # ═══════════════════════════════════════════════════════════════
+    # ⟡ SMART MODEL ROUTING — Select optimal model for query
+    # ═══════════════════════════════════════════════════════════════
+    model_decision = smart_router.route(body.message, has_image=body.has_image())
+
+    record_event("SmartRouter", "MODEL", f"{model_decision.model.name}", "ANALYZING", {
+        "request_id": rid,
+        "tier": model_decision.model.tier.value,
+        "query_type": model_decision.query_type,
+        "atmosphere": model_decision.atmosphere,
+        "confidence": model_decision.confidence
+    })
+
     # Build context with rap sheet awareness + Two-Lane suffix
     base_prompt = get_system_prompt()
 
@@ -1427,7 +1469,7 @@ async def mirror(request: Request, body: MirrorRequest):
         messages.append({"role": "user", "content": body.message})
 
     return StreamingResponse(
-        stream_with_judge(messages, ip, rid, boundary_msg=boundary_msg, routing=routing_decision, has_image=body.has_image()),
+        stream_with_judge(messages, ip, rid, boundary_msg=boundary_msg, routing=routing_decision, model_decision=model_decision),
         media_type="application/x-ndjson"
     )
 
