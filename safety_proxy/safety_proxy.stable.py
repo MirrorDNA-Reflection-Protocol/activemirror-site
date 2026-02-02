@@ -686,7 +686,9 @@ def check_rate(ip: str, request_id: str) -> Tuple[bool, str]:
 # STREAMING WITH EPISTEMIC JUDGE
 # ═══════════════════════════════════════════════════════════════
 
-async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_msg: str = None, routing=None):
+GROQ_VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"  # Groq's vision model (Llama 4 Scout)
+
+async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_msg: str = None, routing=None, has_image: bool = False):
     """Stream with full Epistemic Judge + MirrorShield + Two-Lane enforcement."""
     if not GROQ_API_KEY:
         yield json.dumps({"status": "error", "content": "No API Key"}) + "\n"
@@ -713,16 +715,19 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
         record_event("Superego", "REGRESSION", f"tokens:{max_tokens}", "ANALYZING", {"request_id": request_id})
 
     full_response = ""
-    record_event("Groq", "REQUEST", f"model:{GROQ_MODEL}", "ANALYZING", {"request_id": request_id, "max_tokens": max_tokens})
-    
+
+    # Use vision model if image attached
+    model_to_use = GROQ_VISION_MODEL if has_image else GROQ_MODEL
+    record_event("Groq", "REQUEST", f"model:{model_to_use}", "ANALYZING", {"request_id": request_id, "max_tokens": max_tokens, "has_image": has_image})
+
     try:
-        async with httpx.AsyncClient(timeout=30.0) as c:
+        async with httpx.AsyncClient(timeout=60.0 if has_image else 30.0) as c:
             async with c.stream(
                 "POST",
                 "https://api.groq.com/openai/v1/chat/completions",
                 headers={"Content-Type": "application/json", "Authorization": f"Bearer {GROQ_API_KEY}"},
                 json={
-                    "model": GROQ_MODEL,
+                    "model": model_to_use,
                     "messages": messages,
                     "temperature": routing.temperature if routing else 0.7,
                     "max_tokens": max_tokens,
@@ -730,7 +735,9 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
                 }
             ) as response:
                 if response.status_code != 200:
-                    record_event("Groq", "ERROR", f"status:{response.status_code}", "ERROR", {})
+                    error_body = await response.aread()
+                    logger.error(f"Groq API error: {response.status_code} - {error_body.decode()}")
+                    record_event("Groq", "ERROR", f"status:{response.status_code}", "ERROR", {"body": error_body.decode()[:200]})
                     yield json.dumps({"status": "error", "content": "Mirror clouded."}) + "\n"
                     return
 
@@ -870,10 +877,16 @@ class MirrorRequest(BaseModel):
     messages: List[ChatMessage] = Field(default_factory=list)  # Alias for backwards compat
     dial: float = Field(default=0.5)
     mode: Optional[str] = Field(default=None, description="User preference: 'mirror_only' or 'tool_only'")
+    image: Optional[str] = Field(default=None, description="Base64-encoded image data URL")
+    rag_context: Optional[str] = Field(default=None, description="RAG context from document or vault")
 
     def get_history(self):
         """Return history, falling back to messages for backwards compat."""
         return self.history if self.history else self.messages
+
+    def has_image(self):
+        """Check if request includes an image."""
+        return self.image is not None and self.image.startswith('data:image/')
 
 class ReflectionRequest(BaseModel):
     reflection: str = Field(..., max_length=2000)
@@ -1392,13 +1405,29 @@ async def mirror(request: Request, body: MirrorRequest):
 
     # Build context with rap sheet awareness + Two-Lane suffix
     base_prompt = get_system_prompt()
+
+    # Add RAG context if provided
+    if body.rag_context:
+        base_prompt += f"\n\n[Context from user's documents]:\n{body.rag_context[:2000]}"
+
     messages = [{"role": "system", "content": base_prompt + system_suffix}]
     for msg in body.get_history()[-20:]:
         messages.append({"role": msg.role, "content": msg.content})
-    messages.append({"role": "user", "content": body.message})
+
+    # Handle image in user message (vision model format)
+    if body.has_image():
+        record_event("Vision", "IMAGE", "attached", "ANALYZING", {"request_id": rid})
+        # Format for vision model (OpenAI-compatible multimodal format)
+        user_content = [
+            {"type": "text", "text": body.message},
+            {"type": "image_url", "image_url": {"url": body.image}}
+        ]
+        messages.append({"role": "user", "content": user_content})
+    else:
+        messages.append({"role": "user", "content": body.message})
 
     return StreamingResponse(
-        stream_with_judge(messages, ip, rid, boundary_msg=boundary_msg, routing=routing_decision),
+        stream_with_judge(messages, ip, rid, boundary_msg=boundary_msg, routing=routing_decision, has_image=body.has_image()),
         media_type="application/x-ndjson"
     )
 
