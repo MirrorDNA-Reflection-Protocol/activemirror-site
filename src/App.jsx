@@ -18,6 +18,7 @@ import MirrorAmbient from './pages/MirrorAmbient';
 import Research from './pages/Research';
 import Scan from './pages/Scan';
 import Twins from './pages/Twins';
+import Brief from './pages/Brief';
 
 export default function App() {
     return (
@@ -40,6 +41,7 @@ export default function App() {
                 <Route path="/research" element={<Research />} />
                 <Route path="/scan" element={<Scan />} />
                 <Route path="/twins" element={<Twins />} />
+                <Route path="/brief" element={<Brief />} />
                 <Route path="*" element={<NotFound />} />
             </Routes>
         </BrowserRouter>

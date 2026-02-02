@@ -95,10 +95,10 @@ export default function Home() {
                             <Link to="/terms" className="hover:text-purple-400 transition-colors">Terms</Link>
 
                             {/* Hidden/Subtle Intelligence Link (Mysterious Pulse) - Intensified */}
-                            <a href="https://brief.activemirror.ai" target="_blank" className="relative group/zap" aria-label="Intelligence">
+                            <Link to="/brief" className="relative group/zap" aria-label="Intelligence">
                                 <div className="absolute inset-0 bg-amber-500/30 blur-lg rounded-full animate-pulse-slow opacity-0 group-hover/zap:opacity-100 transition-opacity duration-1000"></div>
                                 <Zap size={10} className="inline-block text-amber-500 animate-pulse-slow drop-shadow-[0_0_3px_rgba(245,158,11,0.3)] group-hover/zap:text-amber-300 group-hover/zap:animate-none group-hover/zap:drop-shadow-[0_0_15px_rgba(245,158,11,1)] transition-all duration-500" />
-                            </a>
+                            </Link>
 
                             <Link to="/privacy" className="hover:text-purple-400 transition-colors">Privacy</Link>
                         </div>
