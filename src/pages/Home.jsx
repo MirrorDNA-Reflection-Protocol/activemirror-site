@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Github, Book, Globe, FileText, Zap, Brain } from 'lucide-react';
+import { ArrowRight, Github, Book, Globe, Zap, Brain, Users, Send, Target } from 'lucide-react';
 import SpotlightCard from '../components/SpotlightCard';
 import MirrorLogo from '../components/MirrorLogo';
 import Lenis from '@studio-freight/lenis';
@@ -67,26 +67,42 @@ export default function Home() {
                             <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                         </a>
 
-                        {/* 4. QUICK LINKS - 2x2 Grid */}
-                        <div className="grid grid-cols-2 gap-2 sm:gap-4 mt-1 sm:mt-2">
-                            <Link to="/scan" className="py-2 sm:py-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/10 hover:border-cyan-500/30 transition-colors flex items-center justify-center gap-2 text-cyan-400 hover:text-cyan-300 text-xs sm:text-sm font-medium">
-                                <Brain size={14} /> BrainScan
+                        {/* 4. INTELLIGENCE SUITE - 2x2 Grid */}
+                        <div className="grid grid-cols-2 gap-2 sm:gap-3 mt-1 sm:mt-2">
+                            <Link to="/scan" className="group py-3 sm:py-4 rounded-xl border border-purple-500/20 bg-purple-500/5 hover:bg-purple-500/10 hover:border-purple-500/40 transition-all flex flex-col items-center justify-center gap-1 hover:scale-[1.02]">
+                                <Brain size={20} className="text-purple-400 group-hover:text-purple-300 transition-colors" />
+                                <span className="text-xs sm:text-sm font-medium text-purple-400 group-hover:text-purple-300">BrainScan</span>
+                                <span className="text-[9px] sm:text-[10px] text-zinc-600 hidden sm:block">Discover your archetype</span>
                             </Link>
-                            <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="py-2 sm:py-3 rounded-xl border border-purple-500/10 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500/20 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-purple-400 text-xs sm:text-sm font-medium">
-                                <Github size={14} /> Protocol
-                            </a>
-                            <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/story/" className="py-2 sm:py-3 rounded-xl border border-purple-500/10 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500/20 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-purple-400 text-xs sm:text-sm font-medium" target="_blank" rel="noopener noreferrer">
-                                <Book size={14} /> The Story
-                            </a>
-                            <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/blog/" className="py-2 sm:py-3 rounded-xl border border-purple-500/10 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500/20 transition-colors flex items-center justify-center gap-2 text-zinc-300 hover:text-purple-400 text-xs sm:text-sm font-medium" target="_blank" rel="noopener noreferrer">
-                                <ArrowRight size={14} /> Blog
-                            </a>
+                            <Link to="/twins" className="group py-3 sm:py-4 rounded-xl border border-violet-500/20 bg-violet-500/5 hover:bg-violet-500/10 hover:border-violet-500/40 transition-all flex flex-col items-center justify-center gap-1 hover:scale-[1.02]">
+                                <Users size={20} className="text-violet-400 group-hover:text-violet-300 transition-colors" />
+                                <span className="text-xs sm:text-sm font-medium text-violet-400 group-hover:text-violet-300">AI Twins</span>
+                                <span className="text-[9px] sm:text-[10px] text-zinc-600 hidden sm:block">Cognitive companions</span>
+                            </Link>
+                            <Link to="/brief" className="group py-3 sm:py-4 rounded-xl border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 hover:border-amber-500/40 transition-all flex flex-col items-center justify-center gap-1 hover:scale-[1.02]">
+                                <Target size={20} className="text-amber-400 group-hover:text-amber-300 transition-colors" />
+                                <span className="text-xs sm:text-sm font-medium text-amber-400 group-hover:text-amber-300">Brief</span>
+                                <span className="text-[9px] sm:text-[10px] text-zinc-600 hidden sm:block">Temporal intelligence</span>
+                            </Link>
+                            <Link to="/cast" className="group py-3 sm:py-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/10 hover:border-cyan-500/40 transition-all flex flex-col items-center justify-center gap-1 hover:scale-[1.02]">
+                                <Send size={20} className="text-cyan-400 group-hover:text-cyan-300 transition-colors" />
+                                <span className="text-xs sm:text-sm font-medium text-cyan-400 group-hover:text-cyan-300">Cast</span>
+                                <span className="text-[9px] sm:text-[10px] text-zinc-600 hidden sm:block">Messages through time</span>
+                            </Link>
                         </div>
 
-                        {/* 5. PREVIEW LINK */}
-                        <Link to="/preview" className="mt-2 sm:mt-4 text-[10px] sm:text-xs text-zinc-600 hover:text-purple-400 transition-colors">
-                            ✨ Preview upcoming features →
-                        </Link>
+                        {/* 5. EXTERNAL LINKS */}
+                        <div className="flex justify-center gap-4 sm:gap-6 mt-3 sm:mt-4 text-[10px] sm:text-xs text-zinc-500">
+                            <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="hover:text-purple-400 transition-colors flex items-center gap-1">
+                                <Github size={12} /> Protocol
+                            </a>
+                            <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/story/" target="_blank" rel="noopener noreferrer" className="hover:text-purple-400 transition-colors flex items-center gap-1">
+                                <Book size={12} /> Story
+                            </a>
+                            <Link to="/research" className="hover:text-purple-400 transition-colors flex items-center gap-1">
+                                <ArrowRight size={12} /> Research
+                            </Link>
+                        </div>
                     </div>
 
                     {/* FOOTER: LEGALS ONLY */}
