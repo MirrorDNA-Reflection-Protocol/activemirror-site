@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Brain, Sparkles, Share2, Home } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Brain, Sparkles, Share2, Home, Users } from 'lucide-react';
 import SpotlightCard from '../components/SpotlightCard';
 import MirrorLogo from '../components/MirrorLogo';
 
@@ -84,6 +84,10 @@ export default function Scan() {
                 if (!res.ok) throw new Error('Failed to submit quiz');
                 const data = await res.json();
                 setResult(data);
+                // Save brain ID for twins
+                if (data.brain_id) {
+                    localStorage.setItem('mirrorBrainId', data.brain_id);
+                }
                 setPhase('results');
             } catch (err) {
                 setError('Failed to process your results. Please try again.');
@@ -450,23 +454,34 @@ function ResultsScreen({ result, onRetake }) {
 
                 {/* Actions */}
                 <motion.div
-                    className="flex flex-col sm:flex-row gap-3"
+                    className="space-y-3"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1 }}
                 >
+                    {/* Primary CTA - Meet Twins */}
                     <Link
-                        to="/"
-                        className="flex-1 py-3 rounded-xl border border-purple-500/20 bg-white/5 text-white font-medium hover:bg-purple-500/10 hover:border-purple-500/30 transition-all flex items-center justify-center gap-2"
+                        to="/twins"
+                        className={`w-full py-4 rounded-xl bg-gradient-to-r ${colors.bg.replace('/20', '')} text-white font-bold text-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-lg ${colors.glow}`}
                     >
-                        <Home size={18} /> Back to Home
+                        <Users size={20} /> Meet Your AI Twins <ArrowRight size={18} />
                     </Link>
-                    <button
-                        onClick={onRetake}
-                        className="flex-1 py-3 rounded-xl border border-purple-500/20 bg-white/5 text-white font-medium hover:bg-purple-500/10 hover:border-purple-500/30 transition-all flex items-center justify-center gap-2"
-                    >
-                        <ArrowLeft size={18} /> Retake Quiz
-                    </button>
+
+                    {/* Secondary Actions */}
+                    <div className="flex gap-3">
+                        <Link
+                            to="/"
+                            className="flex-1 py-3 rounded-xl border border-purple-500/20 bg-white/5 text-white font-medium hover:bg-purple-500/10 hover:border-purple-500/30 transition-all flex items-center justify-center gap-2 text-sm"
+                        >
+                            <Home size={16} /> Home
+                        </Link>
+                        <button
+                            onClick={onRetake}
+                            className="flex-1 py-3 rounded-xl border border-purple-500/20 bg-white/5 text-white font-medium hover:bg-purple-500/10 hover:border-purple-500/30 transition-all flex items-center justify-center gap-2 text-sm"
+                        >
+                            <ArrowLeft size={16} /> Retake
+                        </button>
+                    </div>
                 </motion.div>
 
                 {/* Brain ID */}

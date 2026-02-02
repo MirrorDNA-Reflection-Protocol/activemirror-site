@@ -17,6 +17,7 @@ import NotFound from './pages/NotFound';
 import MirrorAmbient from './pages/MirrorAmbient';
 import Research from './pages/Research';
 import Scan from './pages/Scan';
+import Twins from './pages/Twins';
 
 export default function App() {
     return (
@@ -38,6 +39,7 @@ export default function App() {
                 <Route path="/prism" element={<MirrorPage />} />
                 <Route path="/research" element={<Research />} />
                 <Route path="/scan" element={<Scan />} />
+                <Route path="/twins" element={<Twins />} />
                 <Route path="*" element={<NotFound />} />
             </Routes>
         </BrowserRouter>
