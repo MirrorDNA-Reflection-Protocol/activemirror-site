@@ -22,6 +22,7 @@ class ModelTier(Enum):
     REASONING = "reasoning"  # Code, math, logic
     CREATIVE = "creative"    # Writing, brainstorming
     VISION = "vision"        # Image analysis
+    IMAGE_GEN = "image_gen"  # Image generation
 
 
 @dataclass
@@ -72,6 +73,15 @@ MODELS = {
         tier=ModelTier.VISION,
         max_tokens=800,
         temperature_default=0.3
+    ),
+    ModelTier.IMAGE_GEN: ModelConfig(
+        name="Stable Diffusion XL",
+        provider="Replicate",
+        model_id="stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+        api_base="https://api.replicate.com/v1",
+        tier=ModelTier.IMAGE_GEN,
+        max_tokens=0,  # Not applicable for image gen
+        temperature_default=0.0
     )
 }
 
@@ -89,12 +99,21 @@ PATTERNS = {
     ],
     ModelTier.CREATIVE: [
         # Writing patterns
-        r'\b(write|draft|compose|create|brainstorm|ideas)\b',
+        r'\b(write|draft|compose|brainstorm|ideas)\b',
         r'\b(story|poem|essay|article|blog|script|dialogue)\b',
         r'\b(creative|imaginative|unique|original)\b',
         # Brainstorming patterns
         r'\b(what if|imagine|suppose|possibilities|alternatives)\b',
         r'\b(inspire|motivation|perspective|viewpoint)\b',
+    ],
+    ModelTier.IMAGE_GEN: [
+        # Direct image generation requests
+        r'\b(generate|create|make|draw|paint|render|design)\s+(an?\s+)?(image|picture|photo|artwork|illustration|portrait|scene)\b',
+        r'\b(image|picture|photo|artwork|illustration)\s+of\b',
+        r'\bshow me (an?\s+)?(image|picture|visual)\b',
+        r'\b(visualize|depict|illustrate)\b',
+        r'\bcreate\s+(a\s+)?visual\b',
+        r'\bdraw\s+(me\s+)?(a|an)\b',
     ]
 }
 
@@ -159,6 +178,15 @@ class SmartRouter:
             return ModelTier.VISION, "image_analysis", 1.0
 
         text_lower = text.lower()
+
+        # Check image generation patterns FIRST (highest priority)
+        image_gen_score = 0
+        for pattern in PATTERNS[ModelTier.IMAGE_GEN]:
+            if re.search(pattern, text_lower):
+                image_gen_score += 1
+
+        if image_gen_score >= 1:
+            return ModelTier.IMAGE_GEN, "image_generation", min(0.7 + image_gen_score * 0.1, 0.95)
 
         # Check reasoning patterns
         reasoning_score = 0

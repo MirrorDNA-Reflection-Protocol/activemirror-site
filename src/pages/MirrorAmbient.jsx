@@ -420,7 +420,7 @@ const MessageBubble = ({ message, atmosphere, onSpeak, onRegenerate, voiceEnable
                         <span className="text-amber-400 text-xs">Safety Notice</span>
                     </div>
                 )}
-                {/* Image attachment */}
+                {/* Image attachment (user uploaded) */}
                 {message.image && (
                     <div className="mb-2">
                         <img
@@ -428,6 +428,33 @@ const MessageBubble = ({ message, atmosphere, onSpeak, onRegenerate, voiceEnable
                             alt="Attached"
                             className="max-w-full max-h-48 rounded-lg object-contain"
                         />
+                    </div>
+                )}
+                {/* Generated image (AI created) */}
+                {message.generatedImage && (
+                    <div className="mb-3">
+                        <div className="relative group">
+                            <img
+                                src={message.generatedImage}
+                                alt={message.imagePrompt || "Generated image"}
+                                className="max-w-full rounded-xl border border-white/10"
+                            />
+                            <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a
+                                    href={message.generatedImage}
+                                    download={`mirror-gen-${Date.now()}.png`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2 rounded-lg bg-black/60 text-white/70 hover:text-white transition-colors"
+                                    title="Download"
+                                >
+                                    <Download size={14} />
+                                </a>
+                            </div>
+                        </div>
+                        {message.imagePrompt && (
+                            <p className="text-[10px] text-white/30 mt-1 italic">"{message.imagePrompt}"</p>
+                        )}
                     </div>
                 )}
                 <p className={`text-sm leading-relaxed whitespace-pre-wrap ${isSystem ? 'text-amber-200/90' : isUser ? 'text-white' : 'text-white/85'
@@ -1055,6 +1082,20 @@ const MirrorAmbient = () => {
                                     ...updated[updated.length - 1],
                                     role: 'assistant',
                                     content: fullContent,
+                                    isStreaming: true
+                                };
+                                return updated;
+                            });
+                        } else if (data.status === 'image') {
+                            // Generated image received
+                            setMessages(prev => {
+                                const updated = [...prev];
+                                updated[updated.length - 1] = {
+                                    ...updated[updated.length - 1],
+                                    role: 'assistant',
+                                    content: fullContent,
+                                    generatedImage: data.image_url,
+                                    imagePrompt: data.prompt,
                                     isStreaming: true
                                 };
                                 return updated;
