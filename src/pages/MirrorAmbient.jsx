@@ -395,6 +395,16 @@ const MessageBubble = ({ message, atmosphere, onSpeak, voiceEnabled }) => {
                         <span className="text-amber-400 text-xs">Safety Notice</span>
                     </div>
                 )}
+                {/* Image attachment */}
+                {message.image && (
+                    <div className="mb-2">
+                        <img
+                            src={message.image}
+                            alt="Attached"
+                            className="max-w-full max-h-48 rounded-lg object-contain"
+                        />
+                    </div>
+                )}
                 <p className={`text-sm leading-relaxed whitespace-pre-wrap ${isSystem ? 'text-amber-200/90' : isUser ? 'text-white' : 'text-white/85'
                     }`}>
                     {message.content}
@@ -598,6 +608,7 @@ const MirrorAmbient = () => {
     const [ollamaAvailable, setOllamaAvailable] = useState(false);
     const [shadowThoughts, setShadowThoughts] = useState(null);
     const [localDoc, setLocalDoc] = useState(null);
+    const [pastedImage, setPastedImage] = useState(null); // { dataUrl, file }
 
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
@@ -733,6 +744,36 @@ const MirrorAmbient = () => {
             setError("Failed to parse document for sovereign reflection.");
         }
     };
+    // Handle image paste
+    const handlePaste = useCallback((e) => {
+        const items = e.clipboardData?.items;
+        if (!items) return;
+
+        for (const item of items) {
+            if (item.type.startsWith('image/')) {
+                e.preventDefault();
+                const file = item.getAsFile();
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        setPastedImage({
+                            dataUrl: event.target.result,
+                            file: file
+                        });
+                        haptic('medium');
+                    };
+                    reader.readAsDataURL(file);
+                }
+                break;
+            }
+        }
+    }, []);
+
+    // Clear pasted image
+    const clearPastedImage = useCallback(() => {
+        setPastedImage(null);
+    }, []);
+
     const speak = useCallback((text) => {
         if (!voiceEnabled || !('speechSynthesis' in window)) return;
 
@@ -796,8 +837,12 @@ const MirrorAmbient = () => {
         const emotion = analyzeSentiment(text);
         setBaseAtmosphere(emotionAtmospheres[emotion]);
 
-        // Add user message
-        const userMessage = { role: 'user', content: text };
+        // Add user message (with image if present)
+        const userMessage = {
+            role: 'user',
+            content: text,
+            image: pastedImage?.dataUrl || null
+        };
         const newMessages = [...messages, userMessage];
         setMessages(newMessages);
         setInput('');
@@ -853,17 +898,31 @@ const MirrorAmbient = () => {
                 ragContext = `[Local Document Context from ${localDoc.name}: ${localDoc.content.slice(0, 500)}...]`;
             }
 
+            // Prepare request body
+            const requestBody = {
+                message: text,
+                history: messagesForAPI,
+                tier: currentModel.tier,
+                model: selectedModel,
+                rag_context: ragContext
+            };
+
+            // Add image if present
+            if (pastedImage) {
+                requestBody.image = pastedImage.dataUrl;
+                setShadowThoughts("Analyzing image with vision model...");
+            }
+
             const response = await fetch(`${PROXY_URL}/mirror`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: text,
-                    history: messagesForAPI,
-                    tier: currentModel.tier,
-                    model: selectedModel,
-                    rag_context: ragContext
-                }),
+                body: JSON.stringify(requestBody),
             });
+
+            // Clear image after sending
+            if (pastedImage) {
+                setPastedImage(null);
+            }
 
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
@@ -1284,7 +1343,33 @@ const MirrorAmbient = () => {
                 className="relative z-20 p-4 border-t border-white/5"
                 style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)', background: 'linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.7))' }}
             >
-                <div className="max-w-2xl mx-auto relative flex gap-2">
+                <div className="max-w-2xl mx-auto relative flex flex-col gap-2">
+                    {/* Image Preview */}
+                    {pastedImage && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="relative w-full flex items-center gap-3 p-2 rounded-xl bg-white/5 border border-white/10"
+                        >
+                            <img
+                                src={pastedImage.dataUrl}
+                                alt="Pasted"
+                                className="h-16 w-16 object-cover rounded-lg"
+                            />
+                            <div className="flex-1">
+                                <p className="text-white/60 text-xs">Image ready to send</p>
+                                <p className="text-white/30 text-[10px]">Will be analyzed with your message</p>
+                            </div>
+                            <button
+                                onClick={clearPastedImage}
+                                className="p-2 rounded-lg hover:bg-white/10 text-white/40 hover:text-white/60 transition-colors"
+                            >
+                                <X size={16} />
+                            </button>
+                        </motion.div>
+                    )}
+
+                    <div className="flex gap-2">
                     {/* Voice input button */}
                     <button
                         onClick={toggleListening}
@@ -1303,7 +1388,8 @@ const MirrorAmbient = () => {
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            placeholder={isListening ? "Listening..." : "Ask anything..."}
+                            onPaste={handlePaste}
+                            placeholder={isListening ? "Listening..." : pastedImage ? "Describe what you want to know about the image..." : "Ask anything..."}
                             disabled={isLoading}
                             className="w-full px-4 py-3 pr-14 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/30 resize-none focus:outline-none focus:border-white/20 text-base transition-all disabled:opacity-50"
                             style={{
@@ -1344,6 +1430,7 @@ const MirrorAmbient = () => {
                     >
                         {voiceEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
                     </button>
+                    </div>
                 </div>
                 <div className="max-w-2xl mx-auto flex items-center justify-center gap-4 mt-2">
                     <div className="flex items-center gap-1.5">
