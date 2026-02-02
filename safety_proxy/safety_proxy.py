@@ -863,8 +863,13 @@ class ChatMessage(BaseModel):
 class MirrorRequest(BaseModel):
     message: str = Field(..., max_length=MAX_INPUT_LENGTH)
     history: List[ChatMessage] = Field(default_factory=list)
+    messages: List[ChatMessage] = Field(default_factory=list)  # Alias for backwards compat
     dial: float = Field(default=0.5)
     mode: Optional[str] = Field(default=None, description="User preference: 'mirror_only' or 'tool_only'")
+
+    def get_history(self):
+        """Return history, falling back to messages for backwards compat."""
+        return self.history if self.history else self.messages
 
 class ReflectionRequest(BaseModel):
     reflection: str = Field(..., max_length=2000)
@@ -1309,7 +1314,7 @@ async def mirror_local(request: Request, body: MirrorRequest):
     system_prompt = get_system_prompt() + "\n\nYou are running on local infrastructure via Ollama. The user's data stays on their machine."
     
     messages = [{"role": "system", "content": system_prompt}]
-    for msg in body.history[-10:]:
+    for msg in body.get_history()[-10:]:
         messages.append({"role": msg.role, "content": msg.content})
     messages.append({"role": "user", "content": body.message})
     
@@ -1360,7 +1365,7 @@ async def mirror(request: Request, body: MirrorRequest):
         }
     
     # Session boundary check
-    exchange_count = len(body.history) // 2 + 1
+    exchange_count = len(body.get_history()) // 2 + 1
     boundary_msg = check_session_boundary(exchange_count)
     
     decision, blocked_response, violation, matched_rules = gate_input(body.message, ip, rid)
@@ -1384,7 +1389,7 @@ async def mirror(request: Request, body: MirrorRequest):
     # Build context with rap sheet awareness + Two-Lane suffix
     base_prompt = get_system_prompt()
     messages = [{"role": "system", "content": base_prompt + system_suffix}]
-    for msg in body.history[-20:]:
+    for msg in body.get_history()[-20:]:
         messages.append({"role": msg.role, "content": msg.content})
     messages.append({"role": "user", "content": body.message})
 
@@ -1459,7 +1464,7 @@ async def mirror_prism(request: Request, body: PrismRequest):
     messages = [{"role": "system", "content": get_prism_system_prompt(body.lens)}]
 
     # Add history context (last few exchanges)
-    for msg in body.history[-6:]:
+    for msg in body.get_history()[-6:]:
         messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
 
     messages.append({"role": "user", "content": body.message})
