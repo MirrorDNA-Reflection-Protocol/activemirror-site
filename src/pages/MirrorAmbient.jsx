@@ -582,8 +582,14 @@ const MirrorAmbient = () => {
 
     // Submit message
     const handleSubmit = async () => {
+        console.log('handleSubmit called, input:', input, 'isLoading:', isLoading);
         const text = input.trim();
-        if (!text || isLoading) return;
+        if (!text || isLoading) {
+            console.log('Early return - text empty or loading');
+            return;
+        }
+        console.log('Proceeding with submit...');
+        console.log('PROXY_URL:', PROXY_URL);
 
         haptic('medium');
         setError(null);
@@ -646,6 +652,7 @@ const MirrorAmbient = () => {
                 };
             }
 
+            console.log('About to fetch...');
             const response = await fetch(`${PROXY_URL}/mirror`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -656,23 +663,28 @@ const MirrorAmbient = () => {
                     model: selectedModel
                 }),
             });
+            console.log('Fetch completed, status:', response.status);
 
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             let fullContent = '';
+            console.log('Starting to read stream...');
 
             while (true) {
                 const { done, value } = await reader.read();
+                console.log('Read chunk, done:', done);
                 if (done) break;
 
                 const chunk = decoder.decode(value);
+                console.log('Decoded chunk:', chunk.substring(0, 100));
                 const lines = chunk.split('\n').filter(line => line.trim());
 
                 for (const line of lines) {
                     try {
                         const data = JSON.parse(line);
+                        console.log('Parsed data:', data.status);
                         if (data.status === 'chunk' && data.content) {
                             fullContent += data.content;
                             setMessages(prev => {
@@ -740,6 +752,7 @@ const MirrorAmbient = () => {
             haptic('success');
         } catch (err) {
             console.error('API Error:', err);
+            console.error('Full error object:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
             setError(err.message);
             setMessages(prev => prev.filter(m => !m.isStreaming));
             haptic('error');
@@ -937,8 +950,14 @@ const MirrorAmbient = () => {
                         <textarea
                             ref={inputRef}
                             value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={handleKeyDown}
+                            onChange={(e) => {
+                                console.log('Input changed:', e.target.value);
+                                setInput(e.target.value);
+                            }}
+                            onKeyDown={(e) => {
+                                console.log('Key pressed:', e.key);
+                                handleKeyDown(e);
+                            }}
                             placeholder={isListening ? "Listening..." : "Ask anything..."}
                             disabled={isLoading}
                             className="w-full px-4 py-3 pr-14 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/30 resize-none focus:outline-none focus:border-white/20 text-base transition-all disabled:opacity-50"

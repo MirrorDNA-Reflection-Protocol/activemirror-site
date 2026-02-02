@@ -772,10 +772,11 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
         rewrite_result = None
         if routing:
             rewrite_result = rewrite_engine.process_sync(full_response, routing.response_type)
-            if rewrite_result.was_rewritten:
-                logger.info(f"RewriteEngine: {rewrite_result.method} (violations: {rewrite_result.violations})")
+            was_rewritten = rewrite_result.result != RewriteResult.PASSED
+            if was_rewritten:
+                logger.info(f"RewriteEngine: {rewrite_result.result.value} (violations: {rewrite_result.violations_original})")
                 full_response = rewrite_result.final
-                record_event("RewriteEngine", rewrite_result.method.upper(), f"violations:{len(rewrite_result.violations)}", "REWRITE", {
+                record_event("RewriteEngine", rewrite_result.result.value.upper(), f"violations:{len(rewrite_result.violations_original)}", "REWRITE", {
                     "request_id": request_id,
                     "response_type": routing.response_type.value
                 })
@@ -828,10 +829,10 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
                 "confidence": routing.confidence,
                 "temperature": routing.temperature
             }
-            if rewrite_result and rewrite_result.was_rewritten:
+            if rewrite_result and rewrite_result.result != RewriteResult.PASSED:
                 audit["two_lane"]["rewrite"] = {
-                    "method": rewrite_result.method,
-                    "violation_count": len(rewrite_result.violations)
+                    "method": rewrite_result.result.value,
+                    "violation_count": len(rewrite_result.violations_original)
                 }
         yield json.dumps({"audit": audit}) + "\n"
         
@@ -848,6 +849,9 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
             yield json.dumps({"status": "boundary", "content": f"\n\n---\n\n*{boundary_msg}*"}) + "\n"
             
     except Exception as e:
+        import traceback
+        logger.error(f"Stream error: {e}")
+        logger.error(traceback.format_exc())
         record_event("System", "ERROR", str(e)[:30], "ERROR", {"request_id": request_id})
         yield json.dumps({"status": "error", "content": "Connection lost."}) + "\n"
 
