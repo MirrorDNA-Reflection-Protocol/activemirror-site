@@ -387,6 +387,9 @@ const MirrorAmbient = () => {
         setMessages(prev => [...prev, userMessage]);
         setInput('');
         setIsLoading(true);
+
+        // Keep focus on input for continuous typing
+        setTimeout(() => inputRef.current?.focus(), 0);
         setShadowThought("Analyzing intent and selecting optimal model...");
 
         const assistantId = `assistant-${Date.now()}`;
@@ -501,6 +504,8 @@ const MirrorAmbient = () => {
             setShadowThought(null);
         } finally {
             setIsLoading(false);
+            // Refocus input for continuous conversation
+            inputRef.current?.focus();
         }
     };
 
