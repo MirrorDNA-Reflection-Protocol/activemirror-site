@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Logo from '../components/Logo';
 import ConsentGate from '../components/ConsentGate';
+import BottomNav from '../components/BottomNav';
 
 const PROXY_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8082'
@@ -646,7 +647,7 @@ const MirrorAmbient = () => {
             </main>
 
             {/* Input - Glass */}
-            <div className="relative z-20 border-t border-white/[0.04] p-4 backdrop-blur-sm bg-[#08080a]/80">
+            <div className="relative z-20 border-t border-white/[0.04] p-4 pb-20 backdrop-blur-sm bg-[#08080a]/80">
                 <div className="max-w-2xl mx-auto">
                     {/* Image preview */}
                     <AnimatePresence>
@@ -750,12 +751,11 @@ const MirrorAmbient = () => {
                         </button>
                     </div>
 
-                    {/* Subtle footer */}
-                    <div className="flex items-center justify-center gap-3 mt-3">
-                        <span className="text-[10px] text-white/20">⟡ Sovereign Reflection</span>
-                    </div>
                 </div>
             </div>
+
+            {/* Bottom Navigation */}
+            <BottomNav />
         </div>
     );
 };
