@@ -1,8 +1,9 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
-import Home from './pages/Home';
+import HomePage from './pages/HomePage';
 import Landing from './pages/Landing';
+import ProofPage from './pages/ProofPage';
 import Demo from './pages/Demo';
 import MirrorPage from './pages/MirrorPage';
 import MirrorWithAuth from './pages/MirrorWithAuth';
@@ -28,7 +29,8 @@ export default function App() {
         <ThemeProvider>
             <BrowserRouter>
                 <Routes>
-                    <Route path="/" element={<Home />} />
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/proof" element={<ProofPage />} />
                     <Route path="/start" element={<Start />} />
                     <Route path="/preview" element={<Landing />} />
                     <Route path="/legal" element={<Legal />} />
