@@ -5,6 +5,7 @@ import { copyFileSync, mkdirSync, existsSync } from 'fs'
 
 // All React routes that need SPA fallbacks
 const SPA_ROUTES = [
+    // Main pages
     'start',
     'mirror',
     'preview',
@@ -18,7 +19,40 @@ const SPA_ROUTES = [
     'scan',
     'twins',
     'brief',
-    'cast'
+    'cast',
+    'proof',
+    'research',
+    'prism',
+    'legal',
+    'terms',
+    'privacy',
+    'trust',
+    // Products
+    'products',
+    'products/mirrorgate',
+    'products/mirrorbrain',
+    'products/lingos',
+    'products/mirrorrecall',
+    'products/glyphtrail',
+    'products/trustbydesign',
+    'products/agentdna',
+    'products/vault',
+    // Use Cases
+    'use-cases',
+    'use-cases/individuals',
+    'use-cases/teams',
+    'use-cases/enterprise',
+    'use-cases/government',
+    'use-cases/healthcare',
+    'use-cases/education',
+    // Docs
+    'docs',
+    'docs/architecture',
+    'docs/self-hosting',
+    // About
+    'about',
+    'about/roadmap',
+    'about/contact'
 ];
 
 // Plugin to copy index.html for SPA routing on GitHub Pages
