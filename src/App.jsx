@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
+
+// Main pages
 import HomePage from './pages/HomePage';
 import Landing from './pages/Landing';
 import ProofPage from './pages/ProofPage';
@@ -24,11 +26,42 @@ import Brief from './pages/Brief';
 import Cast from './pages/Cast';
 import Start from './pages/Start';
 
+// Products
+import ProductsIndex from './pages/products/index';
+import MirrorGate from './pages/products/MirrorGate';
+import MirrorBrain from './pages/products/MirrorBrain';
+import LingOS from './pages/products/LingOS';
+import MirrorRecall from './pages/products/MirrorRecall';
+import GlyphTrail from './pages/products/GlyphTrail';
+import TrustByDesign from './pages/products/TrustByDesign';
+import AgentDNA from './pages/products/AgentDNA';
+import Vault from './pages/products/Vault';
+
+// Use Cases
+import UseCasesIndex from './pages/use-cases/index';
+import Individuals from './pages/use-cases/Individuals';
+import Teams from './pages/use-cases/Teams';
+import Enterprise from './pages/use-cases/Enterprise';
+import Government from './pages/use-cases/Government';
+import Healthcare from './pages/use-cases/Healthcare';
+import Education from './pages/use-cases/Education';
+
+// Docs
+import DocsIndex from './pages/docs/index';
+import Architecture from './pages/docs/Architecture';
+import SelfHosting from './pages/docs/SelfHosting';
+
+// About
+import AboutIndex from './pages/about/index';
+import Roadmap from './pages/about/Roadmap';
+import Contact from './pages/about/Contact';
+
 export default function App() {
     return (
         <ThemeProvider>
             <BrowserRouter>
                 <Routes>
+                    {/* Main pages */}
                     <Route path="/" element={<HomePage />} />
                     <Route path="/proof" element={<ProofPage />} />
                     <Route path="/start" element={<Start />} />
@@ -50,6 +83,38 @@ export default function App() {
                     <Route path="/twins" element={<Twins />} />
                     <Route path="/brief" element={<Brief />} />
                     <Route path="/cast" element={<Cast />} />
+
+                    {/* Products */}
+                    <Route path="/products" element={<ProductsIndex />} />
+                    <Route path="/products/mirrorgate" element={<MirrorGate />} />
+                    <Route path="/products/mirrorbrain" element={<MirrorBrain />} />
+                    <Route path="/products/lingos" element={<LingOS />} />
+                    <Route path="/products/mirrorrecall" element={<MirrorRecall />} />
+                    <Route path="/products/glyphtrail" element={<GlyphTrail />} />
+                    <Route path="/products/trustbydesign" element={<TrustByDesign />} />
+                    <Route path="/products/agentdna" element={<AgentDNA />} />
+                    <Route path="/products/vault" element={<Vault />} />
+
+                    {/* Use Cases */}
+                    <Route path="/use-cases" element={<UseCasesIndex />} />
+                    <Route path="/use-cases/individuals" element={<Individuals />} />
+                    <Route path="/use-cases/teams" element={<Teams />} />
+                    <Route path="/use-cases/enterprise" element={<Enterprise />} />
+                    <Route path="/use-cases/government" element={<Government />} />
+                    <Route path="/use-cases/healthcare" element={<Healthcare />} />
+                    <Route path="/use-cases/education" element={<Education />} />
+
+                    {/* Docs */}
+                    <Route path="/docs" element={<DocsIndex />} />
+                    <Route path="/docs/architecture" element={<Architecture />} />
+                    <Route path="/docs/self-hosting" element={<SelfHosting />} />
+
+                    {/* About */}
+                    <Route path="/about" element={<AboutIndex />} />
+                    <Route path="/about/roadmap" element={<Roadmap />} />
+                    <Route path="/about/contact" element={<Contact />} />
+
+                    {/* 404 */}
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </BrowserRouter>
