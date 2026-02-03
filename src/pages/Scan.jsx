@@ -113,22 +113,34 @@ export default function Scan() {
         setCurrentQuestion(0);
     };
 
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+
     return (
-        <div className="relative min-h-screen font-sans text-white overflow-x-hidden selection:bg-purple-500/30">
+        <div className={`relative min-h-screen font-sans overflow-x-hidden selection:bg-purple-500/30 transition-colors ${
+            isDark ? 'bg-[#08080a] text-white' : 'bg-zinc-50 text-zinc-900'
+        }`}>
             {/* Ambient Background */}
-            <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-900/10 via-black to-black z-0" />
-            <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none z-0" />
+            <div className={`fixed inset-0 z-0 ${
+                isDark
+                    ? 'bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-900/10 via-[#08080a] to-[#08080a]'
+                    : 'bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-100/40 via-zinc-50 to-zinc-50'
+            }`} />
 
             {/* Navigation */}
-            <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-purple-500/10">
+            <nav className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b ${
+                isDark ? 'bg-[#08080a]/80 border-white/[0.08]' : 'bg-white/90 border-zinc-200'
+            }`}>
                 <div className="flex justify-between items-center py-3 px-4 max-w-4xl mx-auto">
-                    <Link to="/" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors">
+                    <Link to="/" className={`flex items-center gap-2 transition-colors ${
+                        isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-zinc-800'
+                    }`}>
                         <MirrorLogo className="w-6 h-6" />
                         <span className="text-sm font-medium">Active Mirror</span>
                     </Link>
-                    <div className="flex items-center gap-4 text-xs text-zinc-400">
-                        <span className="hidden sm:inline">BrainScan v1.0</span>
-                        <Brain size={16} className="text-purple-400" />
+                    <div className="flex items-center gap-3">
+                        <ThemeToggle />
+                        <Brain size={16} className={isDark ? 'text-purple-400' : 'text-purple-600'} />
                     </div>
                 </div>
             </nav>
@@ -142,6 +154,7 @@ export default function Scan() {
                             onStart={handleStart}
                             error={error}
                             questionsLoaded={questions.length > 0}
+                            isDark={isDark}
                         />
                     )}
                     {phase === 'quiz' && questions.length > 0 && (
@@ -153,16 +166,18 @@ export default function Scan() {
                             onAnswer={handleAnswer}
                             onBack={handleBack}
                             canGoBack={currentQuestion > 0}
+                            isDark={isDark}
                         />
                     )}
                     {phase === 'loading' && (
-                        <LoadingScreen key="loading" />
+                        <LoadingScreen key="loading" isDark={isDark} />
                     )}
                     {phase === 'results' && result && (
                         <ResultsScreen
                             key="results"
                             result={result}
                             onRetake={handleRetake}
+                            isDark={isDark}
                         />
                     )}
                 </AnimatePresence>
@@ -172,7 +187,7 @@ export default function Scan() {
     );
 }
 
-function IntroScreen({ onStart, error, questionsLoaded }) {
+function IntroScreen({ onStart, error, questionsLoaded, isDark }) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -180,27 +195,51 @@ function IntroScreen({ onStart, error, questionsLoaded }) {
             exit={{ opacity: 0, y: -20 }}
             className="w-full max-w-lg"
         >
-            <SpotlightCard className="text-center p-8 sm:p-12 border border-purple-500/20 bg-black/40 backdrop-blur-3xl">
+            <div className={`text-center p-8 sm:p-12 rounded-2xl border backdrop-blur-xl ${
+                isDark
+                    ? 'border-purple-500/20 bg-black/40'
+                    : 'border-zinc-200 bg-white/80 shadow-xl'
+            }`}>
                 {/* Icon */}
                 <motion.div
                     className="mb-6 flex justify-center"
                     animate={{ scale: [1, 1.05, 1] }}
                     transition={{ duration: 3, repeat: Infinity }}
                 >
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500/20 to-violet-500/20 border border-purple-500/30 flex items-center justify-center">
-                        <Brain size={40} className="text-purple-400" />
+                    <div className={`w-20 h-20 rounded-full flex items-center justify-center ${
+                        isDark
+                            ? 'bg-gradient-to-br from-purple-500/20 to-violet-500/20 border border-purple-500/30'
+                            : 'bg-purple-100 border border-purple-200'
+                    }`}>
+                        <Brain size={40} className={isDark ? 'text-purple-400' : 'text-purple-600'} />
                     </div>
                 </motion.div>
 
                 {/* Headline */}
-                <h1 className="text-3xl sm:text-4xl font-bold mb-4 bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-transparent">
+                <h1 className={`text-3xl sm:text-4xl font-bold mb-4 ${
+                    isDark
+                        ? 'bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-transparent'
+                        : 'text-zinc-900'
+                }`}>
                     BrainScan
                 </h1>
-                <p className="text-zinc-400 mb-8 leading-relaxed">
-                    Discover your cognitive architecture in 8 questions.
-                    <br />
-                    <span className="text-purple-400">Your brain has a shape. Let's find it.</span>
+                <p className={`mb-6 leading-relaxed ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                    Discover your thinking style in 8 questions.
                 </p>
+
+                {/* What is this? - Simple explanation */}
+                <div className={`mb-6 p-4 rounded-xl text-left ${
+                    isDark ? 'bg-white/5 border border-white/10' : 'bg-zinc-50 border border-zinc-200'
+                }`}>
+                    <h3 className={`text-sm font-semibold mb-2 ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                        What is this?
+                    </h3>
+                    <ul className={`text-sm space-y-2 ${isDark ? 'text-zinc-300' : 'text-zinc-600'}`}>
+                        <li>1. Answer 8 simple questions</li>
+                        <li>2. Learn how your brain works</li>
+                        <li>3. Get matched with an AI companion</li>
+                    </ul>
+                </div>
 
                 {/* Error State */}
                 {error && (
@@ -213,11 +252,11 @@ function IntroScreen({ onStart, error, questionsLoaded }) {
                 <button
                     onClick={onStart}
                     disabled={!questionsLoaded}
-                    className="group w-full py-4 rounded-xl bg-gradient-to-r from-purple-500 to-violet-500 text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(168,85,247,0.3)] hover:shadow-[0_0_40px_rgba(168,85,247,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="group w-full py-4 rounded-xl bg-gradient-to-r from-purple-500 to-violet-500 text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-lg shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {questionsLoaded ? (
                         <>
-                            Begin Scan <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
+                            Start <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
                         </>
                     ) : (
                         <>
@@ -232,15 +271,15 @@ function IntroScreen({ onStart, error, questionsLoaded }) {
                 </button>
 
                 {/* Info */}
-                <p className="mt-6 text-xs text-zinc-400">
-                    ~2 minutes • No signup required • Results are private
+                <p className={`mt-6 text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                    Takes 2 minutes • Free • Private
                 </p>
-            </SpotlightCard>
+            </div>
         </motion.div>
     );
 }
 
-function QuizScreen({ question, questionNumber, totalQuestions, onAnswer, onBack, canGoBack }) {
+function QuizScreen({ question, questionNumber, totalQuestions, onAnswer, onBack, canGoBack, isDark }) {
     const progress = (questionNumber / totalQuestions) * 100;
 
     return (
@@ -251,14 +290,22 @@ function QuizScreen({ question, questionNumber, totalQuestions, onAnswer, onBack
             transition={{ duration: 0.3 }}
             className="w-full max-w-xl"
         >
-            <SpotlightCard className="p-6 sm:p-10 border border-purple-500/20 bg-black/40 backdrop-blur-3xl">
+            <div className={`p-6 sm:p-10 rounded-2xl border backdrop-blur-xl ${
+                isDark
+                    ? 'border-purple-500/20 bg-black/40'
+                    : 'border-zinc-200 bg-white/80 shadow-xl'
+            }`}>
                 {/* Progress Bar */}
                 <div className="mb-8">
                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs text-zinc-400 font-mono">Question {questionNumber}/{totalQuestions}</span>
-                        <span className="text-xs text-purple-400 font-mono">{Math.round(progress)}%</span>
+                        <span className={`text-xs font-mono ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                            Question {questionNumber}/{totalQuestions}
+                        </span>
+                        <span className={`text-xs font-mono ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
+                            {Math.round(progress)}%
+                        </span>
                     </div>
-                    <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                    <div className={`h-1 rounded-full overflow-hidden ${isDark ? 'bg-zinc-800' : 'bg-zinc-200'}`}>
                         <motion.div
                             className="h-full bg-gradient-to-r from-purple-500 to-violet-500"
                             initial={{ width: 0 }}
@@ -269,7 +316,9 @@ function QuizScreen({ question, questionNumber, totalQuestions, onAnswer, onBack
                 </div>
 
                 {/* Question */}
-                <h2 className="text-xl sm:text-2xl font-semibold mb-8 text-white leading-relaxed">
+                <h2 className={`text-xl sm:text-2xl font-semibold mb-8 leading-relaxed ${
+                    isDark ? 'text-white' : 'text-zinc-900'
+                }`}>
                     {question.question}
                 </h2>
 
@@ -279,15 +328,27 @@ function QuizScreen({ question, questionNumber, totalQuestions, onAnswer, onBack
                         <motion.button
                             key={index}
                             onClick={() => onAnswer(index)}
-                            className="w-full text-left p-4 rounded-xl border border-purple-500/10 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500/30 transition-all group"
+                            className={`w-full text-left p-4 rounded-xl border transition-all group ${
+                                isDark
+                                    ? 'border-purple-500/10 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500/30'
+                                    : 'border-zinc-200 bg-white hover:bg-purple-50 hover:border-purple-300'
+                            }`}
                             whileHover={{ scale: 1.01 }}
                             whileTap={{ scale: 0.99 }}
                         >
                             <div className="flex items-center gap-4">
-                                <span className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-sm font-mono text-purple-400 group-hover:bg-purple-500/20 transition-colors">
+                                <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-mono transition-colors ${
+                                    isDark
+                                        ? 'bg-purple-500/10 border border-purple-500/20 text-purple-400 group-hover:bg-purple-500/20'
+                                        : 'bg-purple-100 border border-purple-200 text-purple-600 group-hover:bg-purple-200'
+                                }`}>
                                     {String.fromCharCode(65 + index)}
                                 </span>
-                                <span className="text-zinc-300 group-hover:text-white transition-colors">
+                                <span className={`transition-colors ${
+                                    isDark
+                                        ? 'text-zinc-300 group-hover:text-white'
+                                        : 'text-zinc-700 group-hover:text-zinc-900'
+                                }`}>
                                     {option}
                                 </span>
                             </div>
@@ -299,17 +360,19 @@ function QuizScreen({ question, questionNumber, totalQuestions, onAnswer, onBack
                 {canGoBack && (
                     <button
                         onClick={onBack}
-                        className="mt-6 flex items-center gap-2 text-zinc-400 hover:text-zinc-300 transition-colors text-sm"
+                        className={`mt-6 flex items-center gap-2 transition-colors text-sm ${
+                            isDark ? 'text-zinc-400 hover:text-zinc-300' : 'text-zinc-500 hover:text-zinc-700'
+                        }`}
                     >
-                        <ArrowLeft size={16} /> Previous question
+                        <ArrowLeft size={16} /> Previous
                     </button>
                 )}
-            </SpotlightCard>
+            </div>
         </motion.div>
     );
 }
 
-function LoadingScreen() {
+function LoadingScreen({ isDark }) {
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -318,7 +381,11 @@ function LoadingScreen() {
             className="text-center"
         >
             <motion.div
-                className="w-24 h-24 mx-auto mb-8 rounded-full bg-gradient-to-br from-purple-500/20 to-violet-500/20 border border-purple-500/30 flex items-center justify-center"
+                className={`w-24 h-24 mx-auto mb-8 rounded-full flex items-center justify-center ${
+                    isDark
+                        ? 'bg-gradient-to-br from-purple-500/20 to-violet-500/20 border border-purple-500/30'
+                        : 'bg-purple-100 border border-purple-200'
+                }`}
                 animate={{
                     scale: [1, 1.1, 1],
                     rotate: [0, 180, 360]
@@ -329,15 +396,19 @@ function LoadingScreen() {
                     ease: "easeInOut"
                 }}
             >
-                <Sparkles size={40} className="text-purple-400" />
+                <Sparkles size={40} className={isDark ? 'text-purple-400' : 'text-purple-600'} />
             </motion.div>
-            <h2 className="text-xl font-semibold mb-2">Analyzing your brain...</h2>
-            <p className="text-zinc-400 text-sm">Mapping cognitive architecture</p>
+            <h2 className={`text-xl font-semibold mb-2 ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                Analyzing...
+            </h2>
+            <p className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                Discovering your thinking style
+            </p>
         </motion.div>
     );
 }
 
-function ResultsScreen({ result, onRetake }) {
+function ResultsScreen({ result, onRetake, isDark }) {
     const archetype = result.archetype?.toLowerCase() || 'explorer';
     const colors = ARCHETYPE_COLORS[archetype] || ARCHETYPE_COLORS.explorer;
 
@@ -349,7 +420,11 @@ function ResultsScreen({ result, onRetake }) {
             transition={{ duration: 0.5 }}
             className="w-full max-w-2xl"
         >
-            <SpotlightCard className={`p-6 sm:p-10 border ${colors.border} bg-black/40 backdrop-blur-3xl shadow-2xl ${colors.glow}`}>
+            <div className={`p-6 sm:p-10 rounded-2xl border backdrop-blur-xl shadow-2xl ${
+                isDark
+                    ? `${colors.border} bg-black/40 ${colors.glow}`
+                    : 'border-zinc-200 bg-white/90'
+            }`}>
                 {/* Header */}
                 <div className="text-center mb-8">
                     <motion.div
@@ -361,7 +436,7 @@ function ResultsScreen({ result, onRetake }) {
                         {result.archetype_emoji}
                     </motion.div>
                     <motion.h1
-                        className={`text-3xl sm:text-4xl font-bold mb-2 ${colors.text}`}
+                        className={`text-3xl sm:text-4xl font-bold mb-2 ${isDark ? colors.text : 'text-zinc-900'}`}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
@@ -369,7 +444,7 @@ function ResultsScreen({ result, onRetake }) {
                         {result.archetype_name}
                     </motion.h1>
                     <motion.p
-                        className="text-zinc-400 leading-relaxed max-w-md mx-auto"
+                        className={`leading-relaxed max-w-md mx-auto ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.4 }}
@@ -378,45 +453,21 @@ function ResultsScreen({ result, onRetake }) {
                     </motion.p>
                 </div>
 
-                {/* Dimensions */}
+                {/* What this means */}
                 <motion.div
-                    className="mb-8"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    className={`mb-8 p-4 rounded-xl ${
+                        isDark ? 'bg-white/5 border border-white/10' : 'bg-zinc-50 border border-zinc-200'
+                    }`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
                     transition={{ delay: 0.5 }}
                 >
-                    <h3 className="text-sm font-mono text-zinc-400 mb-4 uppercase tracking-wider">Cognitive Dimensions</h3>
-                    <div className="space-y-3">
-                        {Object.entries(result.dimensions || {}).map(([key, value], index) => {
-                            const info = DIMENSION_INFO[key] || { label: key, desc: '', icon: '◉' };
-                            const percentage = Math.round(value * 100);
-                            return (
-                                <motion.div
-                                    key={key}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.5 + index * 0.1 }}
-                                >
-                                    <div className="flex items-center justify-between mb-1">
-                                        <span className="text-sm text-zinc-300 flex items-center gap-2">
-                                            <span>{info.icon}</span>
-                                            {info.label}
-                                            <span className="text-xs text-zinc-400">({info.desc})</span>
-                                        </span>
-                                        <span className="text-sm font-mono text-zinc-400">{percentage}%</span>
-                                    </div>
-                                    <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
-                                        <motion.div
-                                            className={`h-full bg-gradient-to-r ${colors.bg.replace('/20', '')}`}
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${percentage}%` }}
-                                            transition={{ delay: 0.6 + index * 0.1, duration: 0.5 }}
-                                        />
-                                    </div>
-                                </motion.div>
-                            );
-                        })}
-                    </div>
+                    <h3 className={`text-sm font-semibold mb-2 ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                        What this means
+                    </h3>
+                    <p className={`text-sm ${isDark ? 'text-zinc-300' : 'text-zinc-600'}`}>
+                        Your thinking style is "{result.archetype_name}". This affects how you approach problems, make decisions, and interact with others.
+                    </p>
                 </motion.div>
 
                 {/* Strengths */}
@@ -424,35 +475,24 @@ function ResultsScreen({ result, onRetake }) {
                     className="mb-8"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8 }}
+                    transition={{ delay: 0.6 }}
                 >
-                    <h3 className="text-sm font-mono text-zinc-400 mb-3 uppercase tracking-wider">Your Strengths</h3>
+                    <h3 className={`text-sm font-semibold mb-3 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                        Your Strengths
+                    </h3>
                     <div className="flex flex-wrap gap-2">
                         {(result.strengths || []).map((strength, index) => (
                             <span
                                 key={index}
-                                className={`px-3 py-1 rounded-full text-sm border ${colors.border} bg-gradient-to-r ${colors.bg} ${colors.text}`}
+                                className={`px-3 py-1 rounded-full text-sm ${
+                                    isDark
+                                        ? `border ${colors.border} bg-gradient-to-r ${colors.bg} ${colors.text}`
+                                        : 'bg-purple-100 text-purple-700 border border-purple-200'
+                                }`}
                             >
                                 {strength}
                             </span>
                         ))}
-                    </div>
-                </motion.div>
-
-                {/* Stats */}
-                <motion.div
-                    className="grid grid-cols-2 gap-4 mb-8 p-4 rounded-xl bg-white/5 border border-white/10"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.9 }}
-                >
-                    <div className="text-center">
-                        <div className="text-2xl font-bold text-white">{(result.node_count || 0).toLocaleString()}</div>
-                        <div className="text-xs text-zinc-400">Neural Nodes</div>
-                    </div>
-                    <div className="text-center">
-                        <div className="text-2xl font-bold text-white">{(result.connection_count || 0).toLocaleString()}</div>
-                        <div className="text-xs text-zinc-400">Connections</div>
                     </div>
                 </motion.div>
 
@@ -461,45 +501,41 @@ function ResultsScreen({ result, onRetake }) {
                     className="space-y-3"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1 }}
+                    transition={{ delay: 0.8 }}
                 >
                     {/* Primary CTA - Meet Twins */}
                     <Link
                         to="/twins"
-                        className={`w-full py-4 rounded-xl bg-gradient-to-r ${colors.bg.replace('/20', '')} text-white font-bold text-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-lg ${colors.glow}`}
+                        className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-500 to-violet-500 text-white font-bold text-lg hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-lg shadow-purple-500/20"
                     >
-                        <Users size={20} /> Meet Your AI Twins <ArrowRight size={18} />
+                        <Users size={20} /> Meet Your AI Companion <ArrowRight size={18} />
                     </Link>
 
                     {/* Secondary Actions */}
                     <div className="flex gap-3">
                         <Link
                             to="/"
-                            className="flex-1 py-3 rounded-xl border border-purple-500/20 bg-white/5 text-white font-medium hover:bg-purple-500/10 hover:border-purple-500/30 transition-all flex items-center justify-center gap-2 text-sm"
+                            className={`flex-1 py-3 rounded-xl border font-medium transition-all flex items-center justify-center gap-2 text-sm ${
+                                isDark
+                                    ? 'border-purple-500/20 bg-white/5 text-white hover:bg-purple-500/10'
+                                    : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50'
+                            }`}
                         >
                             <Home size={16} /> Home
                         </Link>
                         <button
                             onClick={onRetake}
-                            className="flex-1 py-3 rounded-xl border border-purple-500/20 bg-white/5 text-white font-medium hover:bg-purple-500/10 hover:border-purple-500/30 transition-all flex items-center justify-center gap-2 text-sm"
+                            className={`flex-1 py-3 rounded-xl border font-medium transition-all flex items-center justify-center gap-2 text-sm ${
+                                isDark
+                                    ? 'border-purple-500/20 bg-white/5 text-white hover:bg-purple-500/10'
+                                    : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50'
+                            }`}
                         >
                             <ArrowLeft size={16} /> Retake
                         </button>
                     </div>
                 </motion.div>
-
-                {/* Brain ID */}
-                <motion.div
-                    className="mt-6 text-center"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1.1 }}
-                >
-                    <p className="text-xs text-zinc-400 font-mono">
-                        Brain ID: {result.brain_id || 'LOCAL'}
-                    </p>
-                </motion.div>
-            </SpotlightCard>
+            </div>
         </motion.div>
     );
 }

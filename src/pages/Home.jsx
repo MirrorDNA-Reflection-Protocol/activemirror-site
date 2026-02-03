@@ -1,6 +1,11 @@
+/**
+ * ⟡ Home — Full Landing Page
+ * Combines simple onboarding with full site explanation
+ */
+
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Github, Book, Globe, Zap, Brain, Users, Send, Target, Sparkles } from 'lucide-react';
+import { ArrowRight, Github, Book, Zap, Brain, Users, Send, Target, Sparkles, HelpCircle, Globe } from 'lucide-react';
 import SpotlightCard from '../components/SpotlightCard';
 import MirrorLogo from '../components/MirrorLogo';
 import ThemeToggle from '../components/ThemeToggle';
@@ -47,7 +52,7 @@ export default function Home() {
                 <div className={`flex flex-wrap justify-center gap-x-4 sm:gap-x-6 gap-y-1 py-2 sm:py-3 px-2 sm:px-4 text-[10px] sm:text-xs ${
                     isDark ? 'text-zinc-400' : 'text-zinc-500'
                 }`}>
-                    <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/mobile/" className="hover:text-purple-500 transition-colors" target="_blank" rel="noopener noreferrer">Mobile</a>
+                    <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/capabilities/" className="hover:text-purple-500 transition-colors" target="_blank" rel="noopener noreferrer">Capabilities</a>
                     <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/architecture/" className="hover:text-purple-500 transition-colors" target="_blank" rel="noopener noreferrer">Architecture</a>
                     <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/ecosystem/" className="hover:text-purple-500 transition-colors" target="_blank" rel="noopener noreferrer">Ecosystem</a>
                     <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="hover:text-purple-500 transition-colors" target="_blank" rel="noopener noreferrer">Open Source</a>
@@ -62,8 +67,9 @@ export default function Home() {
                         : 'border-zinc-200 bg-white/60 shadow-zinc-500/10 ring-zinc-200'
                 }`}>
 
-                    {/* LOGO HERO */}
-                    <div className="mb-4 sm:mb-8 flex justify-center">
+                    {/* LOGO + GLYPH */}
+                    <div className="mb-4 sm:mb-8 flex flex-col items-center gap-2">
+                        <span className={`text-4xl glyph-breathe ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>⟡</span>
                         <MirrorLogo className={`w-14 h-14 sm:w-20 sm:h-20 ${isDark ? 'text-white' : 'text-zinc-800'}`} />
                     </div>
 
@@ -83,11 +89,39 @@ export default function Home() {
                         Native to your hardware. Owned by you.
                     </p>
 
+                    {/* WHAT IS THIS - Simple explanation */}
+                    <div className={`mb-6 p-4 rounded-xl text-left ${
+                        isDark ? 'bg-white/5 border border-white/10' : 'bg-zinc-100 border border-zinc-200'
+                    }`}>
+                        <h3 className={`text-sm font-semibold mb-3 flex items-center gap-2 ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                            <HelpCircle size={16} className={isDark ? 'text-purple-400' : 'text-purple-600'} />
+                            What happens when you start?
+                        </h3>
+                        <ol className={`text-sm space-y-2 ${isDark ? 'text-zinc-300' : 'text-zinc-600'}`}>
+                            <li className="flex items-start gap-2">
+                                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600'}`}>1</span>
+                                Answer 8 quick questions (60 seconds)
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600'}`}>2</span>
+                                Discover your cognitive archetype
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600'}`}>3</span>
+                                Meet your matched AI companion
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600'}`}>4</span>
+                                Start reflecting with intelligence that learns you
+                            </li>
+                        </ol>
+                    </div>
+
                     {/* ACTIONS STACK */}
                     <div className="flex flex-col gap-3 sm:gap-4 mb-6 sm:mb-12 max-w-md mx-auto w-full">
                         {/* 1. DISCOVER (Viral Journey - Primary) */}
                         <Link to="/start" className="group w-full py-3 sm:py-4 rounded-xl bg-gradient-to-r from-purple-500 to-violet-500 text-white font-bold text-base sm:text-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 shadow-[0_0_25px_rgba(168,85,247,0.3)] hover:shadow-[0_0_35px_rgba(168,85,247,0.4)]" aria-label="Discover your cognitive archetype">
-                            <Sparkles size={18} /> Discover Your Archetype <ArrowRight className="group-hover:translate-x-1 transition-transform" size={18} />
+                            <Sparkles size={18} /> Get Started <ArrowRight className="group-hover:translate-x-1 transition-transform" size={18} />
                         </Link>
 
                         {/* 2. START REFLECTION (Secondary) */}
@@ -106,7 +140,7 @@ export default function Home() {
                                 ? 'border-cyan-500/20 bg-cyan-500/5 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/30 shadow-[0_0_20px_rgba(34,211,238,0.1)] hover:shadow-[0_0_30px_rgba(34,211,238,0.2)]'
                                 : 'border-cyan-300 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 hover:border-cyan-400'
                         }`}>
-                            <span className="text-base sm:text-lg">✦</span>
+                            <Globe size={16} />
                             Explore Ecosystem
                             <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                         </a>
@@ -167,7 +201,7 @@ export default function Home() {
                         </div>
                     </div>
 
-                    {/* FOOTER: LEGALS ONLY */}
+                    {/* FOOTER: LEGALS */}
                     <div className={`pt-4 sm:pt-6 border-t flex justify-center items-center text-[9px] sm:text-[10px] md:text-xs font-mono uppercase tracking-widest w-full mt-2 sm:mt-6 ${
                         isDark ? 'border-purple-500/10 text-zinc-600' : 'border-zinc-200 text-zinc-400'
                     }`}>

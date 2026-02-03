@@ -1,23 +1,26 @@
 /**
- * AI Twins — Simplified UX
+ * ⟡ AI Twins — Cognitive Companions
  * Click a twin → Start chatting immediately
+ * Powered by Groq cloud LLM
  */
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Shield, Compass, Layers, Eye,
-    Send, ArrowLeft, X, Sparkles
+    Shield, Compass, Layers, Eye, Home,
+    Send, X, Sparkles, Zap
 } from 'lucide-react';
 import MirrorLogo from '../components/MirrorLogo';
 import BottomNav from '../components/BottomNav';
 import ThemeToggle from '../components/ThemeToggle';
 import { useTheme } from '../contexts/ThemeContext';
 
-const BRAIN_API = 'https://brain.activemirror.ai';
+const PROXY_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8082'
+    : 'https://proxy.activemirror.ai';
 
-// Twin definitions
+// Twin definitions with system prompts
 const TWINS = {
     guardian: {
         name: 'Guardian',
@@ -26,6 +29,15 @@ const TWINS = {
         description: 'Watches over your attention and energy. Filters distractions, protects boundaries, keeps you aligned.',
         color: '#3b82f6',
         gradient: 'from-blue-500 to-cyan-500',
+        glyph: '⟡',
+        systemPrompt: `You are the Guardian, an AI twin focused on protecting focus and filtering noise.
+Your role is to:
+- Assess if something aligns with the user's goals
+- Protect their time and attention from distractions
+- Help them maintain boundaries
+- Be direct and protective, like a wise advisor
+
+Keep responses concise (2-4 sentences). Be warm but firm. Start with the ⟡ glyph.`,
         prompts: [
             'Should I take on this new project?',
             'Is this worth my attention?',
@@ -39,6 +51,15 @@ const TWINS = {
         description: 'Ventures into unknown territory. Finds connections, surfaces opportunities you might miss.',
         color: '#10b981',
         gradient: 'from-emerald-500 to-green-500',
+        glyph: '◈',
+        systemPrompt: `You are the Scout, an AI twin focused on exploration and discovery.
+Your role is to:
+- Find unexpected connections between ideas
+- Surface opportunities they might miss
+- Explore adjacent possibilities
+- Be curious and adventurous, always looking for new angles
+
+Keep responses concise (2-4 sentences). Be enthusiastic but grounded. Start with the ◈ glyph.`,
         prompts: [
             'What am I missing here?',
             'What adjacent areas should I explore?',
@@ -52,6 +73,15 @@ const TWINS = {
         description: 'Weaves ideas into frameworks. Finds patterns, creates coherence from complexity.',
         color: '#8b5cf6',
         gradient: 'from-violet-500 to-purple-500',
+        glyph: '◇',
+        systemPrompt: `You are the Synthesizer, an AI twin focused on merging ideas into frameworks.
+Your role is to:
+- Find patterns across disparate concepts
+- Build unifying structures
+- Create coherence from chaos
+- Be integrative and systematic, weaving threads together
+
+Keep responses concise (2-4 sentences). Be insightful and structured. Start with the ◇ glyph.`,
         prompts: [
             'How do these ideas connect?',
             'What framework unifies this?',
@@ -65,6 +95,15 @@ const TWINS = {
         description: 'Shows what you cannot see. Asks uncomfortable questions, illuminates shadows in your thinking.',
         color: '#f59e0b',
         gradient: 'from-amber-500 to-orange-500',
+        glyph: '◎',
+        systemPrompt: `You are the Mirror, an AI twin focused on reflection and revealing blind spots.
+Your role is to:
+- Ask questions that reveal assumptions
+- Show them what they might not see
+- Challenge their thinking gently
+- Be honest and reflective, like a trusted friend who tells hard truths
+
+Keep responses concise (2-4 sentences). Be compassionate but direct. Start with the ◎ glyph.`,
         prompts: [
             'What am I not seeing?',
             'What assumptions am I making?',
@@ -109,35 +148,116 @@ export default function Twins() {
     const sendMessage = async (text = input.trim()) => {
         if (!text || loading || !activeTwin) return;
 
+        const twin = TWINS[activeTwin];
         const userMsg = { role: 'user', content: text };
         setMessages(prev => [...prev, userMsg]);
         setInput('');
         setLoading(true);
 
+        // Add streaming placeholder
+        setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: '',
+            isStreaming: true
+        }]);
+
         try {
-            const response = await fetch(`${BRAIN_API}/api/twins/invoke`, {
+            // Build conversation history for context
+            const history = messages.map(m => ({
+                role: m.role,
+                content: m.content
+            }));
+
+            const response = await fetch(`${PROXY_URL}/mirror`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    twin: activeTwin,
-                    query: text
+                    message: text,
+                    systemPrompt: twin.systemPrompt,
+                    history: history.slice(-6) // Last 6 messages for context
                 })
             });
 
             if (!response.ok) throw new Error('Failed');
 
-            const data = await response.json();
-            setMessages(prev => [...prev, {
-                role: 'assistant',
-                content: data.response || data.message || "I'm here to help. What's on your mind?"
-            }]);
+            // Handle streaming response
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullResponse = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split('\n');
+
+                for (const line of lines) {
+                    if (!line.trim()) continue;
+                    try {
+                        const data = JSON.parse(line);
+                        if (data.text) {
+                            fullResponse += data.text;
+                            setMessages(prev => {
+                                const updated = [...prev];
+                                const lastIdx = updated.length - 1;
+                                if (updated[lastIdx]?.isStreaming) {
+                                    updated[lastIdx] = {
+                                        ...updated[lastIdx],
+                                        content: fullResponse
+                                    };
+                                }
+                                return updated;
+                            });
+                        }
+                    } catch (e) {
+                        // Not JSON, might be raw text
+                        if (line.trim()) {
+                            fullResponse += line;
+                            setMessages(prev => {
+                                const updated = [...prev];
+                                const lastIdx = updated.length - 1;
+                                if (updated[lastIdx]?.isStreaming) {
+                                    updated[lastIdx] = {
+                                        ...updated[lastIdx],
+                                        content: fullResponse
+                                    };
+                                }
+                                return updated;
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Finalize message
+            setMessages(prev => {
+                const updated = [...prev];
+                const lastIdx = updated.length - 1;
+                if (updated[lastIdx]?.isStreaming) {
+                    updated[lastIdx] = {
+                        role: 'assistant',
+                        content: fullResponse || `${twin.glyph} I'm here to help. What's on your mind?`,
+                        isStreaming: false
+                    };
+                }
+                return updated;
+            });
+
         } catch (err) {
             // Fallback response if API fails
-            const twin = TWINS[activeTwin];
-            setMessages(prev => [...prev, {
-                role: 'assistant',
-                content: `As your ${twin.name}, I'm here to help. ${twin.description} What would you like to explore?`
-            }]);
+            setMessages(prev => {
+                const updated = [...prev];
+                const lastIdx = updated.length - 1;
+                if (updated[lastIdx]?.isStreaming) {
+                    updated[lastIdx] = {
+                        role: 'assistant',
+                        content: `${twin.glyph} As your ${twin.name}, I'm here to help. ${twin.description} What would you like to explore?`,
+                        isStreaming: false
+                    };
+                }
+                return updated;
+            });
         } finally {
             setLoading(false);
             inputRef.current?.focus();
@@ -163,11 +283,13 @@ export default function Twins() {
             }`}>
                 <div className="flex items-center justify-between px-4 py-3 max-w-2xl mx-auto">
                     <div className="flex items-center gap-3">
-                        <Link to="/" className={`p-2 -ml-2 ${isDark ? 'text-white/40 hover:text-white/60' : 'text-zinc-400 hover:text-zinc-600'}`}>
-                            <ArrowLeft size={18} />
+                        <Link to="/" className={`p-2 -ml-2 rounded-lg transition-colors ${
+                            isDark ? 'text-white/40 hover:text-white/60 hover:bg-white/5' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100'
+                        }`}>
+                            <Home size={18} />
                         </Link>
                         <div className="flex items-center gap-2">
-                            <MirrorLogo className="w-6 h-6" />
+                            <span className="text-lg">⟡</span>
                             <span className={`font-medium text-sm ${isDark ? 'text-white/80' : 'text-zinc-800'}`}>
                                 AI Twins
                             </span>
@@ -190,7 +312,7 @@ export default function Twins() {
                             Choose Your Twin
                         </h1>
                         <p className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
-                            Each twin has a different perspective. Tap one to start.
+                            Each twin thinks differently. Tap one to start chatting.
                         </p>
                     </motion.div>
 
@@ -214,11 +336,14 @@ export default function Twins() {
                                         boxShadow: isDark ? `0 0 30px ${t.color}20` : `0 4px 20px ${t.color}15`
                                     }}
                                 >
-                                    <div
-                                        className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-                                        style={{ background: `${t.color}20` }}
-                                    >
-                                        <Icon size={20} style={{ color: t.color }} />
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div
+                                            className="w-10 h-10 rounded-xl flex items-center justify-center"
+                                            style={{ background: `${t.color}20` }}
+                                        >
+                                            <Icon size={20} style={{ color: t.color }} />
+                                        </div>
+                                        <span className="text-lg">{t.glyph}</span>
                                     </div>
                                     <h3 className={`font-semibold mb-1 ${isDark ? 'text-white' : 'text-zinc-900'}`}>
                                         {t.name}
@@ -231,7 +356,7 @@ export default function Twins() {
                         })}
                     </div>
 
-                    {/* What they do */}
+                    {/* Mode Indicator */}
                     <motion.div
                         className={`mt-8 p-4 rounded-xl ${
                             isDark ? 'bg-white/[0.02] border border-white/5' : 'bg-zinc-100'
@@ -240,9 +365,33 @@ export default function Twins() {
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.4 }}
                     >
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                                <div className={`w-2 h-2 rounded-full ${isDark ? 'bg-cyan-400' : 'bg-cyan-500'} animate-pulse`} />
+                                <span className={`text-xs font-medium ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`}>
+                                    Cloud Mode
+                                </span>
+                            </div>
+                            <span className={`text-[10px] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                                Llama 3.3 70B via Groq
+                            </span>
+                        </div>
+                        <p className={`text-xs ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                            Responses powered by cloud AI. For fully sovereign (on-device) Twins, use MirrorBrain Desktop.
+                        </p>
+                    </motion.div>
+
+                    {/* What each twin does */}
+                    <motion.div
+                        className={`mt-3 p-3 rounded-lg ${
+                            isDark ? 'bg-purple-500/5 border border-purple-500/10' : 'bg-purple-50 border border-purple-100'
+                        }`}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                    >
                         <p className={`text-xs text-center ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                            <Sparkles size={12} className="inline mr-1" />
-                            Each twin brings a different cognitive lens to your questions
+                            <span className={isDark ? 'text-purple-400' : 'text-purple-600'}>⟡</span> Guardian protects focus · <span className={isDark ? 'text-emerald-400' : 'text-emerald-600'}>◈</span> Scout explores · <span className={isDark ? 'text-violet-400' : 'text-violet-600'}>◇</span> Synthesizer connects · <span className={isDark ? 'text-amber-400' : 'text-amber-600'}>◎</span> Mirror reveals
                         </p>
                     </motion.div>
                 </div>
@@ -277,9 +426,12 @@ export default function Twins() {
                                     <twin.icon size={16} style={{ color: twin.color }} />
                                 </div>
                                 <div>
-                                    <h2 className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-                                        {twin.name}
-                                    </h2>
+                                    <div className="flex items-center gap-2">
+                                        <h2 className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                                            {twin.name}
+                                        </h2>
+                                        <span className="text-sm">{twin.glyph}</span>
+                                    </div>
                                     <p className={`text-xs ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
                                         {twin.tagline}
                                     </p>
@@ -304,6 +456,7 @@ export default function Twins() {
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                     >
+                                        <div className="text-4xl mb-4">{twin.glyph}</div>
                                         <p className={`text-sm mb-6 ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
                                             {twin.description}
                                         </p>
@@ -347,16 +500,19 @@ export default function Twins() {
                                                 boxShadow: isDark ? `0 0 20px ${twin.color}10` : 'none'
                                             } : {}}
                                             >
-                                                <p className={`text-sm leading-relaxed ${
+                                                <p className={`text-sm leading-relaxed whitespace-pre-wrap ${
                                                     isDark ? 'text-white/90' : 'text-zinc-800'
                                                 }`}>
                                                     {msg.content}
+                                                    {msg.isStreaming && (
+                                                        <span className="inline-block w-2 h-4 ml-1 bg-current animate-pulse" />
+                                                    )}
                                                 </p>
                                             </div>
                                         </motion.div>
                                     ))
                                 )}
-                                {loading && (
+                                {loading && messages[messages.length - 1]?.content === '' && (
                                     <motion.div
                                         className="flex justify-start"
                                         initial={{ opacity: 0 }}
@@ -398,7 +554,7 @@ export default function Twins() {
                                     disabled={loading}
                                     className={`flex-1 px-4 py-3 rounded-xl text-sm focus:outline-none transition-all ${
                                         isDark
-                                            ? 'bg-white/5 border border-white/10 text-white placeholder-zinc-600 focus:border-white/20'
+                                            ? 'bg-white/5 border border-white/10 text-white placeholder-zinc-500 focus:border-white/20'
                                             : 'bg-zinc-100 border border-zinc-200 text-zinc-900 placeholder-zinc-400 focus:border-zinc-300'
                                     }`}
                                 />

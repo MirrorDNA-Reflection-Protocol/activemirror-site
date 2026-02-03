@@ -1,29 +1,39 @@
 /**
  * ⟡ Bottom Navigation Bar
  * Mobile-friendly tab navigation for the Intelligence Suite
+ * Supports light/dark themes
  */
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { MessageCircle, Brain, Users, Target, Send } from 'lucide-react';
+import { Home, MessageCircle, Brain, Users, Sparkles } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 
 const NAV_ITEMS = [
-    { path: '/mirror', label: 'Mirror', icon: MessageCircle },
-    { path: '/scan', label: 'Scan', icon: Brain },
+    { path: '/', label: 'Home', icon: Home },
+    { path: '/start', label: 'Discover', icon: Sparkles },
+    { path: '/mirror', label: 'Reflect', icon: MessageCircle },
     { path: '/twins', label: 'Twins', icon: Users },
-    { path: '/brief', label: 'Brief', icon: Target },
-    { path: '/cast', label: 'Cast', icon: Send },
+    { path: '/scan', label: 'Scan', icon: Brain },
 ];
 
 const BottomNav = () => {
     const location = useLocation();
     const currentPath = location.pathname;
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.04] bg-[#08080a]/90 backdrop-blur-xl safe-area-bottom">
+        <nav className={`fixed bottom-0 left-0 right-0 z-50 border-t backdrop-blur-xl safe-area-bottom transition-colors ${
+            isDark
+                ? 'border-white/[0.08] bg-[#08080a]/95'
+                : 'border-zinc-200 bg-white/95'
+        }`}>
             <div className="flex items-center justify-around px-2 py-1">
                 {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
-                    const isActive = currentPath === path || currentPath.startsWith(path + '/');
+                    const isActive = path === '/'
+                        ? currentPath === '/'
+                        : currentPath === path || currentPath.startsWith(path + '/');
 
                     return (
                         <Link
@@ -31,23 +41,22 @@ const BottomNav = () => {
                             to={path}
                             className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all ${
                                 isActive
-                                    ? 'text-white'
-                                    : 'text-white/30 hover:text-white/50'
+                                    ? isDark ? 'text-white' : 'text-purple-600'
+                                    : isDark ? 'text-white/40 hover:text-white/60' : 'text-zinc-400 hover:text-zinc-600'
                             }`}
                         >
                             <div className={`p-1.5 rounded-lg transition-all ${
-                                isActive ? 'bg-white/10' : ''
+                                isActive
+                                    ? isDark ? 'bg-white/10' : 'bg-purple-100'
+                                    : ''
                             }`}>
                                 <Icon size={20} strokeWidth={isActive ? 2 : 1.5} />
                             </div>
                             <span className={`text-[10px] font-medium tracking-wide ${
-                                isActive ? 'opacity-100' : 'opacity-70'
+                                isActive ? 'opacity-100' : 'opacity-80'
                             }`}>
                                 {label}
                             </span>
-                            {isActive && (
-                                <div className="absolute bottom-1 w-1 h-1 rounded-full bg-white/60" />
-                            )}
                         </Link>
                     );
                 })}
