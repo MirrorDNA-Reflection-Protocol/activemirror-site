@@ -31,10 +31,10 @@ const liveEndpoints = [
         url: 'https://brain.activemirror.ai/health'
     },
     {
-        name: 'docs.activemirror.ai',
-        description: 'Protocol documentation',
+        name: 'mirror.activemirror.ai',
+        description: 'Mirror reflection API',
         status: 'live',
-        url: 'https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/'
+        url: 'https://mirror.activemirror.ai/health'
     }
 ];
 
