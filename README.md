@@ -2,10 +2,12 @@
 
 **AI that asks questions instead of giving answers.**
 
-Active Mirror is a reflective thinking tool protected by MirrorGate — a runtime enforcement layer that catches AI lies, blocks unsolicited advice, and logs every violation permanently.
+Active Mirror is a reflective AI experience with AI Twins, BrainScan cognitive quizzes, and true Sovereign Mode (on-device AI). Protected by MirrorGate — a runtime enforcement layer that catches AI lies, blocks unsolicited advice, and logs every violation permanently.
 
-🌐 **Live**: [activemirror.ai](https://activemirror.ai)  
-👁️ **Confessions**: [activemirror.ai/confessions](https://activemirror.ai/confessions) — Watch the AI fight its worst impulses, live.
+🌐 **Live**: [activemirror.ai](https://activemirror.ai)
+🧠 **BrainScan**: [activemirror.ai/scan](https://activemirror.ai/scan) — Discover your cognitive archetype
+⟡ **AI Twins**: [activemirror.ai/twins](https://activemirror.ai/twins) — Four cognitive companions
+👁️ **Confessions**: [activemirror.ai/confessions](https://activemirror.ai/confessions) — Watch the AI fight its worst impulses, live
 
 ---
 
@@ -115,6 +117,36 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for full documentation.
 
 ---
 
+## New Features (v15.1)
+
+### AI Twins
+Four cognitive companions with distinct thinking styles:
+- **⟡ Guardian** — Protects focus, filters distractions
+- **◈ Scout** — Explores possibilities, finds connections
+- **◇ Synthesizer** — Connects dots, builds frameworks
+- **◎ Mirror** — Reveals blind spots, challenges assumptions
+
+### BrainScan
+8-question cognitive architecture quiz:
+- Identifies your archetype (Architect, Explorer, Builder, Analyst, Connector, Creative, Scholar, Strategist)
+- Matches you with your ideal AI Twin
+- 60 seconds to complete
+
+### Sovereign Mode
+True on-device AI via WebLLM:
+- Phi-3.5 Mini runs entirely in your browser
+- ~2GB one-time download
+- Works offline
+- Zero data sent to servers
+
+### Mirror Proof Protocol
+Cryptographic attestation of informed consent:
+- 3 acknowledgments required
+- Generates proof hash per session
+- Consent carries across all AI pages
+
+---
+
 ## Tech Stack
 
 | Component | Technology |
@@ -122,7 +154,7 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for full documentation.
 | Frontend | React 19, Vite, Tailwind, Framer Motion |
 | Safety Proxy | Python FastAPI, Cross-Encoder model |
 | Cloud AI | Groq API (Llama 3.3 70B) |
-| Local AI | WebLLM (Qwen 2.5 1.5B) |
+| Sovereign AI | WebLLM (Phi-3.5 Mini) |
 | Hosting | GitHub Pages, Cloudflare Tunnel |
 
 ---
@@ -189,4 +221,4 @@ MIT License — N1 Intelligence (OPC) Pvt Ltd, Goa, India
 
 ---
 
-⟡ **MirrorGate v11.0 | EPISTEMIC JUDGE**
+⟡ **Active Mirror v15.1 | AI Twins | BrainScan | Sovereign Mode | Mirror Proof Protocol**
