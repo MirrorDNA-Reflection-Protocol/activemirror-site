@@ -219,13 +219,13 @@ const ShadowThoughts = ({ thought, color, isDark }) => (
                     transition={{ duration: 1.5, repeat: Infinity }}
                 />
                 <span className={`text-[10px] uppercase tracking-[0.2em] ${
-                    isDark ? 'text-white/30' : 'text-zinc-400'
+                    isDark ? 'text-white/60' : 'text-zinc-400'
                 }`}>
                     Shadow Intent
                 </span>
             </div>
             <p className={`text-sm leading-relaxed italic ${
-                isDark ? 'text-white/50' : 'text-zinc-500'
+                isDark ? 'text-white/70' : 'text-zinc-500'
             }`}>
                 {thought}
             </p>
@@ -266,7 +266,7 @@ const Message = ({ message, isLast, onRegenerate, accentColor, isDark }) => {
                             transition={{ duration: 2, repeat: Infinity }}
                         />
                         <span className={`text-[10px] uppercase tracking-wider ${
-                            isDark ? 'text-white/40' : 'text-zinc-400'
+                            isDark ? 'text-white/60' : 'text-zinc-400'
                         }`}>
                             {message.model}
                         </span>
@@ -339,7 +339,7 @@ const Message = ({ message, isLast, onRegenerate, accentColor, isDark }) => {
                             </a>
                             {message.imagePrompt && (
                                 <p className={`text-[10px] mt-2 italic text-center ${
-                                    isDark ? 'text-white/30' : 'text-zinc-400'
+                                    isDark ? 'text-white/60' : 'text-zinc-400'
                                 }`}>
                                     "{message.imagePrompt}"
                                 </p>
@@ -386,7 +386,7 @@ const Message = ({ message, isLast, onRegenerate, accentColor, isDark }) => {
                             onClick={copyText}
                             className={`p-1.5 rounded-lg transition-all ${
                                 isDark
-                                    ? 'text-white/25 hover:text-white/50 hover:bg-white/5'
+                                    ? 'text-white/50 hover:text-white/70 hover:bg-white/5'
                                     : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100'
                             }`}
                         >
@@ -397,7 +397,7 @@ const Message = ({ message, isLast, onRegenerate, accentColor, isDark }) => {
                                 onClick={onRegenerate}
                                 className={`p-1.5 rounded-lg transition-all ${
                                     isDark
-                                        ? 'text-white/25 hover:text-white/50 hover:bg-white/5'
+                                        ? 'text-white/50 hover:text-white/70 hover:bg-white/5'
                                         : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100'
                                 }`}
                             >
@@ -747,7 +747,7 @@ const MirrorAmbient = () => {
                     <a
                         href="/"
                         className={`p-2 -ml-2 transition-colors ${
-                            isDark ? 'text-white/40 hover:text-white/60' : 'text-zinc-400 hover:text-zinc-600'
+                            isDark ? 'text-white/60 hover:text-white/60' : 'text-zinc-400 hover:text-zinc-600'
                         }`}
                     >
                         <ArrowLeft size={18} />
@@ -769,7 +769,7 @@ const MirrorAmbient = () => {
                             onClick={exportConversation}
                             className={`p-2 rounded-lg transition-colors ${
                                 isDark
-                                    ? 'text-white/40 hover:text-white/60 hover:bg-white/5'
+                                    ? 'text-white/60 hover:text-white/60 hover:bg-white/5'
                                     : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100'
                             }`}
                             title="Export conversation"
@@ -809,7 +809,7 @@ const MirrorAmbient = () => {
                                 Active Mirror ⟡
                             </h1>
                             <p className={`text-sm max-w-sm leading-relaxed ${
-                                isDark ? 'text-white/40' : 'text-zinc-500'
+                                isDark ? 'text-white/60' : 'text-zinc-500'
                             }`}>
                                 Sovereign reflection engine. The intelligent router automatically selects the best model for your query.
                             </p>
@@ -820,7 +820,7 @@ const MirrorAmbient = () => {
                                             className="w-2 h-2 rounded-full"
                                             style={{ background: color.primary, boxShadow: `0 0 6px ${color.primary}` }}
                                         />
-                                        <span className={`text-[10px] ${isDark ? 'text-white/30' : 'text-zinc-400'}`}>
+                                        <span className={`text-[10px] ${isDark ? 'text-white/60' : 'text-zinc-400'}`}>
                                             {name.split(' ')[0]}
                                         </span>
                                     </div>
@@ -888,7 +888,7 @@ const MirrorAmbient = () => {
                         <button
                             onClick={() => document.getElementById('file-input').click()}
                             className={`p-2.5 transition-colors ${
-                                isDark ? 'text-white/30 hover:text-white/50' : 'text-zinc-400 hover:text-zinc-600'
+                                isDark ? 'text-white/60 hover:text-white/70' : 'text-zinc-400 hover:text-zinc-600'
                             }`}
                         >
                             <Paperclip size={18} />
@@ -914,7 +914,7 @@ const MirrorAmbient = () => {
                             className={`p-2.5 transition-colors ${
                                 isListening
                                     ? 'text-red-400'
-                                    : isDark ? 'text-white/30 hover:text-white/50' : 'text-zinc-400 hover:text-zinc-600'
+                                    : isDark ? 'text-white/60 hover:text-white/70' : 'text-zinc-400 hover:text-zinc-600'
                             }`}
                         >
                             {isListening ? <MicOff size={18} /> : <Mic size={18} />}
@@ -969,7 +969,7 @@ const MirrorAmbient = () => {
                             className={`p-2.5 transition-colors ${
                                 voiceEnabled
                                     ? 'text-violet-400'
-                                    : isDark ? 'text-white/30 hover:text-white/50' : 'text-zinc-400 hover:text-zinc-600'
+                                    : isDark ? 'text-white/60 hover:text-white/70' : 'text-zinc-400 hover:text-zinc-600'
                             }`}
                         >
                             {voiceEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}

@@ -360,7 +360,7 @@ function LandingPhase({ onStart, isDark, ready, error }) {
                     ready
                         ? 'bg-gradient-to-r from-purple-500 to-violet-500 text-white hover:scale-105 active:scale-95'
                         : isDark
-                            ? 'bg-white/10 text-zinc-500 cursor-not-allowed'
+                            ? 'bg-white/10 text-zinc-400 cursor-not-allowed'
                             : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
                 }`}
                 initial={{ opacity: 0, y: 20 }}
@@ -383,7 +383,7 @@ function LandingPhase({ onStart, isDark, ready, error }) {
             {/* Trust signals */}
             <motion.div
                 className={`mt-12 flex items-center justify-center gap-6 text-sm ${
-                    isDark ? 'text-zinc-500' : 'text-zinc-500'
+                    isDark ? 'text-zinc-400' : 'text-zinc-400'
                 }`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -414,10 +414,10 @@ function ScanPhase({ question, questionNum, total, onAnswer, isDark }) {
             {/* Progress */}
             <div className="mb-8">
                 <div className="flex justify-between items-center mb-2">
-                    <span className={`text-sm ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                    <span className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-400'}`}>
                         Question {questionNum} of {total}
                     </span>
-                    <span className={`text-sm ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                    <span className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-400'}`}>
                         {Math.round((questionNum / total) * 100)}%
                     </span>
                 </div>
@@ -578,7 +578,7 @@ function RevealPhase({ archetype, archetypeInfo, mirrorId, result, onContinue, i
 
             {/* MirrorSig ID */}
             <motion.p
-                className={`text-xs font-mono mb-6 ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}
+                className={`text-xs font-mono mb-6 ${isDark ? 'text-zinc-400' : 'text-zinc-400'}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8 }}
@@ -622,7 +622,7 @@ function TwinPhase({ twinInfo, archetypeInfo, onContinue, isDark }) {
             </motion.div>
 
             <motion.p
-                className={`text-sm mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}
+                className={`text-sm mb-2 ${isDark ? 'text-zinc-400' : 'text-zinc-400'}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
@@ -656,7 +656,7 @@ function TwinPhase({ twinInfo, archetypeInfo, onContinue, isDark }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
             >
-                <p className={`text-sm ${isDark ? 'text-zinc-500' : 'text-zinc-500'} mb-3`}>
+                <p className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-400'} mb-3`}>
                     Why this match?
                 </p>
                 <p className={isDark ? 'text-zinc-300' : 'text-zinc-700'}>
@@ -770,7 +770,7 @@ function CompletePhase({ archetype, archetypeInfo, mirrorId, twinInfo, onShare, 
                     animated={false}
                     className="mx-auto"
                 />
-                <p className={`text-xs font-mono mt-2 ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                <p className={`text-xs font-mono mt-2 ${isDark ? 'text-zinc-400' : 'text-zinc-400'}`}>
                     {mirrorId}
                 </p>
             </motion.div>

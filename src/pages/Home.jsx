@@ -120,7 +120,7 @@ export default function Home() {
                             }`}>
                                 <Brain size={20} className={`transition-colors ${isDark ? 'text-purple-400 group-hover:text-purple-300' : 'text-purple-600 group-hover:text-purple-700'}`} />
                                 <span className={`text-xs sm:text-sm font-medium ${isDark ? 'text-purple-400 group-hover:text-purple-300' : 'text-purple-600'}`}>BrainScan</span>
-                                <span className={`text-[9px] sm:text-[10px] hidden sm:block ${isDark ? 'text-zinc-600' : 'text-zinc-500'}`}>Discover your archetype</span>
+                                <span className={`text-[9px] sm:text-[10px] hidden sm:block ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>Discover your archetype</span>
                             </Link>
                             <Link to="/twins" className={`group py-3 sm:py-4 rounded-xl border transition-all flex flex-col items-center justify-center gap-1 hover:scale-[1.02] ${
                                 isDark
@@ -129,7 +129,7 @@ export default function Home() {
                             }`}>
                                 <Users size={20} className={`transition-colors ${isDark ? 'text-violet-400 group-hover:text-violet-300' : 'text-violet-600 group-hover:text-violet-700'}`} />
                                 <span className={`text-xs sm:text-sm font-medium ${isDark ? 'text-violet-400 group-hover:text-violet-300' : 'text-violet-600'}`}>AI Twins</span>
-                                <span className={`text-[9px] sm:text-[10px] hidden sm:block ${isDark ? 'text-zinc-600' : 'text-zinc-500'}`}>Cognitive companions</span>
+                                <span className={`text-[9px] sm:text-[10px] hidden sm:block ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>Cognitive companions</span>
                             </Link>
                             <Link to="/brief" className={`group py-3 sm:py-4 rounded-xl border transition-all flex flex-col items-center justify-center gap-1 hover:scale-[1.02] ${
                                 isDark
@@ -138,7 +138,7 @@ export default function Home() {
                             }`}>
                                 <Target size={20} className={`transition-colors ${isDark ? 'text-amber-400 group-hover:text-amber-300' : 'text-amber-600 group-hover:text-amber-700'}`} />
                                 <span className={`text-xs sm:text-sm font-medium ${isDark ? 'text-amber-400 group-hover:text-amber-300' : 'text-amber-600'}`}>Brief</span>
-                                <span className={`text-[9px] sm:text-[10px] hidden sm:block ${isDark ? 'text-zinc-600' : 'text-zinc-500'}`}>Temporal intelligence</span>
+                                <span className={`text-[9px] sm:text-[10px] hidden sm:block ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>Temporal intelligence</span>
                             </Link>
                             <Link to="/cast" className={`group py-3 sm:py-4 rounded-xl border transition-all flex flex-col items-center justify-center gap-1 hover:scale-[1.02] ${
                                 isDark
@@ -147,13 +147,13 @@ export default function Home() {
                             }`}>
                                 <Send size={20} className={`transition-colors ${isDark ? 'text-cyan-400 group-hover:text-cyan-300' : 'text-cyan-600 group-hover:text-cyan-700'}`} />
                                 <span className={`text-xs sm:text-sm font-medium ${isDark ? 'text-cyan-400 group-hover:text-cyan-300' : 'text-cyan-600'}`}>Cast</span>
-                                <span className={`text-[9px] sm:text-[10px] hidden sm:block ${isDark ? 'text-zinc-600' : 'text-zinc-500'}`}>Messages through time</span>
+                                <span className={`text-[9px] sm:text-[10px] hidden sm:block ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>Messages through time</span>
                             </Link>
                         </div>
 
                         {/* 5. EXTERNAL LINKS */}
                         <div className={`flex justify-center gap-4 sm:gap-6 mt-3 sm:mt-4 text-[10px] sm:text-xs ${
-                            isDark ? 'text-zinc-500' : 'text-zinc-400'
+                            isDark ? 'text-zinc-400' : 'text-zinc-500'
                         }`}>
                             <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="hover:text-purple-500 transition-colors flex items-center gap-1">
                                 <Github size={12} /> Protocol

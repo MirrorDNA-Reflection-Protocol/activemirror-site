@@ -126,7 +126,7 @@ export default function Scan() {
                         <MirrorLogo className="w-6 h-6" />
                         <span className="text-sm font-medium">Active Mirror</span>
                     </Link>
-                    <div className="flex items-center gap-4 text-xs text-zinc-500">
+                    <div className="flex items-center gap-4 text-xs text-zinc-400">
                         <span className="hidden sm:inline">BrainScan v1.0</span>
                         <Brain size={16} className="text-purple-400" />
                     </div>
@@ -232,7 +232,7 @@ function IntroScreen({ onStart, error, questionsLoaded }) {
                 </button>
 
                 {/* Info */}
-                <p className="mt-6 text-xs text-zinc-600">
+                <p className="mt-6 text-xs text-zinc-400">
                     ~2 minutes • No signup required • Results are private
                 </p>
             </SpotlightCard>
@@ -255,7 +255,7 @@ function QuizScreen({ question, questionNumber, totalQuestions, onAnswer, onBack
                 {/* Progress Bar */}
                 <div className="mb-8">
                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs text-zinc-500 font-mono">Question {questionNumber}/{totalQuestions}</span>
+                        <span className="text-xs text-zinc-400 font-mono">Question {questionNumber}/{totalQuestions}</span>
                         <span className="text-xs text-purple-400 font-mono">{Math.round(progress)}%</span>
                     </div>
                     <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
@@ -299,7 +299,7 @@ function QuizScreen({ question, questionNumber, totalQuestions, onAnswer, onBack
                 {canGoBack && (
                     <button
                         onClick={onBack}
-                        className="mt-6 flex items-center gap-2 text-zinc-500 hover:text-zinc-300 transition-colors text-sm"
+                        className="mt-6 flex items-center gap-2 text-zinc-400 hover:text-zinc-300 transition-colors text-sm"
                     >
                         <ArrowLeft size={16} /> Previous question
                     </button>
@@ -332,7 +332,7 @@ function LoadingScreen() {
                 <Sparkles size={40} className="text-purple-400" />
             </motion.div>
             <h2 className="text-xl font-semibold mb-2">Analyzing your brain...</h2>
-            <p className="text-zinc-500 text-sm">Mapping cognitive architecture</p>
+            <p className="text-zinc-400 text-sm">Mapping cognitive architecture</p>
         </motion.div>
     );
 }
@@ -385,7 +385,7 @@ function ResultsScreen({ result, onRetake }) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
                 >
-                    <h3 className="text-sm font-mono text-zinc-500 mb-4 uppercase tracking-wider">Cognitive Dimensions</h3>
+                    <h3 className="text-sm font-mono text-zinc-400 mb-4 uppercase tracking-wider">Cognitive Dimensions</h3>
                     <div className="space-y-3">
                         {Object.entries(result.dimensions || {}).map(([key, value], index) => {
                             const info = DIMENSION_INFO[key] || { label: key, desc: '', icon: '◉' };
@@ -401,7 +401,7 @@ function ResultsScreen({ result, onRetake }) {
                                         <span className="text-sm text-zinc-300 flex items-center gap-2">
                                             <span>{info.icon}</span>
                                             {info.label}
-                                            <span className="text-xs text-zinc-600">({info.desc})</span>
+                                            <span className="text-xs text-zinc-400">({info.desc})</span>
                                         </span>
                                         <span className="text-sm font-mono text-zinc-400">{percentage}%</span>
                                     </div>
@@ -426,7 +426,7 @@ function ResultsScreen({ result, onRetake }) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.8 }}
                 >
-                    <h3 className="text-sm font-mono text-zinc-500 mb-3 uppercase tracking-wider">Your Strengths</h3>
+                    <h3 className="text-sm font-mono text-zinc-400 mb-3 uppercase tracking-wider">Your Strengths</h3>
                     <div className="flex flex-wrap gap-2">
                         {(result.strengths || []).map((strength, index) => (
                             <span
@@ -448,11 +448,11 @@ function ResultsScreen({ result, onRetake }) {
                 >
                     <div className="text-center">
                         <div className="text-2xl font-bold text-white">{(result.node_count || 0).toLocaleString()}</div>
-                        <div className="text-xs text-zinc-500">Neural Nodes</div>
+                        <div className="text-xs text-zinc-400">Neural Nodes</div>
                     </div>
                     <div className="text-center">
                         <div className="text-2xl font-bold text-white">{(result.connection_count || 0).toLocaleString()}</div>
-                        <div className="text-xs text-zinc-500">Connections</div>
+                        <div className="text-xs text-zinc-400">Connections</div>
                     </div>
                 </motion.div>
 
@@ -495,7 +495,7 @@ function ResultsScreen({ result, onRetake }) {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 1.1 }}
                 >
-                    <p className="text-xs text-zinc-600 font-mono">
+                    <p className="text-xs text-zinc-400 font-mono">
                         Brain ID: {result.brain_id || 'LOCAL'}
                     </p>
                 </motion.div>

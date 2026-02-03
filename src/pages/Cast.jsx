@@ -99,7 +99,7 @@ export default function Cast() {
                         <MirrorLogo className="w-6 h-6" />
                         <span className="text-sm font-medium">Active Mirror</span>
                     </Link>
-                    <div className="flex items-center gap-2 text-xs text-zinc-500">
+                    <div className="flex items-center gap-2 text-xs text-zinc-400">
                         <Radio size={14} className="text-cyan-400 animate-pulse" />
                         <span className="hidden sm:inline">Sovereign Messaging</span>
                     </div>
@@ -150,10 +150,10 @@ export default function Cast() {
                                     </div>
                                     <div>
                                         <h3 className="font-medium text-white">Message Timeline</h3>
-                                        <p className="text-xs text-zinc-500">Demo view</p>
+                                        <p className="text-xs text-zinc-400">Demo view</p>
                                     </div>
                                 </div>
-                                <div className="text-xs text-zinc-500 font-mono">
+                                <div className="text-xs text-zinc-400 font-mono">
                                     {demoTime.toLocaleTimeString()}
                                 </div>
                             </div>
@@ -177,8 +177,8 @@ export default function Cast() {
                                                     <p className="text-sm text-zinc-200">{msg.content}</p>
                                                     <div className="flex items-center gap-2 mt-1">
                                                         <span className={`text-xs ${status.text}`}>{msg.status}</span>
-                                                        <span className="text-xs text-zinc-600">•</span>
-                                                        <span className="text-xs text-zinc-500">{msg.time}</span>
+                                                        <span className="text-xs text-zinc-400">•</span>
+                                                        <span className="text-xs text-zinc-400">{msg.time}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -189,7 +189,7 @@ export default function Cast() {
 
                             {/* Footer */}
                             <div className="px-4 py-3 border-t border-white/5 bg-white/5">
-                                <div className="flex items-center gap-2 text-xs text-zinc-500">
+                                <div className="flex items-center gap-2 text-xs text-zinc-400">
                                     <Lock size={12} />
                                     <span>End-to-end encrypted • Local-first • Sync via Tailscale</span>
                                 </div>
@@ -234,7 +234,7 @@ export default function Cast() {
                                                 <div className="flex-1">
                                                     <h3 className="font-semibold text-white mb-1">{feature.title}</h3>
                                                     <p className="text-sm text-zinc-400 mb-2">{feature.description}</p>
-                                                    <p className="text-xs text-zinc-600 italic">"{feature.example}"</p>
+                                                    <p className="text-xs text-zinc-400 italic">"{feature.example}"</p>
                                                 </div>
                                             </div>
                                         </SpotlightCard>
@@ -261,21 +261,21 @@ export default function Cast() {
                                     <div className="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-sm font-mono text-cyan-400">1</div>
                                     <div>
                                         <h4 className="font-medium text-white">Initialize on your device</h4>
-                                        <p className="text-sm text-zinc-500">Use <code className="text-cyan-400 bg-cyan-500/10 px-1 rounded">cast_init</code> via Claude to set up encryption keys</p>
+                                        <p className="text-sm text-zinc-400">Use <code className="text-cyan-400 bg-cyan-500/10 px-1 rounded">cast_init</code> via Claude to set up encryption keys</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-4">
                                     <div className="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-sm font-mono text-cyan-400">2</div>
                                     <div>
                                         <h4 className="font-medium text-white">Send temporal messages</h4>
-                                        <p className="text-sm text-zinc-500">Use <code className="text-cyan-400 bg-cyan-500/10 px-1 rounded">cast_send</code> with a delivery time</p>
+                                        <p className="text-sm text-zinc-400">Use <code className="text-cyan-400 bg-cyan-500/10 px-1 rounded">cast_send</code> with a delivery time</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-4">
                                     <div className="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-sm font-mono text-cyan-400">3</div>
                                     <div>
                                         <h4 className="font-medium text-white">Receive when ready</h4>
-                                        <p className="text-sm text-zinc-500">Messages appear via <code className="text-cyan-400 bg-cyan-500/10 px-1 rounded">cast_receive</code> when their time comes</p>
+                                        <p className="text-sm text-zinc-400">Messages appear via <code className="text-cyan-400 bg-cyan-500/10 px-1 rounded">cast_receive</code> when their time comes</p>
                                     </div>
                                 </div>
                             </div>
@@ -324,7 +324,7 @@ export default function Cast() {
                                             Whistleblower dead drops
                                         </li>
                                     </ul>
-                                    <div className="mt-4 flex items-center gap-2 text-xs text-zinc-500">
+                                    <div className="mt-4 flex items-center gap-2 text-xs text-zinc-400">
                                         <Shield size={12} />
                                         Warning cascade: Push → SMS → Email → Trigger
                                     </div>
@@ -340,7 +340,7 @@ export default function Cast() {
                         animate={{ opacity: 1 }}
                         transition={{ delay: 1 }}
                     >
-                        <p className="text-zinc-500 mb-4">
+                        <p className="text-zinc-400 mb-4">
                             Part of the MirrorDNA sovereign AI stack
                         </p>
                         <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -361,7 +361,7 @@ export default function Cast() {
 
                     {/* Footer */}
                     <motion.div
-                        className="mt-12 text-center text-xs text-zinc-600"
+                        className="mt-12 text-center text-xs text-zinc-400"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 1.1 }}
