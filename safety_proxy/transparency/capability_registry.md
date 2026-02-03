@@ -11,7 +11,8 @@ mirror_links: [5, 7, 13, 17, 19, 22, 25, 29, 35, 38, 43, 46, 47, 49, 50, 52, 53,
 
 # ⟡ CAPABILITY REGISTRY
 # What this AI can and cannot do — with evidence
-# Last updated: 2026-01-17
+# Last updated: 2026-02-03
+# Version: v15.1
 
 ## CAPABILITY TIERS
 
@@ -97,8 +98,8 @@ mirror_links: [5, 7, 13, 17, 19, 22, 25, 29, 35, 38, 43, 46, 47, 49, 50, 52, 53,
 |------------|------|----------|
 | REST API | DOCUMENTED | proxy.activemirror.ai |
 | Streaming SSE | PROVEN | Real-time responses |
-| MirrorBrain Desktop sync | PLANNED | Roadmap Q1 2026 |
-| MirrorVault integration | PLANNED | Roadmap Q1 2026 |
+| MirrorBrain Desktop sync | DOCUMENTED | Q1 2026 roadmap |
+| MirrorVault integration | DOCUMENTED | Q1 2026 roadmap |
 | Third-party model support | DOCUMENTED | Groq, local models |
 | Custom system prompts | DOCUMENTED | API parameter |
 
@@ -135,11 +136,13 @@ These are **not bugs** — they are intentional design decisions:
 
 | Claim | Verification |
 |-------|--------------|
-| Open source safety rules | github.com/n1intelligence/MirrorGate |
+| Open source safety rules | github.com/MirrorDNA-Reflection-Protocol/mirrorgate |
 | Published protocol | DOI: 10.5281/zenodo.17787619 |
 | Live products | activemirror.ai |
 | Transparency pane | View source in browser |
 | Zero network in Sovereign | Browser DevTools → Network tab |
+| Full documentation | mirrordna-reflection-protocol.github.io/MirrorDNA-Docs |
+| 95 repos ecosystem | github.com/MirrorDNA-Reflection-Protocol |
 
 ---
 
