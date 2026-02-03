@@ -13,6 +13,7 @@ import SpotlightCard from '../components/SpotlightCard';
 import MirrorLogo from '../components/MirrorLogo';
 import BottomNav from '../components/BottomNav';
 import ThemeToggle from '../components/ThemeToggle';
+import LightConsentBanner from '../components/LightConsentBanner';
 import { useTheme } from '../contexts/ThemeContext';
 
 const BRAIN_API = 'https://brain.activemirror.ai';
@@ -39,6 +40,7 @@ const DIMENSION_INFO = {
 };
 
 export default function Scan() {
+    const [consentGiven, setConsentGiven] = useState(false);
     const [phase, setPhase] = useState('intro'); // intro, quiz, loading, results
     const [questions, setQuestions] = useState([]);
     const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -120,6 +122,13 @@ export default function Scan() {
         <div className={`relative min-h-screen font-sans overflow-x-hidden selection:bg-purple-500/30 transition-colors ${
             isDark ? 'bg-[#08080a] text-white' : 'bg-zinc-50 text-zinc-900'
         }`}>
+            {/* Light Consent Banner */}
+            <LightConsentBanner
+                feature="brainscan"
+                onConsent={() => setConsentGiven(true)}
+                isDark={isDark}
+            />
+
             {/* Ambient Background */}
             <div className={`fixed inset-0 z-0 ${
                 isDark

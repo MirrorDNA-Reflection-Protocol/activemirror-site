@@ -117,7 +117,7 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for full documentation.
 
 ---
 
-## New Features (v15.1)
+## New Features (v15.3)
 
 ### AI Twins
 Four cognitive companions with distinct thinking styles:
@@ -221,4 +221,4 @@ MIT License — N1 Intelligence (OPC) Pvt Ltd, Goa, India
 
 ---
 
-⟡ **Active Mirror v15.1 | AI Twins | BrainScan | Sovereign Mode | Mirror Proof Protocol**
+⟡ **Active Mirror v15.3 | AI Twins | BrainScan | Sovereign Mode | Mirror Proof Protocol**

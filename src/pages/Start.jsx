@@ -14,6 +14,7 @@ import MirrorSig from '../components/MirrorSig';
 import ShareCard from '../components/ShareCard';
 import ThemeToggle from '../components/ThemeToggle';
 import BottomNav from '../components/BottomNav';
+import LightConsentBanner from '../components/LightConsentBanner';
 import { useTheme } from '../contexts/ThemeContext';
 
 const BRAIN_API = 'https://brain.activemirror.ai';
@@ -124,6 +125,7 @@ export default function Start() {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
+    const [consentGiven, setConsentGiven] = useState(false);
     const [phase, setPhase] = useState(PHASES.LANDING);
     const [questions, setQuestions] = useState([]);
     const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -206,6 +208,13 @@ export default function Start() {
                     ? 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent'
                     : 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-100/50 via-transparent to-transparent'
             }`} />
+
+            {/* Light Consent Banner */}
+            <LightConsentBanner
+                feature="start"
+                onConsent={() => setConsentGiven(true)}
+                isDark={isDark}
+            />
 
             {/* Theme Toggle */}
             <div className="fixed top-4 right-4 z-50">

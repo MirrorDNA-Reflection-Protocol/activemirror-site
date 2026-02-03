@@ -11,19 +11,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, AlertTriangle, ArrowRight, ExternalLink, Check, Lock, Fingerprint } from 'lucide-react';
 import Logo from './Logo';
-
-// Generate proof hash from session data
-const generateProofHash = (acks, timestamp) => {
-    const data = `mirror:${acks.join(':')}:${timestamp}:${navigator.userAgent.slice(0, 20)}`;
-    let hash = 0;
-    for (let i = 0; i < data.length; i++) {
-        const char = data.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash;
-    }
-    const hex = Math.abs(hash).toString(16).padStart(8, '0');
-    return `⟡${hex.slice(0, 4)}-${hex.slice(4, 8)}`.toUpperCase();
-};
+import { hasSessionConsent, setSessionConsent, generateProofHash } from '../utils/consent';
 
 const ConsentGate = ({ onConsent }) => {
     const [acknowledgments, setAcknowledgments] = useState({
@@ -33,8 +21,17 @@ const ConsentGate = ({ onConsent }) => {
     });
     const [proofGenerated, setProofGenerated] = useState(false);
     const [showProof, setShowProof] = useState(false);
+    const [alreadyConsented, setAlreadyConsented] = useState(false);
 
     const timestamp = useMemo(() => Date.now(), []);
+
+    // Check if user already has valid consent from another page
+    useEffect(() => {
+        if (hasSessionConsent()) {
+            setAlreadyConsented(true);
+            onConsent?.();
+        }
+    }, [onConsent]);
 
     const allAcknowledged = acknowledgments.notTherapy &&
                            acknowledgments.experimental &&
@@ -68,15 +65,17 @@ const ConsentGate = ({ onConsent }) => {
 
     const handleEnter = () => {
         if (allAcknowledged && proofGenerated) {
-            // Store proof in sessionStorage (not localStorage - per session only)
-            sessionStorage.setItem('mirrorProof', JSON.stringify({
-                hash: proofHash,
-                timestamp,
-                acks: Object.keys(acknowledgments).filter(k => acknowledgments[k])
-            }));
+            // Store proof using shared consent utility
+            const acks = Object.keys(acknowledgments).filter(k => acknowledgments[k]);
+            setSessionConsent(proofHash, acks);
             onConsent();
         }
     };
+
+    // If already consented, don't render the gate
+    if (alreadyConsented) {
+        return null;
+    }
 
     return (
         <div className="min-h-screen min-h-[100dvh] bg-[#020204] text-white overflow-y-auto">

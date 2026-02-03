@@ -18,6 +18,7 @@ import SpotlightCard from '../components/SpotlightCard';
 import MirrorLogo from '../components/MirrorLogo';
 import BottomNav from '../components/BottomNav';
 import ThemeToggle from '../components/ThemeToggle';
+import LightConsentBanner from '../components/LightConsentBanner';
 import { useTheme } from '../contexts/ThemeContext';
 
 const BRIEF_API = 'https://brief.activemirror.ai';
@@ -59,6 +60,7 @@ const STATUS_COLORS = {
 };
 
 export default function Brief() {
+    const [consentGiven, setConsentGiven] = useState(false);
     const [activeTab, setActiveTab] = useState('briefing');
     const [briefing, setBriefing] = useState(null);
     const [predictions, setPredictions] = useState([]);
@@ -102,6 +104,13 @@ export default function Brief() {
 
     return (
         <div className="relative min-h-screen font-sans text-white overflow-x-hidden selection:bg-purple-500/30">
+            {/* Light Consent Banner */}
+            <LightConsentBanner
+                feature="brief"
+                onConsent={() => setConsentGiven(true)}
+                isDark={true}
+            />
+
             {/* Ambient Background */}
             <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-900/10 via-black to-black z-0" />
             <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none z-0" />

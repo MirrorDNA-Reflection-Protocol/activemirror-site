@@ -14,7 +14,9 @@ import {
 import MirrorLogo from '../components/MirrorLogo';
 import BottomNav from '../components/BottomNav';
 import ThemeToggle from '../components/ThemeToggle';
+import ConsentGate from '../components/ConsentGate';
 import { useTheme } from '../contexts/ThemeContext';
+import { hasSessionConsent } from '../utils/consent';
 
 const PROXY_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8082'
@@ -170,6 +172,7 @@ export default function Twins() {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
+    const [hasConsented, setHasConsented] = useState(false);
     const [mode, setMode] = useState('cloud'); // 'cloud' or 'sovereign'
     const [activeTwin, setActiveTwin] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -184,6 +187,13 @@ export default function Twins() {
 
     const inputRef = useRef(null);
     const messagesEndRef = useRef(null);
+
+    // Check for existing consent
+    useEffect(() => {
+        if (hasSessionConsent()) {
+            setHasConsented(true);
+        }
+    }, []);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -374,6 +384,11 @@ export default function Twins() {
     };
 
     const twin = activeTwin ? TWINS[activeTwin] : null;
+
+    // Consent gate - required for AI chat features
+    if (!hasConsented) {
+        return <ConsentGate onConsent={() => setHasConsented(true)} />;
+    }
 
     return (
         <div className={`min-h-screen transition-colors duration-300 ${

@@ -201,8 +201,21 @@ export default function Home() {
                         </div>
                     </div>
 
+                    {/* LEGAL DISCLAIMER */}
+                    <div className={`mt-6 p-4 rounded-xl text-center ${
+                        isDark ? 'bg-amber-500/5 border border-amber-500/10' : 'bg-amber-50 border border-amber-200'
+                    }`}>
+                        <p className={`text-[10px] sm:text-xs leading-relaxed ${isDark ? 'text-amber-200/70' : 'text-amber-700/80'}`}>
+                            <strong className={isDark ? 'text-amber-300' : 'text-amber-800'}>⚠ Disclaimer:</strong> Active Mirror is experimental AI technology.
+                            It is <strong>not</strong> therapy, medical advice, or a substitute for professional help.
+                            Use at your own risk. By using this site, you accept our{' '}
+                            <Link to="/terms" className={`underline ${isDark ? 'hover:text-amber-300' : 'hover:text-amber-900'}`}>Terms</Link> and{' '}
+                            <Link to="/privacy" className={`underline ${isDark ? 'hover:text-amber-300' : 'hover:text-amber-900'}`}>Privacy Policy</Link>.
+                        </p>
+                    </div>
+
                     {/* FOOTER: LEGALS */}
-                    <div className={`pt-4 sm:pt-6 border-t flex justify-center items-center text-[9px] sm:text-[10px] md:text-xs font-mono uppercase tracking-widest w-full mt-2 sm:mt-6 ${
+                    <div className={`pt-4 sm:pt-6 border-t flex justify-center items-center text-[9px] sm:text-[10px] md:text-xs font-mono uppercase tracking-widest w-full mt-4 ${
                         isDark ? 'border-purple-500/10 text-zinc-600' : 'border-zinc-200 text-zinc-400'
                     }`}>
                         <div className="flex flex-wrap justify-center gap-x-4 sm:gap-x-8 gap-y-2 text-center items-center">
