@@ -1,10 +1,11 @@
 /**
- * ⟡ MIRROR AMBIENT v3 — Glass Morphism + Graph Aesthetics
+ * ⟡ MIRROR AMBIENT v4 — Glass Morphism + Theme Support + Viral Features
  *
- * Visual language inspired by Obsidian's knowledge graphs:
- * - Floating particles (nodes)
- * - Glass morphism (frosted surfaces)
- * - Model-specific accent colors
+ * Features:
+ * - Light/Dark theme support with improved readability
+ * - Turn counter with fingerprint reveal at turn 5
+ * - Trust contract badge
+ * - Export conversation button
  * - Shadow thoughts (transparent reasoning)
  */
 
@@ -13,11 +14,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, Send, Mic, MicOff, Volume2, VolumeX,
     Paperclip, X, Copy, Check, RefreshCw, Download,
-    ChevronDown, Shield
+    Shield, Lock, Eye, EyeOff, FileDown
 } from 'lucide-react';
 import Logo from '../components/Logo';
 import ConsentGate from '../components/ConsentGate';
 import BottomNav from '../components/BottomNav';
+import ThemeToggle from '../components/ThemeToggle';
+import { useTheme } from '../contexts/ThemeContext';
 
 const PROXY_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8082'
@@ -27,12 +30,12 @@ const PROXY_URL = typeof window !== 'undefined' && window.location.hostname === 
 // MODEL COLORS - Each model has a signature color
 // ============================================
 const MODEL_COLORS = {
-    'Llama 3.3 70B': { primary: '#f59e0b', glow: 'rgba(245, 158, 11, 0.15)' },      // Amber
-    'DeepSeek R1': { primary: '#06b6d4', glow: 'rgba(6, 182, 212, 0.15)' },          // Cyan
-    'Mistral Large': { primary: '#a855f7', glow: 'rgba(168, 85, 247, 0.15)' },       // Violet
-    'FLUX Schnell': { primary: '#10b981', glow: 'rgba(16, 185, 129, 0.15)' },        // Emerald
-    'Llama 4 Scout': { primary: '#3b82f6', glow: 'rgba(59, 130, 246, 0.15)' },       // Blue
-    default: { primary: '#8b5cf6', glow: 'rgba(139, 92, 246, 0.15)' }                // Purple
+    'Llama 3.3 70B': { primary: '#f59e0b', glow: 'rgba(245, 158, 11, 0.15)' },
+    'DeepSeek R1': { primary: '#06b6d4', glow: 'rgba(6, 182, 212, 0.15)' },
+    'Mistral Large': { primary: '#a855f7', glow: 'rgba(168, 85, 247, 0.15)' },
+    'FLUX Schnell': { primary: '#10b981', glow: 'rgba(16, 185, 129, 0.15)' },
+    'Llama 4 Scout': { primary: '#3b82f6', glow: 'rgba(59, 130, 246, 0.15)' },
+    default: { primary: '#8b5cf6', glow: 'rgba(139, 92, 246, 0.15)' }
 };
 
 const getModelColor = (model) => MODEL_COLORS[model] || MODEL_COLORS.default;
@@ -49,6 +52,111 @@ const CRISIS_RESOURCES = {
         { name: "International Association for Suicide Prevention", contact: "https://www.iasp.info/resources/Crisis_Centres/" }
     ]
 };
+
+// ============================================
+// TRUST CONTRACT - Privacy badge
+// ============================================
+const TrustBadge = ({ isDark }) => (
+    <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs ${
+            isDark
+                ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
+                : 'bg-emerald-50 border border-emerald-200 text-emerald-600'
+        }`}
+    >
+        <Lock size={12} />
+        <span>Sovereign Session</span>
+    </motion.div>
+);
+
+// ============================================
+// FINGERPRINT REVEAL - Shows at turn 5
+// ============================================
+const FingerprintReveal = ({ onDismiss, isDark }) => (
+    <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        onClick={onDismiss}
+    >
+        <motion.div
+            className={`max-w-md w-full p-6 rounded-2xl border ${
+                isDark
+                    ? 'bg-zinc-900 border-white/10'
+                    : 'bg-white border-zinc-200 shadow-xl'
+            }`}
+            onClick={e => e.stopPropagation()}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
+        >
+            <div className="flex items-center gap-3 mb-4">
+                <div className={`p-2 rounded-xl ${isDark ? 'bg-amber-500/20' : 'bg-amber-100'}`}>
+                    <Eye size={24} className={isDark ? 'text-amber-400' : 'text-amber-600'} />
+                </div>
+                <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                    Privacy Check
+                </h3>
+            </div>
+
+            <p className={`mb-4 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                In a typical AI chat, by now they would know:
+            </p>
+
+            <div className={`space-y-2 p-4 rounded-xl mb-4 ${
+                isDark ? 'bg-white/5' : 'bg-zinc-50'
+            }`}>
+                <div className={`text-sm ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
+                    <span className={isDark ? 'text-zinc-500' : 'text-zinc-400'}>IP Address:</span> [Your location]
+                </div>
+                <div className={`text-sm ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
+                    <span className={isDark ? 'text-zinc-500' : 'text-zinc-400'}>Browser:</span> {navigator.userAgent.split(' ').slice(-2).join(' ')}
+                </div>
+                <div className={`text-sm ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
+                    <span className={isDark ? 'text-zinc-500' : 'text-zinc-400'}>Interests:</span> [Derived from conversation]
+                </div>
+                <div className={`text-sm ${isDark ? 'text-red-400' : 'text-red-500'}`}>
+                    <span className={isDark ? 'text-zinc-500' : 'text-zinc-400'}>Storage:</span> Forever, used for training
+                </div>
+            </div>
+
+            <div className={`p-4 rounded-xl mb-4 ${
+                isDark ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-emerald-50 border border-emerald-200'
+            }`}>
+                <p className={`text-sm ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>
+                    <strong>With Active Mirror:</strong> Your data stays sovereign. No tracking, no training on your inputs, session-only retention.
+                </p>
+            </div>
+
+            <button
+                onClick={onDismiss}
+                className={`w-full py-3 rounded-xl font-medium transition-colors ${
+                    isDark
+                        ? 'bg-white/10 hover:bg-white/15 text-white'
+                        : 'bg-zinc-900 hover:bg-zinc-800 text-white'
+                }`}
+            >
+                Got it
+            </button>
+        </motion.div>
+    </motion.div>
+);
+
+// ============================================
+// TURN COUNTER
+// ============================================
+const TurnCounter = ({ count, isDark }) => (
+    <div className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+        Turn {count}/10
+        {count >= 6 && count < 10 && (
+            <span className={isDark ? 'text-amber-400 ml-2' : 'text-amber-600 ml-2'}>
+                {10 - count} remaining
+            </span>
+        )}
+    </div>
+);
 
 // ============================================
 // FLOATING PARTICLES - Graph-like nodes
@@ -88,7 +196,7 @@ const Particle = ({ delay, color }) => {
 // ============================================
 // SHADOW THOUGHTS - Transparent reasoning
 // ============================================
-const ShadowThoughts = ({ thought, color }) => (
+const ShadowThoughts = ({ thought, color, isDark }) => (
     <motion.div
         initial={{ opacity: 0, y: 10, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -96,11 +204,12 @@ const ShadowThoughts = ({ thought, color }) => (
         className="fixed bottom-32 left-1/2 -translate-x-1/2 z-40 max-w-md w-[90%]"
     >
         <div
-            className="px-5 py-3 rounded-2xl backdrop-blur-xl border border-white/[0.08] shadow-2xl"
-            style={{
-                background: 'rgba(15, 15, 18, 0.8)',
-                boxShadow: `0 0 40px ${color}20`
-            }}
+            className={`px-5 py-3 rounded-2xl backdrop-blur-xl border shadow-2xl ${
+                isDark
+                    ? 'bg-zinc-900/80 border-white/[0.08]'
+                    : 'bg-white/90 border-zinc-200'
+            }`}
+            style={{ boxShadow: `0 0 40px ${color}20` }}
         >
             <div className="flex items-center gap-2 mb-1">
                 <motion.div
@@ -109,11 +218,15 @@ const ShadowThoughts = ({ thought, color }) => (
                     animate={{ opacity: [0.4, 1, 0.4] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                 />
-                <span className="text-[10px] uppercase tracking-[0.2em] text-white/30">
+                <span className={`text-[10px] uppercase tracking-[0.2em] ${
+                    isDark ? 'text-white/30' : 'text-zinc-400'
+                }`}>
                     Shadow Intent
                 </span>
             </div>
-            <p className="text-sm text-white/50 leading-relaxed italic">
+            <p className={`text-sm leading-relaxed italic ${
+                isDark ? 'text-white/50' : 'text-zinc-500'
+            }`}>
                 {thought}
             </p>
         </div>
@@ -123,7 +236,7 @@ const ShadowThoughts = ({ thought, color }) => (
 // ============================================
 // GLASS MESSAGE BUBBLE
 // ============================================
-const Message = ({ message, isLast, onRegenerate, accentColor }) => {
+const Message = ({ message, isLast, onRegenerate, accentColor, isDark }) => {
     const isUser = message.role === 'user';
     const isSystem = message.role === 'system';
     const [copied, setCopied] = useState(false);
@@ -143,14 +256,6 @@ const Message = ({ message, isLast, onRegenerate, accentColor }) => {
             className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4 group`}
         >
             <div className={`max-w-[85%] relative`}>
-                {/* Connecting line to previous (graph edge effect) */}
-                {!isUser && !isSystem && (
-                    <div
-                        className="absolute -left-4 top-1/2 w-3 h-px opacity-20"
-                        style={{ background: color.primary }}
-                    />
-                )}
-
                 {/* Model indicator with color dot */}
                 {!isUser && !isSystem && message.model && (
                     <div className="flex items-center gap-2 mb-1.5 ml-1">
@@ -160,7 +265,9 @@ const Message = ({ message, isLast, onRegenerate, accentColor }) => {
                             animate={{ boxShadow: [`0 0 4px ${color.primary}`, `0 0 8px ${color.primary}`, `0 0 4px ${color.primary}`] }}
                             transition={{ duration: 2, repeat: Infinity }}
                         />
-                        <span className="text-[10px] text-white/40 uppercase tracking-wider">
+                        <span className={`text-[10px] uppercase tracking-wider ${
+                            isDark ? 'text-white/40' : 'text-zinc-400'
+                        }`}>
                             {message.model}
                         </span>
                     </div>
@@ -170,12 +277,18 @@ const Message = ({ message, isLast, onRegenerate, accentColor }) => {
                 <div
                     className={`px-4 py-3 rounded-2xl backdrop-blur-md transition-all duration-300 ${
                         isSystem
-                            ? 'bg-amber-500/10 border border-amber-500/20'
+                            ? isDark
+                                ? 'bg-amber-500/10 border border-amber-500/20'
+                                : 'bg-amber-50 border border-amber-200'
                             : isUser
-                                ? 'bg-white/[0.08] border border-white/[0.08] rounded-br-md'
-                                : 'bg-white/[0.03] border border-white/[0.05] rounded-bl-md'
+                                ? isDark
+                                    ? 'bg-white/[0.08] border border-white/[0.08] rounded-br-md'
+                                    : 'bg-zinc-100 border border-zinc-200 rounded-br-md'
+                                : isDark
+                                    ? 'bg-white/[0.03] border border-white/[0.05] rounded-bl-md'
+                                    : 'bg-white border border-zinc-200 rounded-bl-md shadow-sm'
                     }`}
-                    style={!isUser && !isSystem ? {
+                    style={!isUser && !isSystem && isDark ? {
                         boxShadow: `0 0 30px ${color.glow}`,
                         borderColor: `${color.primary}15`
                     } : {}}
@@ -183,8 +296,10 @@ const Message = ({ message, isLast, onRegenerate, accentColor }) => {
                     {/* System message header */}
                     {isSystem && (
                         <div className="flex items-center gap-2 mb-2">
-                            <Shield size={14} className="text-amber-400" />
-                            <span className="text-amber-400 text-xs font-medium">Support Resources</span>
+                            <Shield size={14} className={isDark ? 'text-amber-400' : 'text-amber-600'} />
+                            <span className={`text-xs font-medium ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                                Support Resources
+                            </span>
                         </div>
                     )}
 
@@ -193,7 +308,9 @@ const Message = ({ message, isLast, onRegenerate, accentColor }) => {
                         <img
                             src={message.image}
                             alt="Attached"
-                            className="max-w-full max-h-48 rounded-xl mb-3 border border-white/10"
+                            className={`max-w-full max-h-48 rounded-xl mb-3 border ${
+                                isDark ? 'border-white/10' : 'border-zinc-200'
+                            }`}
                         />
                     )}
 
@@ -203,19 +320,27 @@ const Message = ({ message, isLast, onRegenerate, accentColor }) => {
                             <img
                                 src={message.generatedImage}
                                 alt={message.imagePrompt || "Generated"}
-                                className="max-w-full rounded-xl border border-white/10"
+                                className={`max-w-full rounded-xl border ${
+                                    isDark ? 'border-white/10' : 'border-zinc-200'
+                                }`}
                             />
                             <a
                                 href={message.generatedImage}
                                 download
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="absolute bottom-2 right-2 p-2 rounded-lg bg-black/60 backdrop-blur-sm text-white/60 hover:text-white opacity-0 group-hover/img:opacity-100 transition-opacity"
+                                className={`absolute bottom-2 right-2 p-2 rounded-lg backdrop-blur-sm opacity-0 group-hover/img:opacity-100 transition-opacity ${
+                                    isDark
+                                        ? 'bg-black/60 text-white/60 hover:text-white'
+                                        : 'bg-white/80 text-zinc-600 hover:text-zinc-900'
+                                }`}
                             >
                                 <Download size={14} />
                             </a>
                             {message.imagePrompt && (
-                                <p className="text-[10px] text-white/30 mt-2 italic text-center">
+                                <p className={`text-[10px] mt-2 italic text-center ${
+                                    isDark ? 'text-white/30' : 'text-zinc-400'
+                                }`}>
                                     "{message.imagePrompt}"
                                 </p>
                             )}
@@ -224,7 +349,9 @@ const Message = ({ message, isLast, onRegenerate, accentColor }) => {
 
                     {/* Text content */}
                     <p className={`text-[15px] leading-relaxed whitespace-pre-wrap ${
-                        isSystem ? 'text-amber-200/90' : 'text-white/90'
+                        isSystem
+                            ? isDark ? 'text-amber-200/90' : 'text-amber-800'
+                            : isDark ? 'text-white/90' : 'text-zinc-800'
                     }`}>
                         {message.content}
                         {message.isStreaming && (
@@ -239,30 +366,40 @@ const Message = ({ message, isLast, onRegenerate, accentColor }) => {
 
                     {/* Crisis resources */}
                     {message.resources && (
-                        <div className="mt-3 pt-3 border-t border-amber-500/20 space-y-2">
+                        <div className={`mt-3 pt-3 border-t space-y-2 ${
+                            isDark ? 'border-amber-500/20' : 'border-amber-200'
+                        }`}>
                             {message.resources.map((r, i) => (
                                 <div key={i} className="text-xs">
-                                    <span className="text-amber-300">{r.name}:</span>
-                                    <span className="text-amber-200/70 ml-2">{r.contact}</span>
+                                    <span className={isDark ? 'text-amber-300' : 'text-amber-700'}>{r.name}:</span>
+                                    <span className={`ml-2 ${isDark ? 'text-amber-200/70' : 'text-amber-600'}`}>{r.contact}</span>
                                 </div>
                             ))}
                         </div>
                     )}
                 </div>
 
-                {/* Actions - glass style */}
+                {/* Actions */}
                 {!isUser && !isSystem && !message.isStreaming && message.content && (
                     <div className="flex items-center gap-1 mt-1.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         <button
                             onClick={copyText}
-                            className="p-1.5 rounded-lg text-white/25 hover:text-white/50 hover:bg-white/5 transition-all"
+                            className={`p-1.5 rounded-lg transition-all ${
+                                isDark
+                                    ? 'text-white/25 hover:text-white/50 hover:bg-white/5'
+                                    : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100'
+                            }`}
                         >
                             {copied ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
                         </button>
                         {isLast && onRegenerate && (
                             <button
                                 onClick={onRegenerate}
-                                className="p-1.5 rounded-lg text-white/25 hover:text-white/50 hover:bg-white/5 transition-all"
+                                className={`p-1.5 rounded-lg transition-all ${
+                                    isDark
+                                        ? 'text-white/25 hover:text-white/50 hover:bg-white/5'
+                                        : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100'
+                                }`}
                             >
                                 <RefreshCw size={12} />
                             </button>
@@ -278,6 +415,9 @@ const Message = ({ message, isLast, onRegenerate, accentColor }) => {
 // MAIN COMPONENT
 // ============================================
 const MirrorAmbient = () => {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+
     const [hasConsented, setHasConsented] = useState(false);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
@@ -287,21 +427,18 @@ const MirrorAmbient = () => {
     const [voiceEnabled, setVoiceEnabled] = useState(false);
     const [shadowThought, setShadowThought] = useState(null);
     const [currentModel, setCurrentModel] = useState(null);
-    const [showTierMenu, setShowTierMenu] = useState(false);
+    const [turnCount, setTurnCount] = useState(0);
+    const [showFingerprint, setShowFingerprint] = useState(false);
+    const [fingerprintShown, setFingerprintShown] = useState(false);
 
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
     const recognitionRef = useRef(null);
 
-    // Current accent color based on last model used
-    const accentColor = useMemo(() =>
-        getModelColor(currentModel),
-        [currentModel]
-    );
+    const accentColor = useMemo(() => getModelColor(currentModel), [currentModel]);
 
-    // Generate particles
     const particles = useMemo(() =>
-        Array.from({ length: 20 }, (_, i) => ({ id: i, delay: i * 1.5 })),
+        Array.from({ length: 15 }, (_, i) => ({ id: i, delay: i * 2 })),
         []
     );
 
@@ -314,6 +451,14 @@ const MirrorAmbient = () => {
     useEffect(() => {
         if (hasConsented) inputRef.current?.focus();
     }, [hasConsented]);
+
+    // Show fingerprint reveal at turn 5
+    useEffect(() => {
+        if (turnCount === 5 && !fingerprintShown) {
+            setShowFingerprint(true);
+            setFingerprintShown(true);
+        }
+    }, [turnCount, fingerprintShown]);
 
     // Speech recognition
     useEffect(() => {
@@ -362,6 +507,21 @@ const MirrorAmbient = () => {
         }
     }, []);
 
+    const exportConversation = () => {
+        const content = messages.map(m => {
+            const role = m.role === 'user' ? 'You' : 'Mirror';
+            return `**${role}:**\n${m.content}\n`;
+        }).join('\n---\n\n');
+
+        const blob = new Blob([`# Mirror Conversation\n\nExported: ${new Date().toISOString()}\n\n---\n\n${content}`], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `mirror-conversation-${Date.now()}.md`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
     const handleSubmit = async () => {
         const text = input.trim();
         if (!text && !pastedImage) return;
@@ -388,8 +548,8 @@ const MirrorAmbient = () => {
         setMessages(prev => [...prev, userMessage]);
         setInput('');
         setIsLoading(true);
+        setTurnCount(prev => prev + 1);
 
-        // Keep focus on input for continuous typing
         setTimeout(() => inputRef.current?.focus(), 0);
         setShadowThought("Analyzing intent and selecting optimal model...");
 
@@ -505,7 +665,6 @@ const MirrorAmbient = () => {
             setShadowThought(null);
         } finally {
             setIsLoading(false);
-            // Refocus input for continuous conversation
             inputRef.current?.focus();
         }
     };
@@ -538,58 +697,87 @@ const MirrorAmbient = () => {
     }
 
     return (
-        <div className="fixed inset-0 bg-[#08080a] flex flex-col overflow-hidden" style={{ height: '100dvh' }}>
-            {/* Floating particles */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {particles.map(p => (
-                    <Particle key={p.id} delay={p.delay} color={accentColor.primary} />
-                ))}
-            </div>
+        <div
+            className={`fixed inset-0 flex flex-col overflow-hidden transition-colors duration-300 ${
+                isDark ? 'bg-[#08080a]' : 'bg-[#fafafa]'
+            }`}
+            style={{ height: '100dvh' }}
+        >
+            {/* Floating particles (dark mode only) */}
+            {isDark && (
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    {particles.map(p => (
+                        <Particle key={p.id} delay={p.delay} color={accentColor.primary} />
+                    ))}
+                </div>
+            )}
 
             {/* Ambient gradient */}
-            <motion.div
-                className="absolute inset-0 pointer-events-none"
-                animate={{
-                    background: `radial-gradient(ellipse at 50% 0%, ${accentColor.glow}, transparent 60%)`
-                }}
-                transition={{ duration: 1 }}
-            />
+            {isDark && (
+                <motion.div
+                    className="absolute inset-0 pointer-events-none"
+                    animate={{
+                        background: `radial-gradient(ellipse at 50% 0%, ${accentColor.glow}, transparent 60%)`
+                    }}
+                    transition={{ duration: 1 }}
+                />
+            )}
 
             {/* Shadow thoughts overlay */}
             <AnimatePresence>
                 {shadowThought && (
-                    <ShadowThoughts thought={shadowThought} color={accentColor.primary} />
+                    <ShadowThoughts thought={shadowThought} color={accentColor.primary} isDark={isDark} />
                 )}
             </AnimatePresence>
 
-            {/* Header - Glass */}
-            <header className="relative z-20 flex items-center justify-between px-4 py-3 border-b border-white/[0.04] backdrop-blur-sm">
+            {/* Fingerprint reveal modal */}
+            <AnimatePresence>
+                {showFingerprint && (
+                    <FingerprintReveal onDismiss={() => setShowFingerprint(false)} isDark={isDark} />
+                )}
+            </AnimatePresence>
+
+            {/* Header */}
+            <header className={`relative z-20 flex items-center justify-between px-4 py-3 border-b backdrop-blur-sm ${
+                isDark
+                    ? 'border-white/[0.04] bg-[#08080a]/80'
+                    : 'border-zinc-200 bg-white/80'
+            }`}>
                 <div className="flex items-center gap-3">
-                    <a href="/" className="p-2 -ml-2 text-white/40 hover:text-white/60 transition-colors">
+                    <a
+                        href="/"
+                        className={`p-2 -ml-2 transition-colors ${
+                            isDark ? 'text-white/40 hover:text-white/60' : 'text-zinc-400 hover:text-zinc-600'
+                        }`}
+                    >
                         <ArrowLeft size={18} />
                     </a>
                     <div className="flex items-center gap-2">
                         <Logo size={24} theme="amber" />
-                        <span className="text-white/80 font-medium text-sm">Mirror</span>
+                        <span className={`font-medium text-sm ${isDark ? 'text-white/80' : 'text-zinc-800'}`}>
+                            Mirror
+                        </span>
                     </div>
                 </div>
 
-                {/* Model indicator */}
-                {currentModel && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.06]"
-                    >
-                        <motion.div
-                            className="w-1.5 h-1.5 rounded-full"
-                            style={{ background: accentColor.primary }}
-                            animate={{ boxShadow: [`0 0 4px ${accentColor.primary}`, `0 0 8px ${accentColor.primary}`] }}
-                            transition={{ duration: 1.5, repeat: Infinity, repeatType: 'reverse' }}
-                        />
-                        <span className="text-[11px] text-white/50">{currentModel}</span>
-                    </motion.div>
-                )}
+                <div className="flex items-center gap-3">
+                    <TrustBadge isDark={isDark} />
+                    {turnCount > 0 && <TurnCounter count={turnCount} isDark={isDark} />}
+                    <ThemeToggle />
+                    {messages.length > 0 && (
+                        <button
+                            onClick={exportConversation}
+                            className={`p-2 rounded-lg transition-colors ${
+                                isDark
+                                    ? 'text-white/40 hover:text-white/60 hover:bg-white/5'
+                                    : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100'
+                            }`}
+                            title="Export conversation"
+                        >
+                            <FileDown size={18} />
+                        </button>
+                    )}
+                </div>
             </header>
 
             {/* Messages */}
@@ -603,18 +791,26 @@ const MirrorAmbient = () => {
                             className="h-full flex flex-col items-center justify-center text-center pt-20"
                         >
                             <motion.div
-                                animate={{
+                                animate={isDark ? {
                                     boxShadow: [`0 0 40px ${accentColor.glow}`, `0 0 60px ${accentColor.glow}`, `0 0 40px ${accentColor.glow}`]
-                                }}
+                                } : {}}
                                 transition={{ duration: 3, repeat: Infinity }}
-                                className="mb-8 p-6 rounded-full bg-white/[0.02] border border-white/[0.05]"
+                                className={`mb-8 p-6 rounded-full border ${
+                                    isDark
+                                        ? 'bg-white/[0.02] border-white/[0.05]'
+                                        : 'bg-white border-zinc-200 shadow-sm'
+                                }`}
                             >
                                 <Logo size={48} theme="amber" />
                             </motion.div>
-                            <h1 className="text-xl font-light text-white/80 tracking-wide mb-3">
+                            <h1 className={`text-xl font-light tracking-wide mb-3 ${
+                                isDark ? 'text-white/80' : 'text-zinc-800'
+                            }`}>
                                 Active Mirror ⟡
                             </h1>
-                            <p className="text-white/30 text-sm max-w-sm leading-relaxed">
+                            <p className={`text-sm max-w-sm leading-relaxed ${
+                                isDark ? 'text-white/40' : 'text-zinc-500'
+                            }`}>
                                 Sovereign reflection engine. The intelligent router automatically selects the best model for your query.
                             </p>
                             <div className="flex gap-4 mt-8">
@@ -624,7 +820,9 @@ const MirrorAmbient = () => {
                                             className="w-2 h-2 rounded-full"
                                             style={{ background: color.primary, boxShadow: `0 0 6px ${color.primary}` }}
                                         />
-                                        <span className="text-[10px] text-white/30">{name.split(' ')[0]}</span>
+                                        <span className={`text-[10px] ${isDark ? 'text-white/30' : 'text-zinc-400'}`}>
+                                            {name.split(' ')[0]}
+                                        </span>
                                     </div>
                                 ))}
                             </div>
@@ -638,6 +836,7 @@ const MirrorAmbient = () => {
                                     isLast={idx === messages.length - 1 && msg.role === 'assistant'}
                                     onRegenerate={regenerate}
                                     accentColor={accentColor}
+                                    isDark={isDark}
                                 />
                             ))}
                             <div ref={messagesEndRef} />
@@ -646,8 +845,12 @@ const MirrorAmbient = () => {
                 </div>
             </main>
 
-            {/* Input - Glass */}
-            <div className="relative z-20 border-t border-white/[0.04] p-4 pb-20 backdrop-blur-sm bg-[#08080a]/80">
+            {/* Input */}
+            <div className={`relative z-20 border-t p-4 pb-20 backdrop-blur-sm ${
+                isDark
+                    ? 'border-white/[0.04] bg-[#08080a]/80'
+                    : 'border-zinc-200 bg-white/80'
+            }`}>
                 <div className="max-w-2xl mx-auto">
                     {/* Image preview */}
                     <AnimatePresence>
@@ -662,11 +865,17 @@ const MirrorAmbient = () => {
                                     <img
                                         src={pastedImage.dataUrl}
                                         alt="Attached"
-                                        className="h-16 w-16 object-cover rounded-xl border border-white/10"
+                                        className={`h-16 w-16 object-cover rounded-xl border ${
+                                            isDark ? 'border-white/10' : 'border-zinc-200'
+                                        }`}
                                     />
                                     <button
                                         onClick={() => setPastedImage(null)}
-                                        className="absolute -top-1.5 -right-1.5 p-1 rounded-full bg-black border border-white/10 text-white/60 hover:text-white"
+                                        className={`absolute -top-1.5 -right-1.5 p-1 rounded-full border ${
+                                            isDark
+                                                ? 'bg-black border-white/10 text-white/60 hover:text-white'
+                                                : 'bg-white border-zinc-200 text-zinc-400 hover:text-zinc-600'
+                                        }`}
                                     >
                                         <X size={10} />
                                     </button>
@@ -678,7 +887,9 @@ const MirrorAmbient = () => {
                     <div className="flex items-end gap-2">
                         <button
                             onClick={() => document.getElementById('file-input').click()}
-                            className="p-2.5 text-white/30 hover:text-white/50 transition-colors"
+                            className={`p-2.5 transition-colors ${
+                                isDark ? 'text-white/30 hover:text-white/50' : 'text-zinc-400 hover:text-zinc-600'
+                            }`}
                         >
                             <Paperclip size={18} />
                         </button>
@@ -700,7 +911,11 @@ const MirrorAmbient = () => {
 
                         <button
                             onClick={toggleListening}
-                            className={`p-2.5 transition-colors ${isListening ? 'text-red-400' : 'text-white/30 hover:text-white/50'}`}
+                            className={`p-2.5 transition-colors ${
+                                isListening
+                                    ? 'text-red-400'
+                                    : isDark ? 'text-white/30 hover:text-white/50' : 'text-zinc-400 hover:text-zinc-600'
+                            }`}
                         >
                             {isListening ? <MicOff size={18} /> : <Mic size={18} />}
                         </button>
@@ -715,7 +930,11 @@ const MirrorAmbient = () => {
                                 placeholder={isListening ? "Listening..." : "Message Mirror..."}
                                 disabled={isLoading}
                                 rows={1}
-                                className="w-full px-4 py-3 bg-white/[0.03] border border-white/[0.06] rounded-2xl text-white text-[15px] placeholder-white/25 resize-none focus:outline-none focus:border-white/10 focus:bg-white/[0.04] transition-all disabled:opacity-50 backdrop-blur-sm"
+                                className={`w-full px-4 py-3 rounded-2xl text-[15px] resize-none focus:outline-none transition-all disabled:opacity-50 backdrop-blur-sm ${
+                                    isDark
+                                        ? 'bg-white/[0.03] border border-white/[0.06] text-white placeholder-white/25 focus:border-white/10 focus:bg-white/[0.04]'
+                                        : 'bg-white border border-zinc-200 text-zinc-900 placeholder-zinc-400 focus:border-zinc-300 focus:bg-white shadow-sm'
+                                }`}
                                 style={{ minHeight: '48px', maxHeight: '120px' }}
                             />
                         </div>
@@ -723,11 +942,13 @@ const MirrorAmbient = () => {
                         <motion.button
                             onClick={handleSubmit}
                             disabled={(!input.trim() && !pastedImage) || isLoading}
-                            className="p-2.5 rounded-xl text-white/60 disabled:opacity-20 disabled:cursor-not-allowed transition-all"
+                            className={`p-2.5 rounded-xl disabled:opacity-20 disabled:cursor-not-allowed transition-all ${
+                                isDark ? 'text-white/60' : 'text-zinc-600'
+                            }`}
                             style={{
                                 background: (input.trim() || pastedImage) && !isLoading
-                                    ? `${accentColor.primary}30`
-                                    : 'rgba(255,255,255,0.05)'
+                                    ? isDark ? `${accentColor.primary}30` : `${accentColor.primary}20`
+                                    : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
                             }}
                             whileTap={{ scale: 0.95 }}
                         >
@@ -745,16 +966,18 @@ const MirrorAmbient = () => {
 
                         <button
                             onClick={() => setVoiceEnabled(!voiceEnabled)}
-                            className={`p-2.5 transition-colors ${voiceEnabled ? 'text-violet-400' : 'text-white/30 hover:text-white/50'}`}
+                            className={`p-2.5 transition-colors ${
+                                voiceEnabled
+                                    ? 'text-violet-400'
+                                    : isDark ? 'text-white/30 hover:text-white/50' : 'text-zinc-400 hover:text-zinc-600'
+                            }`}
                         >
                             {voiceEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
                         </button>
                     </div>
-
                 </div>
             </div>
 
-            {/* Bottom Navigation */}
             <BottomNav />
         </div>
     );

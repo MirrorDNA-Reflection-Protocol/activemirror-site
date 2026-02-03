@@ -12,6 +12,8 @@ import { ArrowRight, ArrowLeft, Brain, Sparkles, Share2, Home, Users } from 'luc
 import SpotlightCard from '../components/SpotlightCard';
 import MirrorLogo from '../components/MirrorLogo';
 import BottomNav from '../components/BottomNav';
+import ThemeToggle from '../components/ThemeToggle';
+import { useTheme } from '../contexts/ThemeContext';
 
 const BRAIN_API = 'https://brain.activemirror.ai';
 

@@ -16,6 +16,8 @@ import {
 import SpotlightCard from '../components/SpotlightCard';
 import MirrorLogo from '../components/MirrorLogo';
 import BottomNav from '../components/BottomNav';
+import ThemeToggle from '../components/ThemeToggle';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Feature cards
 const FEATURES = [

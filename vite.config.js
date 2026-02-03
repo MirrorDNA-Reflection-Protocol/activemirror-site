@@ -5,6 +5,7 @@ import { copyFileSync, mkdirSync, existsSync } from 'fs'
 
 // All React routes that need SPA fallbacks
 const SPA_ROUTES = [
+    'start',
     'mirror',
     'preview',
     'confessions',
