@@ -4,8 +4,9 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, Brain, MessageSquare, Database, BarChart3, CheckCircle, Users, Lock, ArrowRight, Github } from 'lucide-react';
+import { Shield, Brain, MessageSquare, Database, BarChart3, CheckCircle, Users, Lock, ArrowRight, Github, Layers } from 'lucide-react';
 import PageLayout from '../../components/PageLayout';
+import EcosystemVisual from '../../components/EcosystemVisual';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const products = [
@@ -140,7 +141,25 @@ export default function ProductsIndex() {
                             Read the Docs
                             <ArrowRight size={18} />
                         </Link>
+                        <Link
+                            to="/ecosystem"
+                            className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${
+                                isDark
+                                    ? 'bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 hover:bg-cyan-500/20'
+                                    : 'bg-cyan-50 border border-cyan-200 text-cyan-700 hover:bg-cyan-100'
+                            }`}
+                        >
+                            <Layers size={18} />
+                            View Architecture
+                        </Link>
                     </div>
+                </div>
+            </section>
+
+            {/* Ecosystem Visual */}
+            <section className="py-8 px-4 sm:px-6">
+                <div className="max-w-5xl mx-auto">
+                    <EcosystemVisual compact />
                 </div>
             </section>
 

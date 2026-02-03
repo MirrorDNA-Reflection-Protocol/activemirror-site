@@ -27,6 +27,7 @@ const SPA_ROUTES = [
     'terms',
     'privacy',
     'trust',
+    'ecosystem',
     // Products
     'products',
     'products/mirrorgate',
