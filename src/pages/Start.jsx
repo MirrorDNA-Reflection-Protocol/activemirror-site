@@ -135,7 +135,7 @@ export default function Start() {
 
     // Fetch questions
     useEffect(() => {
-        fetch(`${BRAIN_API}/scan/questions`)
+        fetch(`${BRAIN_API}/api/quiz/questions`)
             .then(r => r.json())
             .then(data => setQuestions(data.questions || []))
             .catch(() => setError('Could not load scan. Try again.'));
@@ -164,11 +164,17 @@ export default function Start() {
     const submitScan = async (finalAnswers) => {
         setPhase(PHASES.GENERATING);
 
+        // Transform answers to match API format
+        const formattedAnswers = finalAnswers.map(a => ({
+            question_id: a.question_id,
+            answer_index: a.selected_option
+        }));
+
         try {
-            const response = await fetch(`${BRAIN_API}/scan/submit`, {
+            const response = await fetch(`${BRAIN_API}/api/quiz/submit`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ answers: finalAnswers }),
+                body: JSON.stringify({ answers: formattedAnswers }),
             });
 
             const data = await response.json();
