@@ -63,11 +63,11 @@ const ConsentGate = ({ onConsent }) => {
         }));
     };
 
-    const handleEnter = () => {
+    const handleEnter = async () => {
         if (allAcknowledged && proofGenerated) {
-            // Store proof using shared consent utility
+            // Store proof using shared consent utility (also logs to backend)
             const acks = Object.keys(acknowledgments).filter(k => acknowledgments[k]);
-            setSessionConsent(proofHash, acks);
+            await setSessionConsent(proofHash, acks);
             onConsent();
         }
     };

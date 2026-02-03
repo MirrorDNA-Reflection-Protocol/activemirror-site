@@ -26,9 +26,9 @@ const LightConsentBanner = ({ feature, onConsent, isDark = true }) => {
         }
     }, [feature, onConsent]);
 
-    const handleAcknowledge = () => {
+    const handleAcknowledge = async () => {
         setAcknowledged(true);
-        setQuickConsent(feature);
+        await setQuickConsent(feature);
         setTimeout(() => {
             setVisible(false);
             onConsent?.();
