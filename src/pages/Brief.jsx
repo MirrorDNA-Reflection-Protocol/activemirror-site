@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import SpotlightCard from '../components/SpotlightCard';
 import MirrorLogo from '../components/MirrorLogo';
+import BottomNav from '../components/BottomNav';
 
 const BRIEF_API = 'https://brief.activemirror.ai';
 
@@ -124,7 +125,7 @@ export default function Brief() {
             </nav>
 
             {/* Main Content */}
-            <main className="relative z-10 min-h-screen pt-20 pb-8 px-4">
+            <main className="relative z-10 min-h-screen pt-20 pb-24 px-4">
                 <div className="max-w-3xl mx-auto">
                     {/* Header */}
                     <motion.div
@@ -227,6 +228,7 @@ export default function Brief() {
                     </motion.div>
                 </div>
             </main>
+            <BottomNav />
         </div>
     );
 }

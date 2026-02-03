@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Brain, Sparkles, Share2, Home, Users } from 'lucide-react';
 import SpotlightCard from '../components/SpotlightCard';
 import MirrorLogo from '../components/MirrorLogo';
+import BottomNav from '../components/BottomNav';
 
 const BRAIN_API = 'https://brain.activemirror.ai';
 
@@ -131,7 +132,7 @@ export default function Scan() {
             </nav>
 
             {/* Main Content */}
-            <main className="relative z-10 min-h-screen flex items-center justify-center p-4 pt-20 pb-8">
+            <main className="relative z-10 min-h-screen flex items-center justify-center p-4 pt-20 pb-24">
                 <AnimatePresence mode="wait">
                     {phase === 'intro' && (
                         <IntroScreen
@@ -164,6 +165,7 @@ export default function Scan() {
                     )}
                 </AnimatePresence>
             </main>
+            <BottomNav />
         </div>
     );
 }

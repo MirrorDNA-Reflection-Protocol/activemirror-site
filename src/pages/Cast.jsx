@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import SpotlightCard from '../components/SpotlightCard';
 import MirrorLogo from '../components/MirrorLogo';
+import BottomNav from '../components/BottomNav';
 
 // Feature cards
 const FEATURES = [
@@ -104,7 +105,7 @@ export default function Cast() {
             </nav>
 
             {/* Main Content */}
-            <main className="relative z-10 min-h-screen pt-20 pb-8 px-4">
+            <main className="relative z-10 min-h-screen pt-20 pb-24 px-4">
                 <div className="max-w-4xl mx-auto">
                     {/* Hero */}
                     <motion.div
@@ -371,6 +372,7 @@ export default function Cast() {
                     </motion.div>
                 </div>
             </main>
+            <BottomNav />
         </div>
     );
 }

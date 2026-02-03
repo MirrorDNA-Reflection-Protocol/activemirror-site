@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import SpotlightCard from '../components/SpotlightCard';
 import MirrorLogo from '../components/MirrorLogo';
+import BottomNav from '../components/BottomNav';
 
 const BRAIN_API = 'https://brain.activemirror.ai';
 
@@ -256,7 +257,7 @@ export default function Twins() {
             </nav>
 
             {/* Main Content */}
-            <main className="relative z-10 min-h-screen flex flex-col items-center p-4 pt-20 pb-8">
+            <main className="relative z-10 min-h-screen flex flex-col items-center p-4 pt-20 pb-24">
                 {/* Mode Selector */}
                 <motion.div
                     initial={{ opacity: 0, y: -10 }}
@@ -349,6 +350,7 @@ export default function Twins() {
                     )}
                 </AnimatePresence>
             </main>
+            <BottomNav />
         </div>
     );
 }
