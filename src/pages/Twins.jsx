@@ -309,8 +309,10 @@ export default function Twins() {
                         if (!line.trim()) continue;
                         try {
                             const data = JSON.parse(line);
-                            if (data.text) {
-                                fullResponse += data.text;
+                            // Proxy returns {status: "chunk", content: "..."}
+                            const text = data.content || data.text;
+                            if (text) {
+                                fullResponse += text;
                                 setMessages(prev => {
                                     const updated = [...prev];
                                     const lastIdx = updated.length - 1;
