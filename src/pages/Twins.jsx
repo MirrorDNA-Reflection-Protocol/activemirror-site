@@ -297,22 +297,25 @@ export default function Twins() {
 
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
+                let buffer = '';
 
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
 
-                    const chunk = decoder.decode(value, { stream: true });
-                    const lines = chunk.split('\n');
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+
+                    // Keep last potentially incomplete line in buffer
+                    buffer = lines.pop() || '';
 
                     for (const line of lines) {
                         if (!line.trim()) continue;
                         try {
                             const data = JSON.parse(line);
-                            // Proxy returns {status: "chunk", content: "..."}
-                            const text = data.content || data.text;
-                            if (text) {
-                                fullResponse += text;
+                            // Only process chunk messages with content
+                            if (data.status === 'chunk' && data.content) {
+                                fullResponse += data.content;
                                 setMessages(prev => {
                                     const updated = [...prev];
                                     const lastIdx = updated.length - 1;
@@ -326,21 +329,21 @@ export default function Twins() {
                                 });
                             }
                         } catch (e) {
-                            if (line.trim()) {
-                                fullResponse += line;
-                                setMessages(prev => {
-                                    const updated = [...prev];
-                                    const lastIdx = updated.length - 1;
-                                    if (updated[lastIdx]?.isStreaming) {
-                                        updated[lastIdx] = {
-                                            ...updated[lastIdx],
-                                            content: fullResponse
-                                        };
-                                    }
-                                    return updated;
-                                });
-                            }
+                            // JSON parse failed - ignore non-JSON lines
+                            console.debug('Stream parse skip:', line.slice(0, 50));
                         }
+                    }
+                }
+
+                // Process any remaining buffer
+                if (buffer.trim()) {
+                    try {
+                        const data = JSON.parse(buffer);
+                        if (data.status === 'chunk' && data.content) {
+                            fullResponse += data.content;
+                        }
+                    } catch (e) {
+                        // Ignore
                     }
                 }
 
