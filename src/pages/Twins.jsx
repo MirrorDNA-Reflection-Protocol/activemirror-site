@@ -633,13 +633,19 @@ export default function Twins() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                     >
-                        {/* Backdrop */}
+                        {/* Backdrop - fully opaque */}
                         <div
                             className={`absolute inset-0 ${isDark ? 'bg-[#08080a]' : 'bg-zinc-50'}`}
-                            style={isDark ? {
-                                background: `radial-gradient(ellipse at top, ${twin.color}10, #08080a 60%)`
-                            } : {}}
                         />
+                        {/* Subtle gradient overlay */}
+                        {isDark && (
+                            <div
+                                className="absolute inset-0 pointer-events-none"
+                                style={{
+                                    background: `radial-gradient(ellipse at top, ${twin.color}15, transparent 50%)`
+                                }}
+                            />
+                        )}
 
                         {/* Chat Header */}
                         <header className={`relative z-10 flex items-center justify-between px-4 py-3 border-b ${
