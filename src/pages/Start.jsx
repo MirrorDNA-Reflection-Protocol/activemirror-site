@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
     ArrowRight, Brain, Sparkles, Shield, Compass, Layers, Eye,
-    Share2, ChevronRight, Zap, Lock, Download
+    Share2, ChevronRight, Zap, Lock, Download, Fingerprint
 } from 'lucide-react';
 import MirrorSig from '../components/MirrorSig';
 import ShareCard from '../components/ShareCard';
@@ -117,6 +117,7 @@ const PHASES = {
     GENERATING: 'generating',
     REVEAL: 'reveal',
     TWIN: 'twin',
+    SEED: 'seed',
     COMPLETE: 'complete',
 };
 
@@ -271,6 +272,20 @@ export default function Start() {
                             key="twin"
                             twinInfo={twinInfo}
                             archetypeInfo={archetypeInfo}
+                            onContinue={() => setPhase(PHASES.SEED)}
+                            isDark={isDark}
+                        />
+                    )}
+
+                    {/* SEED - Mirror Seed Generation */}
+                    {phase === PHASES.SEED && (
+                        <SeedPhase
+                            key="seed"
+                            archetype={archetype}
+                            archetypeInfo={archetypeInfo}
+                            twinInfo={twinInfo}
+                            mirrorId={mirrorId}
+                            result={result}
                             onContinue={() => setPhase(PHASES.COMPLETE)}
                             isDark={isDark}
                         />
@@ -687,6 +702,221 @@ function TwinPhase({ twinInfo, archetypeInfo, onContinue, isDark }) {
                 whileTap={{ scale: 0.98 }}
             >
                 Continue <ChevronRight size={20} className="inline" />
+            </motion.button>
+        </motion.div>
+    );
+}
+
+function SeedPhase({ archetype, archetypeInfo, twinInfo, mirrorId, result, onContinue, isDark }) {
+    const [seedGenerated, setSeedGenerated] = useState(false);
+    const [downloading, setDownloading] = useState(false);
+
+    // Generate Mirror Seed data
+    const generateSeed = () => {
+        const seed = {
+            version: '1.0',
+            protocol: 'MirrorDNA',
+            created: new Date().toISOString(),
+            identity: {
+                mirrorId: mirrorId,
+                archetype: archetype,
+                archetypeName: archetypeInfo.name,
+                twin: archetypeInfo.twin,
+                twinName: twinInfo.name,
+            },
+            cognition: {
+                strengths: archetypeInfo.strengths,
+                blindSpots: archetypeInfo.blindSpots,
+                scores: result?.scores || {},
+            },
+            consent: {
+                timestamp: new Date().toISOString(),
+                version: '1.0',
+                source: 'activemirror.ai/start',
+            },
+            portability: {
+                format: 'ami',
+                compatible: ['ChatGPT', 'Claude', 'Gemini', 'Local LLMs'],
+                instructions: 'Share this file with any AI to establish your identity context.',
+            }
+        };
+        return seed;
+    };
+
+    const handleDownload = () => {
+        setDownloading(true);
+        const seed = generateSeed();
+        const blob = new Blob([JSON.stringify(seed, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `mirror-seed-${archetype}-${mirrorId.slice(2, 10)}.ami`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        setSeedGenerated(true);
+        setDownloading(false);
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -30 }}
+            className="w-full max-w-lg text-center"
+        >
+            {/* Seed Icon */}
+            <motion.div
+                className={`w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center ${
+                    seedGenerated
+                        ? 'bg-gradient-to-br from-emerald-500 to-green-500'
+                        : `bg-gradient-to-br ${archetypeInfo.gradient}`
+                }`}
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', stiffness: 200 }}
+            >
+                {seedGenerated ? (
+                    <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 300 }}
+                    >
+                        <Lock size={40} className="text-white" />
+                    </motion.div>
+                ) : (
+                    <Fingerprint size={40} className="text-white" />
+                )}
+            </motion.div>
+
+            <motion.p
+                className={`text-sm mb-2 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+            >
+                {seedGenerated ? 'Identity Secured' : 'Create Your Portable Identity'}
+            </motion.p>
+
+            <motion.h1
+                className={`text-3xl sm:text-4xl font-bold mb-4 ${isDark ? 'text-white' : 'text-zinc-900'}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+            >
+                {seedGenerated ? 'Mirror Seed Downloaded' : 'Your Mirror Seed'}
+            </motion.h1>
+
+            <motion.p
+                className={`mb-6 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+            >
+                {seedGenerated
+                    ? 'Your identity file is yours. Share it with any AI to carry your context.'
+                    : 'A portable identity file that works across any AI platform. Owned by you, not them.'}
+            </motion.p>
+
+            {/* Seed Contents Preview */}
+            <motion.div
+                className={`p-4 rounded-xl mb-6 text-left ${
+                    isDark ? 'bg-white/5 border border-white/10' : 'bg-zinc-100 border border-zinc-200'
+                }`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+            >
+                <p className={`text-xs font-mono mb-2 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                    MIRROR SEED CONTAINS:
+                </p>
+                <ul className={`text-sm space-y-1 ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
+                    <li className="flex items-center gap-2">
+                        <span className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${archetypeInfo.gradient}`} />
+                        Archetype: {archetypeInfo.name}
+                    </li>
+                    <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                        AI Twin: {twinInfo.name}
+                    </li>
+                    <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        Cognitive Profile (strengths + blind spots)
+                    </li>
+                    <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
+                        Consent Proof
+                    </li>
+                </ul>
+            </motion.div>
+
+            {/* Download Button */}
+            {!seedGenerated ? (
+                <motion.button
+                    onClick={handleDownload}
+                    disabled={downloading}
+                    className={`w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2 mb-4 ${
+                        downloading
+                            ? 'bg-zinc-500 cursor-wait'
+                            : `bg-gradient-to-r ${archetypeInfo.gradient} hover:opacity-90`
+                    } text-white transition-all`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6 }}
+                    whileHover={{ scale: downloading ? 1 : 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                >
+                    <Download size={20} />
+                    {downloading ? 'Generating...' : 'Download Mirror Seed (.ami)'}
+                </motion.button>
+            ) : (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className={`p-4 rounded-xl mb-4 ${
+                        isDark ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-emerald-50 border border-emerald-200'
+                    }`}
+                >
+                    <p className={`text-sm ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                        ✓ Seed saved to your downloads
+                    </p>
+                </motion.div>
+            )}
+
+            {/* Advanced Options Link */}
+            <motion.a
+                href="https://id.activemirror.ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`inline-flex items-center gap-2 text-sm mb-6 ${
+                    isDark ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'
+                }`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.7 }}
+            >
+                <Fingerprint size={16} />
+                Advanced identity options at id.activemirror.ai
+                <ArrowRight size={14} />
+            </motion.a>
+
+            {/* Continue Button */}
+            <motion.button
+                onClick={onContinue}
+                className={`w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2 ${
+                    isDark
+                        ? 'bg-white/10 hover:bg-white/15 text-white'
+                        : 'bg-zinc-200 hover:bg-zinc-300 text-zinc-900'
+                }`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+            >
+                {seedGenerated ? 'Continue' : 'Skip for Now'}
+                <ChevronRight size={20} />
             </motion.button>
         </motion.div>
     );

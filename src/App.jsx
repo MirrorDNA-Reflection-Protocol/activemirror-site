@@ -26,6 +26,7 @@ import Brief from './pages/Brief';
 import Cast from './pages/Cast';
 import Start from './pages/Start';
 import Ecosystem from './pages/Ecosystem';
+import Skills from './pages/Skills';
 
 // Products
 import ProductsIndex from './pages/products/index';
@@ -85,6 +86,7 @@ export default function App() {
                     <Route path="/brief" element={<Brief />} />
                     <Route path="/cast" element={<Cast />} />
                     <Route path="/ecosystem" element={<Ecosystem />} />
+                    <Route path="/skills" element={<Skills />} />
 
                     {/* Products */}
                     <Route path="/products" element={<ProductsIndex />} />
