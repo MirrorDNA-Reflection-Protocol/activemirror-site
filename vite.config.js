@@ -29,6 +29,7 @@ const SPA_ROUTES = [
     'trust',
     'ecosystem',
     'skills',
+    'features',
     // Products
     'products',
     'products/mirrorgate',
@@ -51,6 +52,7 @@ const SPA_ROUTES = [
     'docs',
     'docs/architecture',
     'docs/self-hosting',
+    'docs/api',
     // About
     'about',
     'about/roadmap',

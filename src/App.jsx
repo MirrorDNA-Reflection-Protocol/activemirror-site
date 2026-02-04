@@ -27,6 +27,7 @@ import Cast from './pages/Cast';
 import Start from './pages/Start';
 import Ecosystem from './pages/Ecosystem';
 import Skills from './pages/Skills';
+import Features from './pages/Features';
 
 // Products
 import ProductsIndex from './pages/products/index';
@@ -52,6 +53,7 @@ import Education from './pages/use-cases/Education';
 import DocsIndex from './pages/docs/index';
 import Architecture from './pages/docs/Architecture';
 import SelfHosting from './pages/docs/SelfHosting';
+import APIDoc from './pages/docs/API';
 
 // About
 import AboutIndex from './pages/about/index';
@@ -87,6 +89,7 @@ export default function App() {
                     <Route path="/cast" element={<Cast />} />
                     <Route path="/ecosystem" element={<Ecosystem />} />
                     <Route path="/skills" element={<Skills />} />
+                    <Route path="/features" element={<Features />} />
 
                     {/* Products */}
                     <Route path="/products" element={<ProductsIndex />} />
@@ -112,6 +115,7 @@ export default function App() {
                     <Route path="/docs" element={<DocsIndex />} />
                     <Route path="/docs/architecture" element={<Architecture />} />
                     <Route path="/docs/self-hosting" element={<SelfHosting />} />
+                    <Route path="/docs/api" element={<APIDoc />} />
 
                     {/* About */}
                     <Route path="/about" element={<AboutIndex />} />

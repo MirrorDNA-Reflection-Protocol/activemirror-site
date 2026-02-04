@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import { ChevronDown, Menu, X, Shield, Brain, MessageSquare, Database,
          BarChart3, CheckCircle, Users, Lock, User, Building2, Landmark,
          Heart, GraduationCap, FileText, BookOpen, Server, Info, Map, Mail,
-         Layers, Terminal } from 'lucide-react';
+         Layers, Terminal, Sparkles, Code } from 'lucide-react';
 import MirrorLogo from './MirrorLogo';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -35,8 +35,10 @@ const docs = [
     { name: 'Getting Started', href: '/docs', icon: FileText, desc: 'Quick start guide' },
     { name: 'Architecture', href: '/docs/architecture', icon: BookOpen, desc: 'System overview' },
     { name: 'Self-Hosting', href: '/docs/self-hosting', icon: Server, desc: 'Run your own' },
+    { name: 'API Reference', href: '/docs/api', icon: Code, desc: 'Developer docs' },
     { name: 'Ecosystem', href: '/ecosystem', icon: Layers, desc: 'Visual architecture' },
     { name: 'Skills', href: '/skills', icon: Terminal, desc: 'Command system' },
+    { name: 'Features', href: '/features', icon: Sparkles, desc: 'All experiences' },
 ];
 
 const about = [
