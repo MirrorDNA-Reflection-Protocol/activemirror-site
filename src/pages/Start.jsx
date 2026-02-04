@@ -464,7 +464,7 @@ function ScanPhase({ question, questionNum, total, onAnswer, isDark }) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
             >
-                {question.text}
+                {question.question || question.text}
             </motion.h2>
 
             {/* Options */}
