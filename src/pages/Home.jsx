@@ -52,11 +52,12 @@ export default function Home() {
                 <div className={`flex flex-wrap justify-center gap-x-4 sm:gap-x-6 gap-y-1 py-2 sm:py-3 px-2 sm:px-4 text-[10px] sm:text-xs ${
                     isDark ? 'text-zinc-400' : 'text-zinc-500'
                 }`}>
-                    <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/capabilities/" className="hover:text-purple-500 transition-colors" target="_blank" rel="noopener noreferrer">Capabilities</a>
-                    <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/architecture/" className="hover:text-purple-500 transition-colors" target="_blank" rel="noopener noreferrer">Architecture</a>
-                    <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/ecosystem/" className="hover:text-purple-500 transition-colors" target="_blank" rel="noopener noreferrer">Ecosystem</a>
-                    <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="hover:text-purple-500 transition-colors" target="_blank" rel="noopener noreferrer">Open Source</a>
-                    <a href="mailto:enterprise@activemirror.ai" className="hover:text-purple-500 transition-colors">Enterprise</a>
+                    <Link to="/features" className="hover:text-purple-500 transition-colors">Features</Link>
+                    <Link to="/products" className="hover:text-purple-500 transition-colors">Products</Link>
+                    <Link to="/ecosystem" className="hover:text-purple-500 transition-colors">Ecosystem</Link>
+                    <Link to="/skills" className="hover:text-purple-500 transition-colors">Skills</Link>
+                    <Link to="/docs" className="hover:text-purple-500 transition-colors">Docs</Link>
+                    <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="hover:text-purple-500 transition-colors" target="_blank" rel="noopener noreferrer">GitHub</a>
                 </div>
             </nav>
 
@@ -135,7 +136,7 @@ export default function Home() {
                         </Link>
 
                         {/* 3. ECOSYSTEM */}
-                        <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/ecosystem/" target="_blank" className={`w-full py-3 sm:py-4 rounded-xl border font-medium transition-all flex items-center justify-center gap-2 sm:gap-3 group text-sm sm:text-base ${
+                        <Link to="/ecosystem" className={`w-full py-3 sm:py-4 rounded-xl border font-medium transition-all flex items-center justify-center gap-2 sm:gap-3 group text-sm sm:text-base ${
                             isDark
                                 ? 'border-cyan-500/20 bg-cyan-500/5 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/30 shadow-[0_0_20px_rgba(34,211,238,0.1)] hover:shadow-[0_0_30px_rgba(34,211,238,0.2)]'
                                 : 'border-cyan-300 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 hover:border-cyan-400'
@@ -143,7 +144,7 @@ export default function Home() {
                             <Globe size={16} />
                             Explore Ecosystem
                             <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                        </a>
+                        </Link>
 
                         {/* 4. INTELLIGENCE SUITE - 2x2 Grid */}
                         <div className="grid grid-cols-2 gap-2 sm:gap-3 mt-1 sm:mt-2">
@@ -185,19 +186,22 @@ export default function Home() {
                             </Link>
                         </div>
 
-                        {/* 5. EXTERNAL LINKS */}
-                        <div className={`flex justify-center gap-4 sm:gap-6 mt-3 sm:mt-4 text-[10px] sm:text-xs ${
+                        {/* 5. EXPLORE LINKS */}
+                        <div className={`flex flex-wrap justify-center gap-3 sm:gap-5 mt-3 sm:mt-4 text-[10px] sm:text-xs ${
                             isDark ? 'text-zinc-400' : 'text-zinc-500'
                         }`}>
-                            <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="hover:text-purple-500 transition-colors flex items-center gap-1">
-                                <Github size={12} /> Protocol
-                            </a>
-                            <a href="https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/story/" target="_blank" rel="noopener noreferrer" className="hover:text-purple-500 transition-colors flex items-center gap-1">
-                                <Book size={12} /> Story
-                            </a>
-                            <Link to="/research" className="hover:text-purple-500 transition-colors flex items-center gap-1">
-                                <ArrowRight size={12} /> Research
+                            <Link to="/features" className="hover:text-purple-500 transition-colors flex items-center gap-1">
+                                <Sparkles size={12} /> Features
                             </Link>
+                            <Link to="/products" className="hover:text-purple-500 transition-colors flex items-center gap-1">
+                                <Zap size={12} /> Products
+                            </Link>
+                            <Link to="/skills" className="hover:text-purple-500 transition-colors flex items-center gap-1">
+                                <ArrowRight size={12} /> Skills
+                            </Link>
+                            <a href="https://github.com/MirrorDNA-Reflection-Protocol" className="hover:text-purple-500 transition-colors flex items-center gap-1" target="_blank" rel="noopener noreferrer">
+                                <Github size={12} /> GitHub
+                            </a>
                         </div>
                     </div>
 
