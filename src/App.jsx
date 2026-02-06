@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import ScrollToTop from './components/ScrollToTop';
 
@@ -115,6 +115,7 @@ export default function App() {
 
                     {/* Docs */}
                     <Route path="/docs" element={<DocsIndex />} />
+                    <Route path="/docs/getting-started" element={<Navigate to="/docs" replace />} />
                     <Route path="/docs/architecture" element={<Architecture />} />
                     <Route path="/docs/self-hosting" element={<SelfHosting />} />
                     <Route path="/docs/api" element={<APIDoc />} />
