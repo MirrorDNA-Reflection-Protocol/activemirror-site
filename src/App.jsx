@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
+import ScrollToTop from './components/ScrollToTop';
 
 // Main pages
 import HomePage from './pages/HomePage';
@@ -64,6 +65,7 @@ export default function App() {
     return (
         <ThemeProvider>
             <BrowserRouter>
+                <ScrollToTop />
                 <Routes>
                     {/* Main pages */}
                     <Route path="/" element={<HomePage />} />

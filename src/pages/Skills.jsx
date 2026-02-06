@@ -1,6 +1,6 @@
 /**
  * ⟡ Skills & Capabilities — Complete MirrorDNA Command Reference
- * 40 skills, 46 daemons, 95+ repos, 9 plugins
+ * 40 skills, 46 daemons, 100+ repos, 9 plugins
  */
 
 import React, { useState } from 'react';
@@ -237,7 +237,7 @@ export default function Skills() {
 
                     <p className={`text-lg max-w-3xl mb-8 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
                         The complete MirrorDNA command system. 40 slash commands, 46 automated daemons,
-                        95+ GitHub repositories, and 9 skill plugins — all working together.
+                        100+ GitHub repositories, and 9 skill plugins — all working together.
                     </p>
 
                     {/* Stats */}
@@ -245,7 +245,7 @@ export default function Skills() {
                         {[
                             { value: '40', label: 'Slash Commands', icon: Terminal },
                             { value: '46', label: 'Daemons', icon: Server },
-                            { value: '95+', label: 'Repositories', icon: Github },
+                            { value: '100+', label: 'Repositories', icon: Github },
                             { value: '9', label: 'Plugins', icon: Layers },
                         ].map((stat) => (
                             <div
@@ -271,7 +271,7 @@ export default function Skills() {
                             { id: 'skills', label: 'Slash Commands', count: 40 },
                             { id: 'daemons', label: 'Daemons', count: 46 },
                             { id: 'automation', label: 'Automation', count: null },
-                            { id: 'repos', label: 'Repositories', count: '95+' },
+                            { id: 'repos', label: 'Repositories', count: '100+' },
                         ].map((tab) => (
                             <button
                                 key={tab.id}
@@ -544,7 +544,7 @@ export default function Skills() {
                                         <Github size={24} className={isDark ? 'text-white' : 'text-zinc-900'} />
                                         <div>
                                             <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-                                                95+ Open Source Repositories
+                                                100+ Open Source Repositories
                                             </h3>
                                             <p className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
                                                 github.com/MirrorDNA-Reflection-Protocol

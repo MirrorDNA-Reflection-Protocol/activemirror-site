@@ -39,8 +39,8 @@ const liveEndpoints = [
 ];
 
 const stats = [
-    { label: 'Open Source Repos', value: '95+' },
-    { label: 'Protocol Version', value: 'v15.3' },
+    { label: 'Open Source Repos', value: '100+' },
+    { label: 'Products', value: '8' },
     { label: 'Architectural Layers', value: '9' },
     { label: 'Live Endpoints', value: '4' }
 ];

@@ -16,7 +16,7 @@ const guides = [
 
 const quickStart = [
     { step: '1', title: 'Try the Demo', desc: 'Experience Active Mirror at activemirror.ai/start', link: '/start' },
-    { step: '2', title: 'Explore the Ecosystem', desc: 'Browse 95 repos at github.com/MirrorDNA-Reflection-Protocol', link: 'https://github.com/MirrorDNA-Reflection-Protocol' },
+    { step: '2', title: 'Explore the Ecosystem', desc: 'Browse 100+ repos at github.com/MirrorDNA-Reflection-Protocol', link: 'https://github.com/MirrorDNA-Reflection-Protocol' },
     { step: '3', title: 'Read the Spec', desc: 'Understand MirrorDNA protocol in the docs', link: 'https://mirrordna-reflection-protocol.github.io/MirrorDNA-Docs/' },
 ];
 

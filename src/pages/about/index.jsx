@@ -34,16 +34,19 @@ export default function AboutPage() {
                 <div className="max-w-4xl mx-auto">
                     <div className={`prose prose-lg ${isDark ? 'prose-invert' : ''} max-w-none`}>
                         <p className={isDark ? 'text-zinc-300' : 'text-zinc-700'}>
-                            Every conversation you've ever had with ChatGPT, Claude, or any other AI ends the same way: the moment you close the window, it forgets you existed. The next time you return, you're a stranger.
+                            Yes, ChatGPT has memory now. Claude has Projects. Every AI company is racing to add "personalization." But look closer: they're bolting memory onto prediction engines. Saving facts about you in a database. It's a notes app pretending to know you.
                         </p>
                         <p className={isDark ? 'text-zinc-300' : 'text-zinc-700'}>
-                            This isn't a bug. It's the architecture. Modern AI is built on <em>prediction</em> — stateless systems trained to generate the next token with no memory, no continuity, no identity.
+                            There's a difference between an AI that <em>remembers things about you</em> and an AI that <em>thinks like you</em>. Between stored context and cognitive continuity. Between a profile and an identity.
                         </p>
                         <p className={isDark ? 'text-zinc-300' : 'text-zinc-700'}>
-                            In early 2025, we began building something different: <strong>AI systems that don't just predict — they reflect.</strong> Systems that remember who they are. Systems that remember who <em>you</em> are. Systems that maintain continuity across sessions, devices, and contexts.
+                            In early 2025, we started building something different. By 2026, it's running in production: <strong>AI systems that don't just predict — they reflect.</strong> Systems that remember who they are. Systems that remember who <em>you</em> are. Systems that maintain continuity across sessions, devices, and contexts.
                         </p>
                         <p className={isDark ? 'text-zinc-300' : 'text-zinc-700'}>
-                            That work became <strong>MirrorDNA</strong> and <strong>Active MirrorOS</strong> — the first production implementations of what we call <strong>Reflective AI</strong>: identity-bound, continuity-governed intelligence built to anchor itself to stable truth rather than drift into statistical noise.
+                            <strong>MirrorDNA</strong> and <strong>Active MirrorOS</strong> are now live — the first production implementations of what we call <strong>Reflective AI</strong>: identity-bound, continuity-governed intelligence built to anchor itself to stable truth rather than drift into statistical noise.
+                        </p>
+                        <p className={isDark ? 'text-zinc-300' : 'text-zinc-700'}>
+                            Active Mirror is a solo-built, sovereign AI stack. No VC. No board. No compromise. Just one person building the future of human-AI collaboration from first principles.
                         </p>
                     </div>
                 </div>
@@ -54,7 +57,7 @@ export default function AboutPage() {
                     <h2 className={`text-2xl font-bold mb-8 ${isDark ? 'text-white' : 'text-zinc-900'}`}>By the Numbers</h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                         <div className="text-center">
-                            <div className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>95</div>
+                            <div className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>100+</div>
                             <div className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>Repositories</div>
                         </div>
                         <div className="text-center">
@@ -62,12 +65,12 @@ export default function AboutPage() {
                             <div className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>Architecture Layers</div>
                         </div>
                         <div className="text-center">
-                            <div className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>10</div>
-                            <div className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>Months Built</div>
+                            <div className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>12+</div>
+                            <div className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>Months in Production</div>
                         </div>
                         <div className="text-center">
-                            <div className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>v15.3</div>
-                            <div className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>Master Citation</div>
+                            <div className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>1</div>
+                            <div className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>Builder</div>
                         </div>
                     </div>
                 </div>

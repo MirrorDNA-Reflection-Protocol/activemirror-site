@@ -249,7 +249,7 @@ export default function API() {
                             isDark={isDark}
                         />
                         <p className={`mt-4 text-sm ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                            Contact <a href="mailto:enterprise@activemirror.ai" className="text-purple-400 hover:underline">enterprise@activemirror.ai</a> for API keys.
+                            Contact <a href="mailto:paul@activemirror.ai" className="text-purple-400 hover:underline">paul@activemirror.ai</a> for API keys.
                         </p>
                     </div>
                 </div>

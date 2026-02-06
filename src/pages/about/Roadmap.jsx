@@ -10,27 +10,29 @@ import { useTheme } from '../../contexts/ThemeContext';
 
 const timeline = [
     {
-        period: 'Now (Live)',
+        period: 'Shipped (Live)',
         status: 'done',
         items: [
             'BrainScan cognitive assessment',
             'AI Twins (Guardian, Scout, Synthesizer, Mirror)',
             'Mirror reflection engine',
             'Consent system with proof logging',
-            'MirrorDNA protocol v15.3',
-            '95 open source repositories',
+            'MirrorDNA protocol',
+            '100+ open source repositories',
             'MirrorGate policy enforcement',
             'MirrorRecall session memory',
+            'activemirror.ai public launch',
+            'Local inference via Ollama',
         ],
     },
     {
-        period: 'Q1 2026',
+        period: 'Q1 2026 (Now)',
         status: 'current',
         items: [
             'MirrorGate public beta',
-            'LingOS Pro launch',
-            'Enterprise pilot program',
-            'Mobile apps (iOS, Android)',
+            'Enterprise pilot discussions',
+            'API documentation & SDKs',
+            'Performance hardening',
         ],
     },
     {
@@ -39,18 +41,18 @@ const timeline = [
         items: [
             'Self-hosting packages',
             'Team collaboration features',
-            'API v2 with webhooks',
-            'Plugin marketplace',
+            'Mobile-optimized experience',
+            'Webhook integrations',
         ],
     },
     {
-        period: 'Q3 2026',
+        period: 'H2 2026',
         status: 'planned',
         items: [
             'On-premise enterprise deployment',
-            'Government certification',
-            'Healthcare partnership program',
             'Multi-language support',
+            'Plugin/extension system',
+            'Advanced analytics dashboard',
         ],
     },
     {
@@ -58,7 +60,6 @@ const timeline = [
         status: 'vision',
         items: [
             'Federated MirrorDNA network',
-            'Hardware integration (local inference)',
             'Research partnerships',
             'Open governance model',
         ],

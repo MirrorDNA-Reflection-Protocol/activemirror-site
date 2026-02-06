@@ -95,7 +95,7 @@ export default function PageLayout({ children, showNav = true }) {
                             <span className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>Active Mirror</span>
                         </div>
                         <p className={`text-sm ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                            © 2025-2026 N1 Intelligence. MirrorDNA Protocol v15.3.
+                            © 2025-2026 N1 Intelligence.
                         </p>
                     </div>
                 </div>

@@ -118,7 +118,7 @@ export default function ProductsIndex() {
                     <p className={`text-lg sm:text-xl max-w-2xl mx-auto mb-8 ${
                         isDark ? 'text-zinc-400' : 'text-zinc-600'
                     }`}>
-                        95 repositories. 9 architectural layers. One unified protocol for reflective, observable, sovereign AI.
+                        100+ repositories. 9 architectural layers. One unified protocol for reflective, observable, sovereign AI.
                     </p>
                     <div className="flex flex-wrap justify-center gap-4">
                         <a
@@ -215,7 +215,7 @@ export default function ProductsIndex() {
                         isDark ? 'bg-white/5 border border-white/10' : 'bg-white border border-zinc-200'
                     }`}>
                         <div className="text-center">
-                            <div className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>95</div>
+                            <div className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>100+</div>
                             <div className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>Repositories</div>
                         </div>
                         <div className="text-center">
@@ -223,12 +223,12 @@ export default function ProductsIndex() {
                             <div className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>Architecture Layers</div>
                         </div>
                         <div className="text-center">
-                            <div className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>v15.3</div>
-                            <div className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>Master Citation</div>
+                            <div className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>8</div>
+                            <div className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>Products</div>
                         </div>
                         <div className="text-center">
-                            <div className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>10</div>
-                            <div className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>Months Built</div>
+                            <div className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>1</div>
+                            <div className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>Builder</div>
                         </div>
                     </div>
                 </div>

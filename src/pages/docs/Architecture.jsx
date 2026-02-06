@@ -41,7 +41,7 @@ export default function ArchitecturePage() {
                         Architecture Overview
                     </h1>
                     <p className={`text-lg max-w-2xl mb-8 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
-                        MirrorDNA is built on 9 architectural layers across 95 repositories. Here's how they fit together.
+                        MirrorDNA is built on 9 architectural layers across 100+ repositories. Here's how they fit together.
                     </p>
                 </div>
             </section>

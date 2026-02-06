@@ -8,10 +8,10 @@ import PageLayout from '../../components/PageLayout';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const contacts = [
-    { type: 'Enterprise Sales', email: 'enterprise@activemirror.ai', icon: Building2, desc: 'For organizations deploying at scale' },
-    { type: 'Partnerships', email: 'partners@activemirror.ai', icon: Users, desc: 'Integration and strategic partnerships' },
-    { type: 'Research & Academia', email: 'research@activemirror.ai', icon: GraduationCap, desc: 'Research collaborations and academic use' },
-    { type: 'General Inquiries', email: 'hello@activemirror.ai', icon: Mail, desc: 'Everything else' },
+    { type: 'Enterprise Sales', email: 'paul@activemirror.ai', icon: Building2, desc: 'For organizations deploying at scale' },
+    { type: 'Partnerships', email: 'paul@activemirror.ai', icon: Users, desc: 'Integration and strategic partnerships' },
+    { type: 'Research & Academia', email: 'paul@activemirror.ai', icon: GraduationCap, desc: 'Research collaborations and academic use' },
+    { type: 'General Inquiries', email: 'paul@activemirror.ai', icon: Mail, desc: 'Everything else' },
 ];
 
 export default function ContactPage() {
