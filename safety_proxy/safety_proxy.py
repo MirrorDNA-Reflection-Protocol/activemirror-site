@@ -689,8 +689,51 @@ def check_rate(ip: str, request_id: str) -> Tuple[bool, str]:
 
 GROQ_VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"  # Groq's vision model (Llama 4 Scout)
 
+async def _try_model_call(model_config, api_key, messages, max_tokens, temperature, has_image, request_id):
+    """
+    Attempt a single model call. Returns (full_response, None) on success,
+    or (None, error_string) on failure.
+    """
+    try:
+        async with httpx.AsyncClient(timeout=60.0 if has_image else 30.0) as c:
+            async with c.stream(
+                "POST",
+                f"{model_config.api_base}/chat/completions",
+                headers={"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"},
+                json={
+                    "model": model_config.model_id,
+                    "messages": messages,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens,
+                    "stream": True
+                }
+            ) as response:
+                if response.status_code != 200:
+                    error_body = await response.aread()
+                    return None, f"{model_config.provider} {response.status_code}: {error_body.decode()[:200]}"
+                
+                full_response = ""
+                async for line in response.aiter_lines():
+                    if line.startswith("data: "):
+                        data = line[6:]
+                        if data == "[DONE]":
+                            break
+                        try:
+                            chunk = json.loads(data)
+                            delta = chunk["choices"][0]["delta"].get("content", "")
+                            if delta:
+                                full_response += delta
+                        except:
+                            continue
+                return full_response, None
+    except httpx.TimeoutException:
+        return None, f"{model_config.provider} timeout"
+    except Exception as e:
+        return None, f"{model_config.provider} error: {str(e)[:100]}"
+
+
 async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_msg: str = None, routing=None, model_decision=None):
-    """Stream with full Epistemic Judge + MirrorShield + Two-Lane + Smart Model Routing."""
+    """Stream with full Epistemic Judge + MirrorShield + Two-Lane + Smart Model Routing + Cascade Fallback."""
 
     # Get model config from smart router decision
     model_config = model_decision.model if model_decision else MODELS[ModelTier.FAST]
@@ -702,8 +745,14 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
         api_key = os.getenv("GROQ_API_KEY")
 
     if not api_key:
-        yield json.dumps({"status": "error", "content": "No API Key"}) + "\n"
-        return
+        # No primary key at all — try the entire fallback chain
+        fallbacks = smart_router.get_fallback_chain(model_config)
+        if fallbacks:
+            model_config, api_key = fallbacks[0]
+            logger.warning(f"Primary API key missing, cascading to {model_config.name}")
+        else:
+            yield json.dumps({"status": "error", "content": "No API keys configured."}) + "\n"
+            return
 
     # Send routing info to frontend FIRST
     if model_decision:
@@ -740,49 +789,58 @@ async def stream_with_judge(messages: list, ip: str, request_id: str, boundary_m
     if superego_limit < 800:
         record_event("Superego", "REGRESSION", f"tokens:{max_tokens}", "ANALYZING", {"request_id": request_id})
 
-    full_response = ""
-    has_image = model_config.tier == ModelTier.VISION
-
-    record_event(model_config.provider, "REQUEST", f"model:{model_config.name}", "ANALYZING", {
-        "request_id": request_id,
-        "max_tokens": max_tokens,
-        "tier": model_config.tier.value
-    })
-
     try:
-        async with httpx.AsyncClient(timeout=60.0 if has_image else 30.0) as c:
-            async with c.stream(
-                "POST",
-                f"{model_config.api_base}/chat/completions",
-                headers={"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"},
-                json={
-                    "model": model_config.model_id,
-                    "messages": messages,
-                    "temperature": routing.temperature if routing else model_config.temperature_default,
-                    "max_tokens": max_tokens,
-                    "stream": True
-                }
-            ) as response:
-                if response.status_code != 200:
-                    error_body = await response.aread()
-                    logger.error(f"{model_config.provider} API error: {response.status_code} - {error_body.decode()}")
-                    record_event(model_config.provider, "ERROR", f"status:{response.status_code}", "ERROR", {"body": error_body.decode()[:200]})
-                    yield json.dumps({"status": "error", "content": "Mirror clouded."}) + "\n"
-                    return
+        has_image = model_config.tier == ModelTier.VISION
+        temperature = routing.temperature if routing else model_config.temperature_default
 
-                async for line in response.aiter_lines():
-                    if line.startswith("data: "):
-                        data = line[6:]
-                        if data == "[DONE]":
-                            break
-                        try:
-                            chunk = json.loads(data)
-                            delta = chunk["choices"][0]["delta"].get("content", "")
-                            if delta:
-                                full_response += delta
-                        except:
-                            continue
-        
+        record_event(model_config.provider, "REQUEST", f"model:{model_config.name}", "ANALYZING", {
+            "request_id": request_id,
+            "max_tokens": max_tokens,
+            "tier": model_config.tier.value
+        })
+
+        # Try primary model
+        full_response, error = await _try_model_call(
+            model_config, api_key, messages, max_tokens, temperature, has_image, request_id
+        )
+
+        # CASCADE: If primary fails, try fallbacks
+        if error:
+            logger.warning(f"Primary model failed ({model_config.name}): {error}")
+            record_event(model_config.provider, "ERROR", error[:30], "ERROR", {"request_id": request_id})
+
+            fallbacks = smart_router.get_fallback_chain(model_config)
+            for fb_model, fb_key in fallbacks:
+                logger.info(f"Cascading to {fb_model.name}...")
+                record_event("Cascade", "FALLBACK", f"→ {fb_model.name}", "ANALYZING", {"request_id": request_id})
+
+                # Notify frontend of model switch
+                yield json.dumps({
+                    "status": "routing",
+                    "model_info": {
+                        "model": fb_model.name,
+                        "provider": fb_model.provider,
+                        "tier": fb_model.tier.value,
+                        "reasoning": f"Fallback from {model_config.name}",
+                        "atmosphere": model_decision.atmosphere if model_decision else "neutral",
+                        "query_type": model_decision.query_type if model_decision else "general"
+                    }
+                }) + "\n"
+
+                full_response, fb_error = await _try_model_call(
+                    fb_model, fb_key, messages, max_tokens, temperature, has_image, request_id
+                )
+                if full_response is not None:
+                    model_config = fb_model  # update for logging
+                    record_event(fb_model.provider, "RESPONSE", f"fallback_ok len:{len(full_response)}", "ALLOW", {"request_id": request_id})
+                    break
+                else:
+                    logger.warning(f"Fallback {fb_model.name} also failed: {fb_error}")
+
+        if full_response is None:
+            yield json.dumps({"status": "error", "content": "⟡ All mirrors clouded. Try again shortly."}) + "\n"
+            return
+
         record_event(model_config.provider, "RESPONSE", f"len:{len(full_response)}", "ALLOW", {"request_id": request_id, "model": model_config.name})
         
         # ═══════════════════════════════════════════════════════════════
@@ -1655,56 +1713,91 @@ async def mirror_prism(request: Request, body: PrismRequest):
     messages.append({"role": "user", "content": body.message})
 
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {GROQ_API_KEY}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": GROQ_MODEL,
-                    "messages": messages,
-                    "temperature": 0.7,
-                    "max_tokens": 500
-                }
-            )
+        # Smart route instead of hardcoded Groq
+        model_decision = smart_router.route(body.message)
+        model_config = model_decision.model
+        api_key = smart_router.get_api_key(model_config)
 
-            if response.status_code != 200:
-                logger.error(f"Groq error: {response.status_code} {response.text}")
-                return {"status": "error", "prism": {
-                    "said": "⟡ The mirror ripples...",
-                    "unsaid": "What if there's signal in the static?",
-                    "futureYou": "I remember technical difficulties. They passed."
-                }}
+        if not api_key:
+            model_config = MODELS[ModelTier.FAST]
+            api_key = os.getenv("GROQ_API_KEY")
 
-            data = response.json()
-            content = data["choices"][0]["message"]["content"]
+        # Build the models-to-try list: primary + fallbacks
+        attempts = [(model_config, api_key)] if api_key else []
+        attempts.extend(smart_router.get_fallback_chain(model_config))
 
-            # Parse the JSON response
+        if not attempts:
+            return {"status": "error", "prism": {
+                "said": "⟡ No inference available right now.",
+                "unsaid": "What if this pause is telling you something?",
+                "futureYou": "I remember the systems coming back. They always did."
+            }}
+
+        data = None
+        last_error = None
+        for try_model, try_key in attempts:
             try:
-                # Extract JSON from response
-                json_match = re.search(r'\{[\s\S]*\}', content)
-                if json_match:
-                    prism = json.loads(json_match.group())
-                else:
-                    raise ValueError("No JSON found")
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    response = await client.post(
+                        f"{try_model.api_base}/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {try_key}",
+                            "Content-Type": "application/json"
+                        },
+                        json={
+                            "model": try_model.model_id,
+                            "messages": messages,
+                            "temperature": 0.7,
+                            "max_tokens": 500
+                        }
+                    )
+                    if response.status_code == 200:
+                        data = response.json()
+                        logger.info(f"Prism served by {try_model.name}")
+                        record_event("Prism", "MODEL", try_model.name, "ALLOW", {"request_id": rid})
+                        break
+                    else:
+                        last_error = f"{try_model.name}: {response.status_code}"
+                        logger.warning(f"Prism cascade: {last_error}")
+            except Exception as e:
+                last_error = f"{try_model.name}: {str(e)[:80]}"
+                logger.warning(f"Prism cascade: {last_error}")
+                continue
 
-                # Validate required fields
-                if not all(k in prism for k in ["said", "unsaid", "futureYou"]):
-                    raise ValueError("Missing prism fields")
+        if not data:
+            logger.error(f"Prism: all models failed. Last: {last_error}")
+            return {"status": "error", "prism": {
+                "said": "⟡ The mirror ripples...",
+                "unsaid": "What if there's signal in the static?",
+                "futureYou": "I remember technical difficulties. They passed."
+            }}
 
-                record_event("Prism", "SUCCESS", f"lens:{body.lens}", "REFRACTED", {"request_id": rid})
-                return {"status": "ok", "prism": prism}
+        content = data["choices"][0]["message"]["content"]
 
-            except (json.JSONDecodeError, ValueError) as e:
-                logger.warning(f"Prism parse error: {e}. Content: {content[:200]}")
-                # Fallback: construct prism from plain text
-                return {"status": "ok", "prism": {
-                    "said": f"⟡ {content[:150]}... What's at the heart of this for you?",
-                    "unsaid": "What if there's something beneath this you haven't named yet?",
-                    "futureYou": "I remember wrestling with things like this. The answer was closer than I thought."
-                }}
+        # Parse the JSON response
+        try:
+            # Extract JSON from response
+            json_match = re.search(r'\{[\s\S]*\}', content)
+            if json_match:
+                prism = json.loads(json_match.group())
+            else:
+                raise ValueError("No JSON found")
+
+            # Validate required fields
+            if not all(k in prism for k in ["said", "unsaid", "futureYou"]):
+                raise ValueError("Missing prism fields")
+
+            record_event("Prism", "SUCCESS", f"lens:{body.lens}", "REFRACTED", {"request_id": rid})
+            return {"status": "ok", "prism": prism}
+
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.warning(f"Prism parse error: {e}. Content: {content[:200]}")
+            # Fallback: construct prism from plain text
+            return {"status": "ok", "prism": {
+                "said": f"⟡ {content[:150]}... What's at the heart of this for you?",
+                "unsaid": "What if there's something beneath this you haven't named yet?",
+                "futureYou": "I remember wrestling with things like this. The answer was closer than I thought."
+            }}
 
     except Exception as e:
         logger.error(f"Prism error: {e}")

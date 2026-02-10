@@ -105,6 +105,18 @@ PATTERNS = {
         # Brainstorming patterns
         r'\b(what if|imagine|suppose|possibilities|alternatives)\b',
         r'\b(inspire|motivation|perspective|viewpoint)\b',
+        # Reflection patterns — Creative tier handles introspection best
+        r'\bi (feel|felt|am feeling)\b',
+        r'\bi\'?m (stuck|lost|confused|overwhelmed|anxious|scared|afraid|lonely|sad|angry|frustrated)\b',
+        r'\bwhy do i (keep|always|never)\b',
+        r'\bwhat\'?s wrong with me\b',
+        r'\bi don\'?t know (what|how|why|if)\b',
+        r'\bhelp me understand (myself|why i|what i)\b',
+        r'\bi (need|want) to (change|grow|heal|let go|move on)\b',
+        r'\b(self-worth|self-doubt|imposter|shame|guilt|grief|loss)\b',
+        r'\b(relationship|intimacy|connection|loneliness|isolation)\b',
+        r'\b(reflect|reflecting|introspect|journal)\b',
+        r'\b(meaning|purpose|identity|who am i)\b',
     ],
     ModelTier.IMAGE_GEN: [
         # Direct image generation requests
@@ -267,10 +279,31 @@ class SmartRouter:
         provider_keys = {
             "Groq": "GROQ_API_KEY",
             "DeepSeek": "DEEPSEEK_API_KEY",
-            "Mistral": "MISTRAL_API_KEY"
+            "Mistral": "MISTRAL_API_KEY",
+            "OpenAI": "OPENAI_API_KEY",
+            "Google": "GOOGLE_API_KEY",
         }
         key_name = provider_keys.get(model.provider)
         return os.getenv(key_name) if key_name else None
+
+    def get_fallback_chain(self, failed_model: ModelConfig) -> list:
+        """
+        Return ordered list of (ModelConfig, api_key) fallbacks,
+        skipping the model that just failed.
+        Cascade: Groq → DeepSeek → Mistral → (stop).
+        """
+        chain_order = [ModelTier.FAST, ModelTier.REASONING, ModelTier.CREATIVE]
+        results = []
+        for tier in chain_order:
+            candidate = MODELS.get(tier)
+            if not candidate:
+                continue
+            if candidate.model_id == failed_model.model_id:
+                continue  # skip the one that just failed
+            key = self.get_api_key(candidate)
+            if key:
+                results.append((candidate, key))
+        return results
 
 
 # Singleton instance
