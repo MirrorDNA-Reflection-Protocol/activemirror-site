@@ -7,9 +7,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY safety_proxy.py .
-COPY mirror_shield_public.py .
-COPY storage.py .
+COPY *.py .
 
 # Copy transparency docs (bundled for Docker — no vault dependency)
 COPY transparency/ ./transparency/

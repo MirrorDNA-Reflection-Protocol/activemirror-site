@@ -1676,6 +1676,9 @@ class PrismRequest(BaseModel):
     history: List[dict] = []
     lens: str = "linear"
 
+    def get_history(self):
+        return self.history
+
 
 @app.post("/mirror-prism")
 async def mirror_prism(request: Request, body: PrismRequest):
