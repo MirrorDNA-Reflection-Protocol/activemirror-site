@@ -29,6 +29,7 @@ from storage import create_storage
 from two_lane_router import TwoLaneRouter, SchemaValidator, ResponseType, IntentCategory
 from rewrite_engine import RewriteEngine, RewriteResult
 from smart_router import smart_router, ModelTier, MODELS
+from web_search import get_search_context
 
 load_dotenv()
 
@@ -966,6 +967,7 @@ class MirrorRequest(BaseModel):
     mode: Optional[str] = Field(default=None, description="User preference: 'mirror_only' or 'tool_only'")
     image: Optional[str] = Field(default=None, description="Base64-encoded image data URL")
     rag_context: Optional[str] = Field(default=None, description="RAG context from document or vault")
+    systemPrompt: Optional[str] = Field(default=None, description="Custom system prompt (used by Twins)")
 
     def get_history(self):
         """Return history, falling back to messages for backwards compat."""
@@ -1613,14 +1615,24 @@ async def mirror(request: Request, body: MirrorRequest):
             media_type="application/x-ndjson"
         )
 
-    # Build context with rap sheet awareness + Two-Lane suffix
-    base_prompt = get_system_prompt()
+    # Build context — use custom system prompt if provided (Twins), else default
+    if body.systemPrompt:
+        base_prompt = body.systemPrompt
+    else:
+        base_prompt = get_system_prompt()
+        base_prompt += system_suffix
 
     # Add RAG context if provided
     if body.rag_context:
         base_prompt += f"\n\n[Context from user's documents]:\n{body.rag_context[:2000]}"
 
-    messages = [{"role": "system", "content": base_prompt + system_suffix}]
+    # Web search grounding — inject current info when query needs it
+    search_context = get_search_context(body.message)
+    if search_context:
+        base_prompt += f"\n\n{search_context}"
+        record_event("WebSearch", "GROUNDING", f"query:{body.message[:40]}", "ANALYZING", {"request_id": rid})
+
+    messages = [{"role": "system", "content": base_prompt}]
     for msg in body.get_history()[-20:]:
         messages.append({"role": msg.role, "content": msg.content})
 

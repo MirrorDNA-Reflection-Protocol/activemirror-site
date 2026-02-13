@@ -15,6 +15,7 @@ import ThemeToggle from '../components/ThemeToggle';
 import ConsentGate from '../components/ConsentGate';
 import { useTheme } from '../contexts/ThemeContext';
 import { hasSessionConsent } from '../utils/consent';
+import { getArchetype } from '../lib/mirror-state';
 
 const PROXY_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8082'
@@ -143,12 +144,14 @@ Format: 2-4 sentences. Always start with ◎. Often end with a reflective questi
 // Archetype to Twin mapping for recommendations
 const getRecommendedTwin = () => {
     try {
-        const brainScanResult = localStorage.getItem('brainScan_archetype') ||
-                               localStorage.getItem('cognitiveArchetype') ||
-                               localStorage.getItem('mirrorArchetype');
-        if (!brainScanResult) return null;
+        const info = getArchetype();
+        if (!info) return null;
 
-        const archetype = brainScanResult.toLowerCase();
+        // Direct match from BrainScan twin assignment
+        if (info.twin && TWINS[info.twin]) return info.twin;
+
+        const archetype = (info.archetype || '').toLowerCase();
+        if (!archetype) return null;
 
         for (const [key, twin] of Object.entries(TWINS)) {
             if (twin.archetypes.some(a => archetype.includes(a))) {
