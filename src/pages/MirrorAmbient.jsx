@@ -21,6 +21,7 @@ import ConsentGate from '../components/ConsentGate';
 import BottomNav from '../components/BottomNav';
 import ThemeToggle from '../components/ThemeToggle';
 import { useTheme } from '../contexts/ThemeContext';
+import { getState, hasBrainScan, hasIntake } from '../lib/mirror-state';
 
 const PROXY_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8082'
@@ -419,6 +420,7 @@ const MirrorAmbient = () => {
     const isDark = theme === 'dark';
 
     const [hasConsented, setHasConsented] = useState(false);
+    const [mirrorState] = useState(() => getState());
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -757,6 +759,14 @@ const MirrorAmbient = () => {
                         <span className={`font-medium text-sm ${isDark ? 'text-white/80' : 'text-zinc-800'}`}>
                             Mirror
                         </span>
+                        {mirrorState.blueprint && (
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                                isDark ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                    : 'bg-blue-50 text-blue-600 border border-blue-200'
+                            }`}>
+                                {mirrorState.blueprint.modeLabel || mirrorState.blueprint.mode}
+                            </span>
+                        )}
                     </div>
                 </div>
 
@@ -806,12 +816,18 @@ const MirrorAmbient = () => {
                             <h1 className={`text-xl font-light tracking-wide mb-3 ${
                                 isDark ? 'text-white/80' : 'text-zinc-800'
                             }`}>
-                                Active Mirror ⟡
+                                {mirrorState.archetypeName
+                                    ? `${mirrorState.archetypeName}'s Mirror ⟡`
+                                    : 'Active Mirror ⟡'}
                             </h1>
                             <p className={`text-sm max-w-sm leading-relaxed ${
                                 isDark ? 'text-white/60' : 'text-zinc-500'
                             }`}>
-                                Sovereign reflection engine. The intelligent router automatically selects the best model for your query.
+                                {mirrorState.blueprint
+                                    ? `${mirrorState.blueprint.modeLabel || 'Sovereign'} mode active. ${mirrorState.twinName ? `Your ${mirrorState.twinName} Twin is routing.` : 'Intelligent routing enabled.'}`
+                                    : mirrorState.archetype
+                                        ? `Welcome back. Your ${mirrorState.twinName || 'AI'} Twin is ready.`
+                                        : 'Sovereign reflection engine. The intelligent router automatically selects the best model for your query.'}
                             </p>
                             <div className="flex gap-4 mt-8">
                                 {Object.entries(MODEL_COLORS).slice(0, 4).map(([name, color]) => (

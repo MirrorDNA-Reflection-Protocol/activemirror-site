@@ -26,6 +26,7 @@ import Twins from './pages/Twins';
 import Brief from './pages/Brief';
 import Cast from './pages/Cast';
 import Start from './pages/Start';
+import Setup from './pages/Setup';
 import Ecosystem from './pages/Ecosystem';
 import Skills from './pages/Skills';
 import Features from './pages/Features';
@@ -71,6 +72,7 @@ export default function App() {
                     <Route path="/" element={<HomePage />} />
                     <Route path="/proof" element={<ProofPage />} />
                     <Route path="/start" element={<Start />} />
+                    <Route path="/setup" element={<Setup />} />
                     <Route path="/preview" element={<Landing />} />
                     <Route path="/legal" element={<Legal />} />
                     <Route path="/terms" element={<Terms />} />

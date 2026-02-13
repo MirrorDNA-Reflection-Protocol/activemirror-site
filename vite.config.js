@@ -7,6 +7,7 @@ import { copyFileSync, mkdirSync, existsSync } from 'fs'
 const SPA_ROUTES = [
     // Main pages
     'start',
+    'setup',
     'mirror',
     'preview',
     'confessions',

@@ -16,6 +16,7 @@ import ThemeToggle from '../components/ThemeToggle';
 import BottomNav from '../components/BottomNav';
 import LightConsentBanner from '../components/LightConsentBanner';
 import { useTheme } from '../contexts/ThemeContext';
+import { saveBrainScan } from '../lib/mirror-state';
 
 const BRAIN_API = 'https://brain.activemirror.ai';
 
@@ -301,6 +302,7 @@ export default function Start() {
                             twinInfo={twinInfo}
                             onShare={() => setShowShareCard(true)}
                             onMirror={() => navigate('/mirror')}
+                            onSetup={() => navigate('/setup')}
                             onTwins={() => navigate('/twins')}
                             isDark={isDark}
                         />
@@ -922,7 +924,20 @@ function SeedPhase({ archetype, archetypeInfo, twinInfo, mirrorId, result, onCon
     );
 }
 
-function CompletePhase({ archetype, archetypeInfo, mirrorId, twinInfo, onShare, onMirror, onTwins, isDark }) {
+function CompletePhase({ archetype, archetypeInfo, mirrorId, twinInfo, onShare, onMirror, onSetup, onTwins, isDark }) {
+    // Persist onboarding data via shared state layer
+    useEffect(() => {
+        saveBrainScan({
+            archetype,
+            archetypeName: archetypeInfo.name,
+            twin: archetypeInfo.twin,
+            twinName: twinInfo.name,
+            strengths: archetypeInfo.strengths,
+            blindSpots: archetypeInfo.blindSpots,
+            mirrorId,
+        });
+    }, [archetype, archetypeInfo, mirrorId, twinInfo]);
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -966,33 +981,45 @@ function CompletePhase({ archetype, archetypeInfo, mirrorId, twinInfo, onShare, 
                 transition={{ delay: 0.4 }}
             >
                 <button
-                    onClick={onMirror}
+                    onClick={onSetup}
                     className={`w-full py-4 rounded-xl font-semibold bg-gradient-to-r ${archetypeInfo.gradient} text-white flex items-center justify-center gap-2`}
                 >
-                    <Sparkles size={20} /> Start Reflecting
+                    <Shield size={20} /> Configure Your Mirror <ChevronRight size={18} className="inline" />
                 </button>
 
                 <button
-                    onClick={onTwins}
+                    onClick={onMirror}
                     className={`w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2 ${
                         isDark
                             ? 'bg-white/10 hover:bg-white/15 text-white'
                             : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900'
                     }`}
                 >
-                    <twinInfo.icon size={20} /> Meet All Twins
+                    <Sparkles size={20} /> Start Reflecting
                 </button>
 
-                <button
-                    onClick={onShare}
-                    className={`w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2 border ${
-                        isDark
-                            ? 'border-white/10 hover:bg-white/5 text-white'
-                            : 'border-zinc-200 hover:bg-zinc-50 text-zinc-900'
-                    }`}
-                >
-                    <Share2 size={20} /> Share Your MirrorSig
-                </button>
+                <div className="grid grid-cols-2 gap-3">
+                    <button
+                        onClick={onTwins}
+                        className={`py-3 rounded-xl font-medium flex items-center justify-center gap-2 text-sm border ${
+                            isDark
+                                ? 'border-white/10 hover:bg-white/5 text-white'
+                                : 'border-zinc-200 hover:bg-zinc-50 text-zinc-900'
+                        }`}
+                    >
+                        <twinInfo.icon size={16} /> Meet Twins
+                    </button>
+                    <button
+                        onClick={onShare}
+                        className={`py-3 rounded-xl font-medium flex items-center justify-center gap-2 text-sm border ${
+                            isDark
+                                ? 'border-white/10 hover:bg-white/5 text-white'
+                                : 'border-zinc-200 hover:bg-zinc-50 text-zinc-900'
+                        }`}
+                    >
+                        <Share2 size={16} /> Share
+                    </button>
+                </div>
             </motion.div>
 
             {/* MirrorSig */}
