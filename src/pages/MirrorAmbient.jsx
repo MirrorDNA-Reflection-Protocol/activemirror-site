@@ -251,9 +251,9 @@ const Message = ({ message, isLast, onRegenerate, accentColor, isDark }) => {
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
             className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4 group`}
         >
             <div className={`max-w-[85%] relative`}>
@@ -900,56 +900,41 @@ const MirrorAmbient = () => {
                         )}
                     </AnimatePresence>
 
+                    <input
+                        type="file"
+                        id="file-input"
+                        hidden
+                        accept="image/*"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file?.type.startsWith('image/')) {
+                                const reader = new FileReader();
+                                reader.onload = (ev) => setPastedImage({ dataUrl: ev.target.result });
+                                reader.readAsDataURL(file);
+                            }
+                            e.target.value = '';
+                        }}
+                    />
+
                     <div className="flex items-end gap-2">
-                        <button
-                            onClick={() => document.getElementById('file-input').click()}
-                            className={`p-2.5 transition-colors ${
-                                isDark ? 'text-white/60 hover:text-white/70' : 'text-zinc-400 hover:text-zinc-600'
-                            }`}
-                        >
-                            <Paperclip size={18} />
-                        </button>
-                        <input
-                            type="file"
-                            id="file-input"
-                            hidden
-                            accept="image/*"
-                            onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file?.type.startsWith('image/')) {
-                                    const reader = new FileReader();
-                                    reader.onload = (ev) => setPastedImage({ dataUrl: ev.target.result });
-                                    reader.readAsDataURL(file);
-                                }
-                                e.target.value = '';
-                            }}
-                        />
-
-                        <button
-                            onClick={toggleListening}
-                            className={`p-2.5 transition-colors ${
-                                isListening
-                                    ? 'text-red-400'
-                                    : isDark ? 'text-white/60 hover:text-white/70' : 'text-zinc-400 hover:text-zinc-600'
-                            }`}
-                        >
-                            {isListening ? <MicOff size={18} /> : <Mic size={18} />}
-                        </button>
-
                         <div className="flex-1 relative">
                             <textarea
                                 ref={inputRef}
                                 value={input}
-                                onChange={(e) => setInput(e.target.value)}
+                                onChange={(e) => {
+                                    setInput(e.target.value);
+                                    e.target.style.height = 'auto';
+                                    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                                }}
                                 onKeyDown={handleKeyDown}
                                 onPaste={handlePaste}
-                                placeholder={isListening ? "Listening..." : "Message Mirror..."}
+                                placeholder="Message Mirror..."
                                 disabled={isLoading}
                                 rows={1}
-                                className={`w-full px-4 py-3 rounded-2xl text-[15px] resize-none focus:outline-none transition-all disabled:opacity-50 backdrop-blur-sm ${
+                                className={`w-full px-4 py-3 rounded-2xl text-[15px] resize-none focus:outline-none transition-all disabled:opacity-50 ${
                                     isDark
-                                        ? 'bg-white/[0.03] border border-white/[0.06] text-white placeholder-white/25 focus:border-white/10 focus:bg-white/[0.04]'
-                                        : 'bg-white border border-zinc-200 text-zinc-900 placeholder-zinc-400 focus:border-zinc-300 focus:bg-white shadow-sm'
+                                        ? 'bg-white/[0.03] border border-white/[0.06] text-white placeholder-white/25 focus:border-white/10'
+                                        : 'bg-white border border-zinc-200 text-zinc-900 placeholder-zinc-400 focus:border-zinc-300 shadow-sm'
                                 }`}
                                 style={{ minHeight: '48px', maxHeight: '120px' }}
                             />
@@ -958,13 +943,13 @@ const MirrorAmbient = () => {
                         <motion.button
                             onClick={handleSubmit}
                             disabled={(!input.trim() && !pastedImage) || isLoading}
-                            className={`p-2.5 rounded-xl disabled:opacity-20 disabled:cursor-not-allowed transition-all ${
+                            className={`p-3 rounded-xl disabled:opacity-20 transition-all ${
                                 isDark ? 'text-white/60' : 'text-zinc-600'
                             }`}
                             style={{
                                 background: (input.trim() || pastedImage) && !isLoading
-                                    ? isDark ? `${accentColor.primary}30` : `${accentColor.primary}20`
-                                    : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
+                                    ? isDark ? `${accentColor.primary}25` : `${accentColor.primary}15`
+                                    : isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)'
                             }}
                             whileTap={{ scale: 0.95 }}
                         >
@@ -979,17 +964,6 @@ const MirrorAmbient = () => {
                                 <Send size={18} />
                             )}
                         </motion.button>
-
-                        <button
-                            onClick={() => setVoiceEnabled(!voiceEnabled)}
-                            className={`p-2.5 transition-colors ${
-                                voiceEnabled
-                                    ? 'text-violet-400'
-                                    : isDark ? 'text-white/60 hover:text-white/70' : 'text-zinc-400 hover:text-zinc-600'
-                            }`}
-                        >
-                            {voiceEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
-                        </button>
                     </div>
                 </div>
             </div>

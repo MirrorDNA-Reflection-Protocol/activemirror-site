@@ -7,8 +7,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Shield, Compass, Layers, Eye, Home, Send, X, ArrowLeft,
-    Users, Sparkles, RotateCcw, Trash2, BookOpen
+    Shield, Compass, Layers, Eye, Home, Send, ArrowLeft,
+    Users, Sparkles, RotateCcw
 } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
 import ThemeToggle from '../components/ThemeToggle';
@@ -218,7 +218,6 @@ export default function Twins() {
     const [councilResponses, setCouncilResponses] = useState({});
     const [councilQuestion, setCouncilQuestion] = useState('');
     const [councilHistory, setCouncilHistory] = useState([]); // Array of { question, responses: {twin: content} }
-    const [showExercises, setShowExercises] = useState(false);
     const [recommendedTwin, setRecommendedTwin] = useState(null);
 
     const inputRef = useRef(null);
@@ -259,13 +258,11 @@ export default function Twins() {
         setActiveTwin(twinKey);
         setMessages(savedMessages);
         setInput('');
-        setShowExercises(false);
     };
 
     const closeTwin = () => {
         setActiveTwin(null);
         setMessages([]);
-        setShowExercises(false);
     };
 
     const switchTwin = (newTwinKey) => {
@@ -476,8 +473,9 @@ export default function Twins() {
         // Ask all twins in parallel
         await Promise.all(Object.keys(TWINS).map(fetchTwinResponse));
 
-        // Save this round to history
+        // Save this round to history and clear streaming state
         setCouncilHistory(prev => [...prev, { question: q, responses: finalResponses }]);
+        setCouncilResponses({});
         setIsLoading(false);
     };
 
@@ -898,28 +896,50 @@ export default function Twins() {
                         <div className={`border-t p-4 ${
                             isDark ? 'border-white/10 bg-[#08080a]' : 'border-zinc-200 bg-white'
                         }`}>
-                            <div className="max-w-2xl mx-auto flex gap-3">
-                                <input
-                                    ref={councilInputRef}
-                                    type="text"
-                                    value={councilQuestion}
-                                    onChange={(e) => setCouncilQuestion(e.target.value)}
-                                    onKeyDown={handleCouncilKeyDown}
-                                    placeholder={councilHistory.length > 0 ? "Follow up with the council..." : "Ask the council..."}
-                                    disabled={isLoading}
-                                    className={`flex-1 px-4 py-3 rounded-xl text-sm focus:outline-none transition-all ${
-                                        isDark
-                                            ? 'bg-white/5 border border-white/10 text-white placeholder-zinc-500 focus:border-white/20'
-                                            : 'bg-zinc-100 border border-zinc-200 text-zinc-900 placeholder-zinc-400 focus:border-zinc-300'
-                                    }`}
-                                />
-                                <button
+                            <div className="max-w-2xl mx-auto flex items-end gap-3">
+                                <div className="flex-1 relative">
+                                    <textarea
+                                        ref={councilInputRef}
+                                        value={councilQuestion}
+                                        onChange={(e) => {
+                                            setCouncilQuestion(e.target.value);
+                                            e.target.style.height = 'auto';
+                                            e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                                        }}
+                                        onKeyDown={handleCouncilKeyDown}
+                                        placeholder={councilHistory.length > 0 ? "Follow up..." : "Ask the council..."}
+                                        disabled={isLoading}
+                                        rows={1}
+                                        className={`w-full px-4 py-3 rounded-2xl text-sm resize-none focus:outline-none transition-all ${
+                                            isDark
+                                                ? 'bg-white/[0.03] border border-white/[0.06] text-white placeholder-white/25 focus:border-white/10'
+                                                : 'bg-white border border-zinc-200 text-zinc-900 placeholder-zinc-400 focus:border-zinc-300 shadow-sm'
+                                        }`}
+                                        style={{ minHeight: '44px', maxHeight: '120px' }}
+                                    />
+                                </div>
+                                <motion.button
                                     onClick={() => askCouncil(councilQuestion)}
                                     disabled={!councilQuestion.trim() || isLoading}
-                                    className="p-3 rounded-xl transition-all disabled:opacity-30 bg-gradient-to-r from-purple-500/20 to-cyan-500/20"
+                                    className="p-3 rounded-xl transition-all disabled:opacity-20"
+                                    style={{
+                                        background: councilQuestion.trim() && !isLoading
+                                            ? 'rgba(168, 85, 247, 0.15)'
+                                            : isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)'
+                                    }}
+                                    whileTap={{ scale: 0.95 }}
                                 >
-                                    <Send size={18} className={councilQuestion.trim() ? 'text-purple-400' : isDark ? 'text-zinc-600' : 'text-zinc-400'} />
-                                </button>
+                                    {isLoading ? (
+                                        <motion.div
+                                            className="w-[18px] h-[18px] border-2 rounded-full"
+                                            style={{ borderColor: 'rgba(168,85,247,0.3)', borderTopColor: '#a855f7' }}
+                                            animate={{ rotate: 360 }}
+                                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                                        />
+                                    ) : (
+                                        <Send size={18} className={councilQuestion.trim() ? 'text-purple-400' : isDark ? 'text-zinc-600' : 'text-zinc-400'} />
+                                    )}
+                                </motion.button>
                             </div>
                         </div>
                     </motion.div>
@@ -964,129 +984,55 @@ export default function Twins() {
                                 </div>
                             </div>
 
-                            {/* Twin Switcher & Actions */}
+                            {/* Actions */}
                             <div className="flex items-center gap-1">
-                                {/* Quick switch to other twins */}
-                                <div className="flex items-center gap-1 mr-2">
-                                    {Object.entries(TWINS).filter(([k]) => k !== activeTwin).map(([key, t]) => {
-                                        const Icon = t.icon;
-                                        return (
-                                            <button
-                                                key={key}
-                                                onClick={() => switchTwin(key)}
-                                                className={`p-2 rounded-lg transition-all ${
-                                                    isDark ? 'hover:bg-white/10' : 'hover:bg-zinc-100'
-                                                }`}
-                                                title={`Switch to ${t.name}`}
-                                            >
-                                                <Icon size={16} style={{ color: t.color, opacity: 0.7 }} />
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-
-                                {/* Exercises toggle */}
-                                <button
-                                    onClick={() => setShowExercises(!showExercises)}
-                                    className={`p-2 rounded-lg transition-all ${
-                                        showExercises
-                                            ? isDark ? 'bg-white/10 text-white' : 'bg-zinc-200 text-zinc-700'
-                                            : isDark ? 'hover:bg-white/10 text-white/60' : 'hover:bg-zinc-100 text-zinc-500'
-                                    }`}
-                                    title="Cognitive Exercises"
-                                >
-                                    <BookOpen size={18} />
-                                </button>
-
-                                {/* Clear conversation */}
                                 {messages.length > 0 && (
                                     <button
                                         onClick={clearCurrentConversation}
-                                        className={`p-2 rounded-lg ${
-                                            isDark ? 'hover:bg-white/10 text-white/60' : 'hover:bg-zinc-100 text-zinc-500'
+                                        className={`p-2 rounded-lg transition-colors ${
+                                            isDark ? 'hover:bg-white/5 text-white/30 hover:text-white/50' : 'hover:bg-zinc-100 text-zinc-300 hover:text-zinc-500'
                                         }`}
-                                        title="Clear conversation"
+                                        title="Clear"
                                     >
-                                        <Trash2 size={18} />
+                                        <RotateCcw size={16} />
                                     </button>
                                 )}
                             </div>
                         </header>
-
-                        {/* Exercises Panel */}
-                        <AnimatePresence>
-                            {showExercises && (
-                                <motion.div
-                                    className={`border-b px-4 py-3 ${
-                                        isDark ? 'border-white/10 bg-white/[0.02]' : 'border-zinc-200 bg-zinc-50'
-                                    }`}
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                >
-                                    <p className={`text-xs mb-2 font-medium ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
-                                        {twin.name}'s Cognitive Exercises
-                                    </p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {twin.exercises.map((exercise, i) => (
-                                            <button
-                                                key={i}
-                                                onClick={() => {
-                                                    sendMessage(exercise.prompt);
-                                                    setShowExercises(false);
-                                                }}
-                                                className={`px-3 py-2 rounded-lg text-xs transition-all ${
-                                                    isDark
-                                                        ? 'bg-white/5 hover:bg-white/10 text-zinc-300 border border-white/10'
-                                                        : 'bg-white hover:bg-zinc-50 text-zinc-700 border border-zinc-200'
-                                                }`}
-                                            >
-                                                {exercise.name}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
 
                         {/* Messages */}
                         <div className="flex-1 overflow-y-auto px-4 py-6">
                             <div className="max-w-xl mx-auto space-y-4">
                                 {messages.length === 0 ? (
                                     <motion.div
-                                        className="text-center py-12"
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
+                                        className="text-center pt-16 pb-8"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: 0.1, duration: 0.4 }}
                                     >
-                                        <div className="text-5xl mb-6">{twin.glyph}</div>
-                                        <p className={`text-sm mb-8 max-w-sm mx-auto ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                                        <motion.div
+                                            className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6 ${
+                                                isDark ? 'bg-white/[0.03] border border-white/[0.06]' : 'bg-white border border-zinc-200 shadow-sm'
+                                            }`}
+                                            style={isDark ? { boxShadow: `0 0 40px ${twin.color}10` } : {}}
+                                        >
+                                            <twin.icon size={28} style={{ color: twin.color }} />
+                                        </motion.div>
+                                        <p className={`text-sm mb-8 max-w-xs mx-auto leading-relaxed ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
                                             {twin.description}
                                         </p>
-                                        <p className={`text-xs mb-4 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                                            Try asking:
-                                        </p>
                                         <div className="flex flex-col gap-2 max-w-xs mx-auto">
-                                            {[
-                                                activeTwin === 'guardian' ? 'Should I take on this new project?' :
-                                                activeTwin === 'scout' ? 'What am I missing here?' :
-                                                activeTwin === 'synthesizer' ? 'How do these ideas connect?' :
-                                                'What am I not seeing?',
-
-                                                activeTwin === 'guardian' ? 'Is this worth my attention?' :
-                                                activeTwin === 'scout' ? 'What adjacent areas should I explore?' :
-                                                activeTwin === 'synthesizer' ? 'What framework unifies this?' :
-                                                'What assumptions am I making?'
-                                            ].map((prompt, i) => (
+                                            {twin.exercises.slice(0, 2).map((exercise, i) => (
                                                 <button
                                                     key={i}
-                                                    onClick={() => sendMessage(prompt)}
-                                                    className={`px-4 py-3 rounded-xl text-sm text-left transition-all ${
+                                                    onClick={() => sendMessage(exercise.prompt)}
+                                                    className={`px-4 py-3 rounded-2xl text-sm text-left transition-all ${
                                                         isDark
-                                                            ? 'bg-white/5 hover:bg-white/10 border border-white/10'
-                                                            : 'bg-white hover:bg-zinc-50 border border-zinc-200'
+                                                            ? 'bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] text-zinc-300'
+                                                            : 'bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-700 shadow-sm'
                                                     }`}
                                                 >
-                                                    {prompt}
+                                                    {exercise.name}
                                                 </button>
                                             ))}
                                         </div>
@@ -1101,6 +1047,7 @@ export default function Twins() {
                                                     className="flex justify-center"
                                                     initial={{ opacity: 0 }}
                                                     animate={{ opacity: 1 }}
+                                                    transition={{ duration: 0.2 }}
                                                 >
                                                     <span className={`text-xs px-3 py-1 rounded-full ${
                                                         isDark ? 'bg-white/5 text-zinc-500' : 'bg-zinc-100 text-zinc-500'
@@ -1117,36 +1064,48 @@ export default function Twins() {
                                         return (
                                             <motion.div
                                                 key={msg.id}
-                                                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                                                initial={{ opacity: 0, y: 10 }}
+                                                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} group`}
+                                                initial={{ opacity: 0, y: 6 }}
                                                 animate={{ opacity: 1, y: 0 }}
+                                                transition={{ duration: 0.25, ease: 'easeOut' }}
                                             >
-                                                <div className={`max-w-[85%] px-4 py-3 rounded-2xl ${
-                                                    msg.role === 'user'
-                                                        ? isDark
-                                                            ? 'bg-white/10 rounded-br-md'
-                                                            : 'bg-zinc-200 rounded-br-md'
-                                                        : isDark
-                                                            ? 'bg-white/5 border border-white/10 rounded-bl-md'
-                                                            : 'bg-white border border-zinc-200 rounded-bl-md'
-                                                }`}
-                                                style={msg.role !== 'user' && isDark ? {
-                                                    boxShadow: `0 0 30px ${msgTwin.color}10`
-                                                } : {}}
-                                                >
-                                                    <p className={`text-sm leading-relaxed whitespace-pre-wrap ${
-                                                        isDark ? 'text-white/90' : 'text-zinc-800'
-                                                    }`}>
-                                                        {msg.content}
-                                                        {msg.isStreaming && (
-                                                            <motion.span
-                                                                className="inline-block w-0.5 h-4 ml-1 rounded-full"
-                                                                style={{ background: msgTwin.color }}
-                                                                animate={{ opacity: [1, 0.3, 1] }}
-                                                                transition={{ duration: 0.8, repeat: Infinity }}
-                                                            />
-                                                        )}
-                                                    </p>
+                                                <div className="max-w-[85%]">
+                                                    {/* Model indicator for assistant */}
+                                                    {msg.role !== 'user' && msg.twin && TWINS[msg.twin] && (
+                                                        <div className="flex items-center gap-1.5 mb-1 ml-1">
+                                                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: msgTwin.color }} />
+                                                            <span className={`text-[10px] uppercase tracking-wider ${isDark ? 'text-white/40' : 'text-zinc-400'}`}>
+                                                                {msgTwin.name}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    <div className={`px-4 py-3 rounded-2xl ${
+                                                        msg.role === 'user'
+                                                            ? isDark
+                                                                ? 'bg-white/[0.08] border border-white/[0.06] rounded-br-md'
+                                                                : 'bg-zinc-100 border border-zinc-200 rounded-br-md'
+                                                            : isDark
+                                                                ? 'bg-white/[0.03] border border-white/[0.05] rounded-bl-md'
+                                                                : 'bg-white border border-zinc-200 rounded-bl-md shadow-sm'
+                                                    }`}
+                                                    style={msg.role !== 'user' && isDark ? {
+                                                        boxShadow: `0 0 30px ${msgTwin.color}08`
+                                                    } : {}}
+                                                    >
+                                                        <p className={`text-[15px] leading-relaxed whitespace-pre-wrap ${
+                                                            isDark ? 'text-white/90' : 'text-zinc-800'
+                                                        }`}>
+                                                            {msg.content}
+                                                            {msg.isStreaming && (
+                                                                <motion.span
+                                                                    className="inline-block w-0.5 h-4 ml-0.5 rounded-full align-text-bottom"
+                                                                    style={{ background: msgTwin.color }}
+                                                                    animate={{ opacity: [1, 0.3, 1] }}
+                                                                    transition={{ duration: 0.8, repeat: Infinity }}
+                                                                />
+                                                            )}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </motion.div>
                                         );
@@ -1160,31 +1119,48 @@ export default function Twins() {
                         <div className={`border-t p-4 ${
                             isDark ? 'border-white/10 bg-[#08080a]' : 'border-zinc-200 bg-white'
                         }`}>
-                            <div className="max-w-xl mx-auto flex gap-3">
-                                <input
-                                    ref={inputRef}
-                                    type="text"
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    onKeyDown={handleKeyDown}
-                                    placeholder={`Ask ${twin.name}...`}
-                                    disabled={isLoading}
-                                    className={`flex-1 px-4 py-3 rounded-xl text-sm focus:outline-none transition-all ${
-                                        isDark
-                                            ? 'bg-white/5 border border-white/10 text-white placeholder-zinc-500 focus:border-white/20'
-                                            : 'bg-zinc-100 border border-zinc-200 text-zinc-900 placeholder-zinc-400 focus:border-zinc-300'
-                                    }`}
-                                />
-                                <button
+                            <div className="max-w-xl mx-auto flex items-end gap-3">
+                                <div className="flex-1 relative">
+                                    <textarea
+                                        ref={inputRef}
+                                        value={input}
+                                        onChange={(e) => {
+                                            setInput(e.target.value);
+                                            e.target.style.height = 'auto';
+                                            e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                                        }}
+                                        onKeyDown={handleKeyDown}
+                                        placeholder={`Message ${twin.name}...`}
+                                        disabled={isLoading}
+                                        rows={1}
+                                        className={`w-full px-4 py-3 rounded-2xl text-sm resize-none focus:outline-none transition-all ${
+                                            isDark
+                                                ? 'bg-white/[0.03] border border-white/[0.06] text-white placeholder-white/25 focus:border-white/10'
+                                                : 'bg-white border border-zinc-200 text-zinc-900 placeholder-zinc-400 focus:border-zinc-300 shadow-sm'
+                                        }`}
+                                        style={{ minHeight: '44px', maxHeight: '120px' }}
+                                    />
+                                </div>
+                                <motion.button
                                     onClick={() => sendMessage()}
                                     disabled={!input.trim() || isLoading}
-                                    className="p-3 rounded-xl transition-all disabled:opacity-30"
+                                    className="p-3 rounded-xl transition-all disabled:opacity-20"
                                     style={{
-                                        background: input.trim() ? `${twin.color}30` : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
+                                        background: input.trim() && !isLoading ? `${twin.color}25` : isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)'
                                     }}
+                                    whileTap={{ scale: 0.95 }}
                                 >
-                                    <Send size={18} style={{ color: input.trim() ? twin.color : isDark ? '#71717a' : '#a1a1aa' }} />
-                                </button>
+                                    {isLoading ? (
+                                        <motion.div
+                                            className="w-[18px] h-[18px] border-2 rounded-full"
+                                            style={{ borderColor: `${twin.color}30`, borderTopColor: twin.color }}
+                                            animate={{ rotate: 360 }}
+                                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                                        />
+                                    ) : (
+                                        <Send size={18} style={{ color: input.trim() ? twin.color : isDark ? '#52525b' : '#a1a1aa' }} />
+                                    )}
+                                </motion.button>
                             </div>
                         </div>
                     </motion.div>
