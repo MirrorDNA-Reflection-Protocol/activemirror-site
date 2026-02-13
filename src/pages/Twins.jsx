@@ -217,6 +217,7 @@ export default function Twins() {
     const [councilMode, setCouncilMode] = useState(false);
     const [councilResponses, setCouncilResponses] = useState({});
     const [councilQuestion, setCouncilQuestion] = useState('');
+    const [councilHistory, setCouncilHistory] = useState([]); // Array of { question, responses: {twin: content} }
     const [showExercises, setShowExercises] = useState(false);
     const [recommendedTwin, setRecommendedTwin] = useState(null);
 
@@ -238,6 +239,13 @@ export default function Twins() {
             setTimeout(() => inputRef.current?.focus(), 100);
         }
     }, [activeTwin]);
+
+    // Auto-focus council input after responses finish
+    useEffect(() => {
+        if (councilMode && !isLoading && councilHistory.length > 0) {
+            setTimeout(() => councilInputRef.current?.focus(), 100);
+        }
+    }, [councilMode, isLoading, councilHistory.length]);
 
     // Save conversation when messages change
     useEffect(() => {
@@ -386,12 +394,28 @@ export default function Twins() {
         }
     };
 
-    // Council Mode - ask all 4 twins
+    // Council Mode - ask all 4 twins with conversation history
     const askCouncil = async (question) => {
         if (!question.trim()) return;
 
+        const q = question.trim();
+        setCouncilQuestion('');
         setCouncilResponses({});
         setIsLoading(true);
+
+        // Build per-twin history from previous council rounds
+        const buildHistory = (twinKey) => {
+            const hist = [];
+            for (const round of councilHistory) {
+                hist.push({ role: 'user', content: round.question });
+                if (round.responses[twinKey]) {
+                    hist.push({ role: 'assistant', content: round.responses[twinKey] });
+                }
+            }
+            return hist.slice(-10); // Keep last 10 messages per twin
+        };
+
+        const finalResponses = {};
 
         const fetchTwinResponse = async (twinKey) => {
             const twin = TWINS[twinKey];
@@ -400,9 +424,9 @@ export default function Twins() {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        message: question,
+                        message: q,
                         systemPrompt: twin.systemPrompt,
-                        history: []
+                        history: buildHistory(twinKey)
                     })
                 });
 
@@ -433,12 +457,15 @@ export default function Twins() {
                     }
                 }
 
+                const final = fullContent || `${twin.glyph} No response.`;
+                finalResponses[twinKey] = final;
                 setCouncilResponses(prev => ({
                     ...prev,
-                    [twinKey]: { content: fullContent || `${twin.glyph} No response.`, isStreaming: false }
+                    [twinKey]: { content: final, isStreaming: false }
                 }));
 
             } catch (err) {
+                finalResponses[twinKey] = `${twin.glyph} Connection issue.`;
                 setCouncilResponses(prev => ({
                     ...prev,
                     [twinKey]: { content: `${twin.glyph} Connection issue.`, isStreaming: false, error: true }
@@ -448,6 +475,9 @@ export default function Twins() {
 
         // Ask all twins in parallel
         await Promise.all(Object.keys(TWINS).map(fetchTwinResponse));
+
+        // Save this round to history
+        setCouncilHistory(prev => [...prev, { question: q, responses: finalResponses }]);
         setIsLoading(false);
     };
 
@@ -641,6 +671,7 @@ export default function Twins() {
                                         setCouncilMode(false);
                                         setCouncilResponses({});
                                         setCouncilQuestion('');
+                                        setCouncilHistory([]);
                                     }}
                                     className={`p-2 rounded-lg ${
                                         isDark ? 'hover:bg-white/10 text-white/60' : 'hover:bg-zinc-100 text-zinc-500'
@@ -658,15 +689,17 @@ export default function Twins() {
                                     </p>
                                 </div>
                             </div>
-                            {Object.keys(councilResponses).length > 0 && (
+                            {councilHistory.length > 0 && (
                                 <button
                                     onClick={() => {
                                         setCouncilResponses({});
                                         setCouncilQuestion('');
+                                        setCouncilHistory([]);
                                     }}
                                     className={`p-2 rounded-lg ${
                                         isDark ? 'hover:bg-white/10 text-white/60' : 'hover:bg-zinc-100 text-zinc-500'
                                     }`}
+                                    title="New council session"
                                 >
                                     <RotateCcw size={18} />
                                 </button>
@@ -675,8 +708,8 @@ export default function Twins() {
 
                         {/* Council Content */}
                         <div className="flex-1 overflow-y-auto px-4 py-6">
-                            <div className="max-w-4xl mx-auto">
-                                {Object.keys(councilResponses).length === 0 ? (
+                            <div className="max-w-4xl mx-auto space-y-6">
+                                {councilHistory.length === 0 && Object.keys(councilResponses).length === 0 ? (
                                     <motion.div
                                         className="text-center py-12"
                                         initial={{ opacity: 0, y: 10 }}
@@ -705,73 +738,159 @@ export default function Twins() {
                                         </div>
                                     </motion.div>
                                 ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {Object.entries(TWINS).map(([key, t]) => {
-                                            const response = councilResponses[key];
-                                            const Icon = t.icon;
-                                            return (
-                                                <motion.div
-                                                    key={key}
-                                                    className={`p-4 rounded-2xl border ${
-                                                        isDark
-                                                            ? 'bg-white/[0.02] border-white/10'
-                                                            : 'bg-white border-zinc-200'
-                                                    }`}
-                                                    initial={{ opacity: 0, y: 20 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    style={{ boxShadow: isDark ? `0 0 30px ${t.color}10` : 'none' }}
-                                                >
-                                                    <div className="flex items-center gap-2 mb-3">
-                                                        <div
-                                                            className="w-8 h-8 rounded-lg flex items-center justify-center"
-                                                            style={{ background: `${t.color}20` }}
-                                                        >
-                                                            <Icon size={16} style={{ color: t.color }} />
-                                                        </div>
-                                                        <span className={`font-medium ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-                                                            {t.name}
-                                                        </span>
-                                                        <span style={{ color: t.color }}>{t.glyph}</span>
-                                                    </div>
-                                                    <p className={`text-sm leading-relaxed ${
-                                                        isDark ? 'text-zinc-300' : 'text-zinc-700'
+                                    <>
+                                        {/* Previous rounds */}
+                                        {councilHistory.map((round, roundIdx) => (
+                                            <div key={roundIdx} className="space-y-4">
+                                                {/* User question */}
+                                                <div className="flex justify-end">
+                                                    <div className={`max-w-[80%] px-4 py-3 rounded-2xl rounded-br-md ${
+                                                        isDark ? 'bg-white/10' : 'bg-zinc-200'
                                                     }`}>
-                                                        {response?.content || (
-                                                            <span className={isDark ? 'text-zinc-500' : 'text-zinc-400'}>
-                                                                Thinking...
-                                                            </span>
-                                                        )}
-                                                        {response?.isStreaming && (
-                                                            <motion.span
-                                                                className="inline-block w-0.5 h-4 ml-1 rounded-full"
-                                                                style={{ background: t.color }}
-                                                                animate={{ opacity: [1, 0.3, 1] }}
-                                                                transition={{ duration: 0.8, repeat: Infinity }}
-                                                            />
-                                                        )}
-                                                    </p>
-                                                    {/* Continue with this twin */}
-                                                    {response && !response.isStreaming && (
-                                                        <button
-                                                            onClick={() => {
-                                                                setCouncilMode(false);
-                                                                openTwin(key);
-                                                                // Add the council question and response to the new chat
-                                                                setMessages([
-                                                                    { id: `user-council`, role: 'user', content: councilQuestion },
-                                                                    { id: `assistant-council`, role: 'assistant', content: response.content, twin: key }
-                                                                ]);
-                                                            }}
-                                                            className={`mt-3 text-xs ${isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-600'}`}
-                                                        >
-                                                            Continue with {t.name} →
-                                                        </button>
-                                                    )}
-                                                </motion.div>
-                                            );
-                                        })}
-                                    </div>
+                                                        <p className={`text-sm ${isDark ? 'text-white/90' : 'text-zinc-800'}`}>
+                                                            {round.question}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {/* 4 twin responses */}
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    {Object.entries(TWINS).map(([key, t]) => {
+                                                        const content = round.responses[key];
+                                                        const Icon = t.icon;
+                                                        // Check if this is the latest round (show continue button)
+                                                        const isLatestRound = roundIdx === councilHistory.length - 1 && Object.keys(councilResponses).length === 0;
+                                                        return (
+                                                            <div
+                                                                key={key}
+                                                                className={`p-4 rounded-2xl border ${
+                                                                    isDark
+                                                                        ? 'bg-white/[0.02] border-white/10'
+                                                                        : 'bg-white border-zinc-200'
+                                                                }`}
+                                                            >
+                                                                <div className="flex items-center gap-2 mb-2">
+                                                                    <div
+                                                                        className="w-6 h-6 rounded-md flex items-center justify-center"
+                                                                        style={{ background: `${t.color}20` }}
+                                                                    >
+                                                                        <Icon size={14} style={{ color: t.color }} />
+                                                                    </div>
+                                                                    <span className={`text-xs font-medium ${isDark ? 'text-white/70' : 'text-zinc-600'}`}>
+                                                                        {t.name}
+                                                                    </span>
+                                                                </div>
+                                                                <p className={`text-sm leading-relaxed ${
+                                                                    isDark ? 'text-zinc-300' : 'text-zinc-700'
+                                                                }`}>
+                                                                    {content || '...'}
+                                                                </p>
+                                                                {isLatestRound && content && (
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            // Build full council history for this twin as 1:1 chat seed
+                                                                            const seedMessages = [];
+                                                                            for (const r of councilHistory) {
+                                                                                seedMessages.push({ id: `user-${seedMessages.length}`, role: 'user', content: r.question });
+                                                                                if (r.responses[key]) {
+                                                                                    seedMessages.push({ id: `assistant-${seedMessages.length}`, role: 'assistant', content: r.responses[key], twin: key });
+                                                                                }
+                                                                            }
+                                                                            setCouncilMode(false);
+                                                                            setActiveTwin(key);
+                                                                            setMessages(seedMessages);
+                                                                        }}
+                                                                        className={`mt-2 text-xs ${isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-600'}`}
+                                                                    >
+                                                                        Continue 1:1 with {t.name} →
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {/* Current streaming round */}
+                                        {Object.keys(councilResponses).length > 0 && (
+                                            <div className="space-y-4">
+                                                {/* The current question is already cleared from input, show it from context */}
+                                                {councilHistory.length === 0 || Object.values(councilResponses).some(r => r.isStreaming) ? null : null}
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    {Object.entries(TWINS).map(([key, t]) => {
+                                                        const response = councilResponses[key];
+                                                        const Icon = t.icon;
+                                                        const allDone = Object.values(councilResponses).every(r => !r.isStreaming);
+                                                        return (
+                                                            <motion.div
+                                                                key={key}
+                                                                className={`p-4 rounded-2xl border ${
+                                                                    isDark
+                                                                        ? 'bg-white/[0.02] border-white/10'
+                                                                        : 'bg-white border-zinc-200'
+                                                                }`}
+                                                                initial={{ opacity: 0, y: 20 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                style={{ boxShadow: isDark ? `0 0 30px ${t.color}10` : 'none' }}
+                                                            >
+                                                                <div className="flex items-center gap-2 mb-2">
+                                                                    <div
+                                                                        className="w-6 h-6 rounded-md flex items-center justify-center"
+                                                                        style={{ background: `${t.color}20` }}
+                                                                    >
+                                                                        <Icon size={14} style={{ color: t.color }} />
+                                                                    </div>
+                                                                    <span className={`text-xs font-medium ${isDark ? 'text-white/70' : 'text-zinc-600'}`}>
+                                                                        {t.name}
+                                                                    </span>
+                                                                </div>
+                                                                <p className={`text-sm leading-relaxed ${
+                                                                    isDark ? 'text-zinc-300' : 'text-zinc-700'
+                                                                }`}>
+                                                                    {response?.content || (
+                                                                        <span className={isDark ? 'text-zinc-500' : 'text-zinc-400'}>
+                                                                            Thinking...
+                                                                        </span>
+                                                                    )}
+                                                                    {response?.isStreaming && (
+                                                                        <motion.span
+                                                                            className="inline-block w-0.5 h-4 ml-1 rounded-full"
+                                                                            style={{ background: t.color }}
+                                                                            animate={{ opacity: [1, 0.3, 1] }}
+                                                                            transition={{ duration: 0.8, repeat: Infinity }}
+                                                                        />
+                                                                    )}
+                                                                </p>
+                                                                {allDone && response && !response.error && (
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            const seedMessages = [];
+                                                                            for (const r of councilHistory) {
+                                                                                seedMessages.push({ id: `user-${seedMessages.length}`, role: 'user', content: r.question });
+                                                                                if (r.responses[key]) {
+                                                                                    seedMessages.push({ id: `assistant-${seedMessages.length}`, role: 'assistant', content: r.responses[key], twin: key });
+                                                                                }
+                                                                            }
+                                                                            setCouncilMode(false);
+                                                                            setActiveTwin(key);
+                                                                            setMessages(seedMessages);
+                                                                        }}
+                                                                        className={`mt-2 text-xs ${isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-600'}`}
+                                                                    >
+                                                                        Continue 1:1 with {t.name} →
+                                                                    </button>
+                                                                )}
+                                                            </motion.div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
+                                <div ref={messagesEndRef} />
                             </div>
                         </div>
 
@@ -786,7 +905,7 @@ export default function Twins() {
                                     value={councilQuestion}
                                     onChange={(e) => setCouncilQuestion(e.target.value)}
                                     onKeyDown={handleCouncilKeyDown}
-                                    placeholder="Ask the council..."
+                                    placeholder={councilHistory.length > 0 ? "Follow up with the council..." : "Ask the council..."}
                                     disabled={isLoading}
                                     className={`flex-1 px-4 py-3 rounded-xl text-sm focus:outline-none transition-all ${
                                         isDark
