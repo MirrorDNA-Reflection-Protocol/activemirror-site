@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
-import { copyFileSync, mkdirSync, existsSync } from 'fs'
+import { copyFileSync, mkdirSync, existsSync, readFileSync, writeFileSync } from 'fs'
 
 // All React routes that need SPA fallbacks
 const SPA_ROUTES = [
@@ -60,6 +60,40 @@ const SPA_ROUTES = [
     'about/contact'
 ];
 
+const ROUTE_META = {
+    confessions: {
+        title: 'Confession Booth — Active Mirror',
+        metaTitle: 'Confession Booth — Active Mirror',
+        description: 'Watch blocked AI outputs and real-time governance decisions from MirrorGate. Every block justified. Every event visible.',
+        ogUrl: 'https://activemirror.ai/confessions/',
+        ogTitle: 'Confession Booth — Active Mirror',
+        ogDescription: 'Live flight recorder of blocked outputs and AI guardrail decisions.',
+        twitterUrl: 'https://activemirror.ai/confessions/',
+        twitterTitle: 'Confession Booth — Active Mirror',
+        twitterDescription: 'Live view of blocked outputs, policy triggers, and governance events.',
+        canonical: 'https://activemirror.ai/confessions/'
+    }
+}
+
+const applyRouteMeta = (route, htmlPath) => {
+    const meta = ROUTE_META[route]
+    if (!meta || !existsSync(htmlPath)) return
+
+    let html = readFileSync(htmlPath, 'utf8')
+    html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${meta.title}</title>`)
+    html = html.replace(/<meta name="title" content="[^"]*" \/>/, `<meta name="title" content="${meta.metaTitle}" />`)
+    html = html.replace(/<meta name="description" content="[^"]*" \/>/, `<meta name="description" content="${meta.description}" />`)
+    html = html.replace(/<meta property="og:url" content="[^"]*" \/>/, `<meta property="og:url" content="${meta.ogUrl}" />`)
+    html = html.replace(/<meta property="og:title" content="[^"]*" \/>/, `<meta property="og:title" content="${meta.ogTitle}" />`)
+    html = html.replace(/<meta property="og:description" content="[^"]*" \/>/, `<meta property="og:description" content="${meta.ogDescription}" />`)
+    html = html.replace(/<meta name="twitter:url" content="[^"]*" \/>/, `<meta name="twitter:url" content="${meta.twitterUrl}" />`)
+    html = html.replace(/<meta name="twitter:title" content="[^"]*" \/>/, `<meta name="twitter:title" content="${meta.twitterTitle}" />`)
+    html = html.replace(/<meta name="twitter:description" content="[^"]*" \/>/, `<meta name="twitter:description" content="${meta.twitterDescription}" />`)
+    html = html.replace(/<link rel="canonical" href="[^"]*" \/>/, `<link rel="canonical" href="${meta.canonical}" />`)
+
+    writeFileSync(htmlPath, html)
+}
+
 // Plugin to copy index.html for SPA routing on GitHub Pages
 const spaFallbackPlugin = () => ({
     name: 'spa-fallback',
@@ -80,6 +114,7 @@ const spaFallbackPlugin = () => ({
             if (!existsSync(targetIndex)) {
                 copyFileSync(distIndex, targetIndex)
             }
+            applyRouteMeta(route, targetIndex)
         }
         
         console.log(`✅ SPA fallbacks created: 404.html, ${SPA_ROUTES.join('/, ')}`)

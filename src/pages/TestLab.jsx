@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CreateWebWorkerMLCEngine } from "@mlc-ai/web-llm";
 import { ArrowLeft, Send, CloudLightning, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -75,6 +74,7 @@ export default function TestLab() {
                 const workerScript = `import { WebWorkerMLCEngineHandler } from "https://esm.run/@mlc-ai/web-llm"; const handler = new WebWorkerMLCEngineHandler(); self.onmessage = (msg) => { handler.onmessage(msg); };`;
                 const worker = new Worker(URL.createObjectURL(new Blob([workerScript], { type: "application/javascript" })), { type: "module" });
                 try {
+                    const { CreateWebWorkerMLCEngine } = await import('@mlc-ai/web-llm');
                     const eng = await CreateWebWorkerMLCEngine(worker, modelId, {
                         initProgressCallback: (r) => setLocalProgress(r.progress === 1 ? "" : `Loading Vault... ${Math.round(r.progress * 100)}%`)
                     });
