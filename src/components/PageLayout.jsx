@@ -72,6 +72,7 @@ export default function PageLayout({ children, showNav = true }) {
                                 <li><Link to="/about/roadmap" className="hover:text-purple-500">Roadmap</Link></li>
                                 <li><a href="https://github.com/MirrorDNA-Reflection-Protocol" className="hover:text-purple-500">GitHub</a></li>
                                 <li><Link to="/research" className="hover:text-purple-500">Research</Link></li>
+                                <li><a href="https://beacon.activemirror.ai" target="_blank" rel="noopener noreferrer" className="hover:text-purple-500">Beacon</a></li>
                             </ul>
                         </div>
 

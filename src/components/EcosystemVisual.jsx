@@ -403,7 +403,8 @@ export default function EcosystemVisual({ compact = false }) {
                             { name: 'activemirror.ai', status: 'live' },
                             { name: 'id.activemirror.ai', status: 'live' },
                             { name: 'brain.activemirror.ai', status: 'live' },
-                            { name: 'mirror.activemirror.ai', status: 'live' }
+                            { name: 'mirror.activemirror.ai', status: 'live' },
+                            { name: 'beacon.activemirror.ai', status: 'live' }
                         ].map((site, i) => (
                             <a
                                 key={site.name}

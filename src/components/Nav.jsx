@@ -43,6 +43,7 @@ const docs = [
 
 const about = [
     { name: 'About Us', href: '/about', icon: Info, desc: 'Our story' },
+    { name: 'Beacon', href: 'https://beacon.activemirror.ai', icon: BookOpen, desc: 'Reflections from Paul', external: true },
     { name: 'Roadmap', href: '/about/roadmap', icon: Map, desc: "What's coming" },
     { name: 'Contact', href: '/about/contact', icon: Mail, desc: 'Get in touch' },
 ];
@@ -69,27 +70,33 @@ function Dropdown({ label, items, isOpen, onToggle, isDark }) {
                         : 'bg-white border-zinc-200'
                 }`}>
                     <div className="p-2">
-                        {items.map((item) => (
-                            <Link
-                                key={item.name}
-                                to={item.href}
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                                    isDark
-                                        ? 'hover:bg-white/5'
-                                        : 'hover:bg-zinc-50'
-                                }`}
-                            >
-                                <item.icon size={18} className={isDark ? 'text-purple-400' : 'text-purple-600'} />
-                                <div>
-                                    <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-                                        {item.name}
+                        {items.map((item) => {
+                            const cls = `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                                isDark ? 'hover:bg-white/5' : 'hover:bg-zinc-50'
+                            }`;
+                            const inner = (
+                                <>
+                                    <item.icon size={18} className={isDark ? 'text-purple-400' : 'text-purple-600'} />
+                                    <div>
+                                        <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                                            {item.name}
+                                        </div>
+                                        <div className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                                            {item.desc}
+                                        </div>
                                     </div>
-                                    <div className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                                        {item.desc}
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
+                                </>
+                            );
+                            return item.external ? (
+                                <a key={item.name} href={item.href} target="_blank" rel="noopener noreferrer" className={cls}>
+                                    {inner}
+                                </a>
+                            ) : (
+                                <Link key={item.name} to={item.href} className={cls}>
+                                    {inner}
+                                </Link>
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -262,6 +269,11 @@ export default function Nav() {
                                 className={`px-3 py-2 rounded-lg text-sm ${isDark ? 'hover:bg-white/5 text-zinc-300' : 'hover:bg-zinc-50 text-zinc-700'}`}>
                                 About
                             </Link>
+                            <a href="https://beacon.activemirror.ai" target="_blank" rel="noopener noreferrer"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className={`px-3 py-2 rounded-lg text-sm ${isDark ? 'hover:bg-white/5 text-zinc-300' : 'hover:bg-zinc-50 text-zinc-700'}`}>
+                                Beacon
+                            </a>
                             <Link to="/start" onClick={() => setMobileMenuOpen(false)}
                                 className="px-4 py-2 rounded-lg text-sm font-medium bg-purple-600 text-white">
                                 Get Started
